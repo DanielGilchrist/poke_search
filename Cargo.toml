@@ -1,0 +1,11 @@
+[package]
+name = "poke_search_cli"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures = "0.3.25"
+rustemon = "3.0.1"
+tokio = { version = "1.23.0", features = ["macros", "rt-multi-thread"] }
