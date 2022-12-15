@@ -1,3 +1,5 @@
+use std::process::exit;
+
 use rustemon::{
     client::RustemonClient,
     error::Error,
@@ -31,7 +33,10 @@ impl MoveCommand {
     async fn _execute(&self) {
         let pokemon = match self.fetch_pokemon().await {
             Ok(pokemon) => pokemon,
-            Err(_) => panic!("Pokemon doesn't exist!"),
+            Err(_) => {
+              println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
+              exit(1);
+            },
         };
 
         let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
