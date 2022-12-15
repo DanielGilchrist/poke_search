@@ -1,173 +1,58 @@
+use crate::formatter;
+
 use std::process::exit;
 
-use rustemon::{
-    client::RustemonClient,
-    error::Error,
-    model::{
-        moves::Move,
-        pokemon::{Pokemon, PokemonMove},
-    },
-    pokemon::pokemon,
-    Follow,
-};
-
-use futures::{stream, StreamExt};
+use rustemon::{client::RustemonClient, model::moves::Move, moves::move_};
 
 pub struct MoveCommand {
     client: RustemonClient,
-    pokemon_name: String,
-    type_name: Option<String>,
+    move_name: String,
+    include_learned_by: bool,
 }
 
 impl MoveCommand {
-    pub async fn execute(client: RustemonClient, pokemon_name: String, type_name: Option<String>) {
+    pub async fn execute(client: RustemonClient, move_name: String, include_learned_by: bool) {
         MoveCommand {
             client,
-            pokemon_name,
-            type_name,
+            move_name,
+            include_learned_by,
         }
         ._execute()
         .await;
     }
 
     async fn _execute(&self) {
-        let pokemon = match self.fetch_pokemon().await {
-            Ok(pokemon) => pokemon,
-            Err(_) => {
-                println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
-                exit(1);
-            }
-        };
+        let move_ = self.fetch_move().await;
 
-        let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
-        let move_output = self.build_output(moves);
+        let mut output = String::from("Move\n");
 
-        let pokemon_name = capitalise(&pokemon.name);
-        println!("Pokemon: {}", pokemon_name);
+        output.push_str(&formatter::format(&move_));
 
-        if !move_output.is_empty() {
-            println!("Moves:");
-            println!("{}", move_output);
-        } else {
-            match &self.type_name {
-                Some(type_name) => {
-                    println!(
-                        "{} has no {} type moves",
-                        pokemon_name,
-                        capitalise(type_name)
-                    );
-                }
-                None => (),
-            };
-        }
-    }
+        if self.include_learned_by {
+            output.push_str("\nLearned by:");
 
-    async fn fetch_pokemon(&self) -> Result<Pokemon, Error> {
-        pokemon::get_by_name(&self.pokemon_name, &self.client).await
-    }
+            let mut learned_by_pokemon = move_.learned_by_pokemon;
+            learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
 
-    async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<Move> {
-        stream::iter(pokemon_moves)
-            .map(|move_resource| {
-                let client_ref = &self.client;
-
-                async move { move_resource.move_.follow(client_ref).await.unwrap() }
-            })
-            .buffer_unordered(100)
-            .collect::<Vec<_>>()
-            .await
-    }
-
-    fn process_moves(&self, moves: Vec<Move>) -> Vec<Move> {
-        let mut filtered_moves = match &self.type_name {
-            Some(type_name) => moves
+            let formatted_pokemon = learned_by_pokemon
                 .into_iter()
-                .filter_map(|move_| {
-                    if &move_.type_.name == type_name {
-                        Some(move_)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>(),
-            None => moves,
-        };
-
-        filtered_moves.sort_by_key(|move_| move_.power);
-        filtered_moves.reverse();
-
-        filtered_moves
-    }
-
-    fn build_output(&self, moves: Vec<Move>) -> String {
-        moves.into_iter().fold(String::new(), |mut output, move_| {
-            let formatted_name = move_
-                .name
-                .split('-')
-                .into_iter()
-                .map(capitalise)
+                .map(|pokemon| format!("  {}", formatter::split_and_capitalise(&pokemon.name)))
                 .collect::<Vec<_>>()
-                .join(" ");
+                .join("\n");
 
-            output.push_str(format("Name", &formatted_name).as_str());
-            output.push_str(format("Type", &move_.type_.name).as_str());
-            output.push_str(format("Damage Type", &move_.damage_class.name).as_str());
+            output.push_str(&formatted_pokemon);
+        }
 
-            let power = parse_maybe_i64(move_.power);
-            output.push_str(format("Power", &power).as_str());
-            output.push_str(format("Accuracy", &parse_maybe_i64(move_.accuracy)).as_str());
-            output.push_str(format("PP", &parse_maybe_i64(move_.pp)).as_str());
-
-            let flavour_text = move_
-                .flavor_text_entries
-                .into_iter()
-                .find_map(|entry| {
-                    if entry.language.name == "en" {
-                        Some(entry.flavor_text)
-                    } else {
-                        None
-                    }
-                })
-                .unwrap()
-                .replace('\n', " ");
-
-            output.push_str(format("Description", &flavour_text).as_str());
-
-            let effect_chance = format!("{}%", parse_maybe_i64(move_.effect_chance));
-            move_.effect_entries.into_iter().for_each(|entry| {
-                let description = if power == "-" {
-                    entry.effect.replace('\n', " ").replace("  ", " ")
-                } else {
-                    entry
-                        .short_effect
-                        .replace("$effect_chance%", &effect_chance)
-                };
-
-                output.push_str(format("Effect", &description).as_str());
-            });
-
-            output.push_str("\n\n");
-
-            output
-        })
+        println!("{}", output);
     }
-}
 
-pub fn capitalise(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-    }
-}
-
-pub fn format(title: &str, value: &str) -> String {
-    format!("  {}{}{}\n", title, ": ", capitalise(value))
-}
-
-pub fn parse_maybe_i64(value: Option<i64>) -> String {
-    match value {
-        Some(value) => value.to_string(),
-        None => String::from("-"),
+    async fn fetch_move(&self) -> Move {
+        match move_::get_by_name(&self.move_name, &self.client).await {
+            Ok(move_) => move_,
+            Err(_) => {
+                println!("Move \"{}\" doesn't exist", self.move_name);
+                exit(1)
+            }
+        }
     }
 }
