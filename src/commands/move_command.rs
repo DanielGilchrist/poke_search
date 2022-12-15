@@ -34,9 +34,9 @@ impl MoveCommand {
         let pokemon = match self.fetch_pokemon().await {
             Ok(pokemon) => pokemon,
             Err(_) => {
-              println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
-              exit(1);
-            },
+                println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
+                exit(1);
+            }
         };
 
         let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);

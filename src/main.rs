@@ -9,7 +9,14 @@ async fn main() {
 
     match parse_commands().get_matches().subcommand() {
         Some(("moves", sub_matches)) => {
-            let pokemon_name = sub_matches.get_one::<String>("pokemon").unwrap().to_owned();
+            let pokemon_name = sub_matches
+                .get_one::<String>("pokemon")
+                .unwrap()
+                .to_lowercase()
+                .split(' ')
+                .collect::<Vec<_>>()
+                .join("-");
+
             let type_name = sub_matches
                 .get_one::<String>("type_name")
                 .map(|s| s.to_owned());
