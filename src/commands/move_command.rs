@@ -1,23 +1,65 @@
-use rustemon::{client::RustemonClient, Follow};
+use rustemon::{
+  client::RustemonClient,
+  error::Error,
+  model::{
+    moves::Move,
+    pokemon::{
+      Pokemon,
+      PokemonMove
+    },
+  },
+  pokemon::pokemon,
+  Follow
+};
+
 use futures::{stream, StreamExt};
 
 pub struct MoveCommand {
   client: RustemonClient,
+  pokemon_name: String,
   type_name: Option<String>
 }
 
 impl MoveCommand {
-  pub async fn execute(client: RustemonClient, type_name: Option<String>) {
+  pub async fn execute(client: RustemonClient, pokemon_name: String, type_name: Option<String>) {
     MoveCommand {
       client,
+      pokemon_name,
       type_name
     }._execute().await;
   }
 
   async fn _execute(&self) {
-    let pokemon = rustemon::pokemon::pokemon::get_by_name("toxicroak", &self.client).await.unwrap();
+    let pokemon = match self.fetch_pokemon().await {
+      Ok(pokemon) => pokemon,
+      Err(_) => panic!("Pokemon doesn't exist!")
+    };
 
-    let full_moves = stream::iter(pokemon.moves)
+    let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
+    let move_output = self.build_output(moves);
+
+    let pokemon_name = capitalise(&pokemon.name);
+    println!("Pokemon: {}", pokemon_name);
+
+    if is_present(&move_output) {
+      println!("Moves:");
+      println!("{}", move_output);
+    } else {
+      match &self.type_name {
+        Some(type_name) => {
+          println!("{} has no {} type moves", pokemon_name, capitalise(type_name));
+        },
+        None => ()
+      };
+    }
+  }
+
+  async fn fetch_pokemon(&self) -> Result<Pokemon, Error> {
+    pokemon::get_by_name(&self.pokemon_name, &self.client).await
+  }
+
+  async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<Move> {
+    stream::iter(pokemon_moves)
       .map(|move_resource| {
         let client_ref = &self.client;
 
@@ -27,24 +69,30 @@ impl MoveCommand {
       })
       .buffer_unordered(100)
       .collect::<Vec<_>>()
-      .await;
+      .await
+  }
 
+  fn process_moves(&self, moves: Vec<Move>) -> Vec<Move> {
     let mut filtered_moves = match &self.type_name {
       Some(type_name) => {
-        full_moves
+        moves
           .into_iter()
           .filter_map(|move_| {
             if &move_.type_.name == type_name { Some(move_) } else { None }
           })
           .collect::<Vec<_>>()
       },
-      None => full_moves
+      None => moves
     };
 
     filtered_moves.sort_by_key(|move_| move_.power);
     filtered_moves.reverse();
 
-    let move_output = filtered_moves
+    filtered_moves
+  }
+
+  fn build_output(&self, moves: Vec<Move>) -> String {
+    moves
       .into_iter()
       .fold(String::new(), |mut output, move_| {
         let formatted_name = move_
@@ -88,17 +136,7 @@ impl MoveCommand {
         output.push_str("\n\n");
 
         output
-      });
-
-    let pokemon_name = capitalise(&pokemon.name);
-    println!("Pokemon: {}", pokemon_name);
-    if is_present(&move_output) {
-      println!("Moves:");
-      println!("{}", move_output);
-    } else {
-      // TODO - handle optional type name
-      println!("{} has no {} type moves", pokemon_name, capitalise(&self.type_name.as_ref().unwrap()));
-    }
+      })
   }
 }
 
