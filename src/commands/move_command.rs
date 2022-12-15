@@ -40,7 +40,7 @@ impl MoveCommand {
         let pokemon_name = capitalise(&pokemon.name);
         println!("Pokemon: {}", pokemon_name);
 
-        if is_present(&move_output) {
+        if !move_output.is_empty() {
             println!("Moves:");
             println!("{}", move_output);
         } else {
@@ -165,12 +165,4 @@ pub fn parse_maybe_i64(value: Option<i64>) -> String {
         Some(value) => value.to_string(),
         None => String::from("-"),
     }
-}
-
-pub fn is_blank(str: &str) -> bool {
-    str.replace(['\n', ' '], "").is_empty()
-}
-
-pub fn is_present(str: &str) -> bool {
-    !is_blank(str)
 }
