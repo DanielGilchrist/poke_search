@@ -97,9 +97,9 @@ impl MoveCommand {
       .fold(String::new(), |mut output, move_| {
         let formatted_name = move_
           .name
-          .split("-")
+          .split('-')
           .into_iter()
-          .map(|str| capitalise(str))
+          .map(capitalise)
           .collect::<Vec<_>>()
           .join(" ");
 
@@ -118,14 +118,14 @@ impl MoveCommand {
           } else {
             None
           }
-        }).unwrap().replace("\n", " ");
+        }).unwrap().replace('\n', " ");
 
         output.push_str(format("Description", &flavour_text).as_str());
 
         let effect_chance = format!("{}%", parse_maybe_i64(move_.effect_chance));
         move_.effect_entries.into_iter().for_each(|entry| {
           let description = if power == "-" {
-            entry.effect.replace("\n", " ").replace("  ", " ")
+            entry.effect.replace('\n', " ").replace("  ", " ")
           } else {
             entry.short_effect.replace("$effect_chance%", &effect_chance)
           };
@@ -160,7 +160,7 @@ pub fn parse_maybe_i64(value: Option<i64>) -> String {
 }
 
 pub fn is_blank(str: &str) -> bool {
-  str.replace("\n", "").replace(" ", "").len() == 0
+  str.replace(['\n', ' '], "").is_empty()
 }
 
 pub fn is_present(str: &str) -> bool {
