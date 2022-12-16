@@ -1,4 +1,4 @@
-use crate::formatter;
+use crate::formatter::{self, FormatModel};
 
 use std::process::exit;
 
@@ -26,7 +26,7 @@ impl MoveCommand {
 
         let mut output = String::from("Move\n");
 
-        output.push_str(&formatter::format(&move_));
+        output.push_str(&move_.format());
 
         if self.include_learned_by {
             output.push_str("\nLearned by:");

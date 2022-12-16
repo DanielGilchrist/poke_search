@@ -1,4 +1,4 @@
-use crate::formatter;
+use crate::{formatter, formatter::FormatModel};
 
 use std::process::exit;
 
@@ -101,7 +101,7 @@ impl MovesCommand {
 
     fn build_output(&self, moves: Vec<Move>) -> String {
         moves.into_iter().fold(String::new(), |mut output, move_| {
-            output.push_str(formatter::format(&move_).as_str());
+            output.push_str(move_.format().as_str());
             output.push_str("\n\n");
 
             output
