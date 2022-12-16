@@ -1,7 +1,7 @@
-use crate::formatter::{FormatModel};
+use crate::formatter::FormatModel;
 
-use std::process::exit;
 use futures::{stream, StreamExt};
+use std::process::exit;
 
 use rustemon::{client::RustemonClient, model::pokemon::Pokemon, pokemon::pokemon, Follow};
 
@@ -24,27 +24,24 @@ impl PokemonCommand {
         let pokemon = self.fetch_pokemon().await;
         let output = pokemon.format();
 
-        println!("{}", "Pokemon");
+        println!("Pokemon");
         println!("{}", output);
 
-        println!("{}", "Stats");
+        println!("Stats");
         let full_stats = stream::iter(pokemon.stats)
-          .map(|pokemon_stat| {
-            let client_ref = &self.client;
+            .map(|pokemon_stat| {
+                let client_ref = &self.client;
 
-            async move {
-              pokemon_stat
-                .stat
-                .follow(client_ref)
-                .await
-                .unwrap()
-            }
-          })
-          .buffer_unordered(6)
-          .collect::<Vec<_>>()
-          .await;
+                async move { pokemon_stat.stat.follow(client_ref).await.unwrap() }
+            })
+            .buffer_unordered(6)
+            .collect::<Vec<_>>()
+            .await;
 
-        println!("{:?}", full_stats.into_iter().map(|s| s.name).collect::<Vec<_>>());
+        println!(
+            "{:?}",
+            full_stats.into_iter().map(|s| s.name).collect::<Vec<_>>()
+        );
     }
 
     async fn fetch_pokemon(&self) -> Pokemon {
