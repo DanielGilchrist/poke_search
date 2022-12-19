@@ -29,7 +29,7 @@ impl MoveCommand {
         output.push_str(&move_.format());
 
         if self.include_learned_by {
-            output.push_str("\nLearned by:");
+            output.push_str("\nLearned by:\n");
 
             let mut learned_by_pokemon = move_.learned_by_pokemon;
             learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());

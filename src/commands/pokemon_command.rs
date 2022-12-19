@@ -1,9 +1,13 @@
-use crate::formatter::FormatModel;
+use crate::formatter::{self, FormatAbility, FormatModel};
 
 use futures::{stream, StreamExt};
-use std::process::exit;
+use std::{process::exit, rc::Rc};
 
 use rustemon::{client::RustemonClient, model::pokemon::Pokemon, pokemon::pokemon, Follow};
+
+static STAT_NAMES: &'static [&str] = &[
+  "HP", "Attack", "Defense", "Special Attack", "Special Defense", "Speed"
+];
 
 pub struct PokemonCommand {
     client: RustemonClient,
@@ -21,27 +25,43 @@ impl PokemonCommand {
     }
 
     async fn _execute(&self) {
-        let pokemon = self.fetch_pokemon().await;
+        let pokemon = Rc::new(self.fetch_pokemon().await);
         let output = pokemon.format();
 
-        println!("Pokemon");
+        println!("Summary");
         println!("{}", output);
 
         println!("Stats");
-        let full_stats = stream::iter(pokemon.stats)
-            .map(|pokemon_stat| {
-                let client_ref = &self.client;
+        pokemon.stats.iter().enumerate().for_each(|(index, stat)| {
+          // This assumes the stats returned from the API are always in the same order.
+          // Because "PokemonStat" doesn't include the stats name, this is much simplier
+          // than requesting for the Stat resource just for the corresponding name
+          let stat_name = STAT_NAMES[index];
+          println!("{}: {}", stat_name, stat.base_stat);
+        });
 
-                async move { pokemon_stat.stat.follow(client_ref).await.unwrap() }
-            })
-            .buffer_unordered(6)
-            .collect::<Vec<_>>()
-            .await;
+        println!("Abilities");
+        stream::iter(&pokemon.abilities)
+          .map(|a| {
+            let client_ref = &self.client;
+            let pokemon_ref = &pokemon;
 
-        println!(
-            "{:?}",
-            full_stats.into_iter().map(|s| s.name).collect::<Vec<_>>()
-        );
+            async move {
+              let ability = a.ability.follow(client_ref).await.unwrap();
+
+              FormatAbility::new(
+                ability,
+                Rc::clone(pokemon_ref),
+              )
+            }
+          })
+          .buffer_unordered(2)
+          .collect::<Vec<_>>()
+          .await
+          .into_iter()
+          .for_each(|ability| {
+            println!("{}", ability.format());
+          });
     }
 
     async fn fetch_pokemon(&self) -> Pokemon {
