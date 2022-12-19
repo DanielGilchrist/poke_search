@@ -1,4 +1,4 @@
-use crate::formatter;
+use crate::formatter::{self, FormatModel};
 
 use std::process::exit;
 
@@ -26,10 +26,10 @@ impl MoveCommand {
 
         let mut output = String::from("Move\n");
 
-        output.push_str(&formatter::format(&move_));
+        output.push_str(&move_.format());
 
         if self.include_learned_by {
-            output.push_str("\nLearned by:");
+            output.push_str("\nLearned by:\n");
 
             let mut learned_by_pokemon = move_.learned_by_pokemon;
             learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
