@@ -18,14 +18,21 @@ pub struct MovesCommand {
     client: RustemonClient,
     pokemon_name: String,
     type_name: Option<String>,
+    category: Option<String>,
 }
 
 impl MovesCommand {
-    pub async fn execute(client: RustemonClient, pokemon_name: String, type_name: Option<String>) {
+    pub async fn execute(
+        client: RustemonClient,
+        pokemon_name: String,
+        type_name: Option<String>,
+        category: Option<String>,
+    ) {
         MovesCommand {
             client,
             pokemon_name,
             type_name,
+            category,
         }
         ._execute()
         .await;
@@ -79,8 +86,10 @@ impl MovesCommand {
     }
 
     fn process_moves(&self, moves: Vec<Move>) -> Vec<Move> {
-        let mut filtered_moves = match &self.type_name {
-            Some(type_name) => moves
+        let mut processed_moves = moves;
+
+        processed_moves = match &self.type_name {
+            Some(type_name) => processed_moves
                 .into_iter()
                 .filter_map(|move_| {
                     if &move_.type_.name == type_name {
@@ -90,13 +99,27 @@ impl MovesCommand {
                     }
                 })
                 .collect::<Vec<_>>(),
-            None => moves,
+            None => processed_moves,
         };
 
-        filtered_moves.sort_by_key(|move_| move_.power);
-        filtered_moves.reverse();
+        processed_moves = match &self.category {
+            Some(category) => processed_moves
+                .into_iter()
+                .filter_map(|move_| {
+                    if &move_.damage_class.name == category {
+                        Some(move_)
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>(),
+            None => processed_moves,
+        };
 
-        filtered_moves
+        processed_moves.sort_by_key(|move_| move_.power);
+        processed_moves.reverse();
+
+        processed_moves
     }
 
     fn build_output(&self, moves: Vec<Move>) -> String {

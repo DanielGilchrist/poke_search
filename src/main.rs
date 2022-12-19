@@ -15,8 +15,9 @@ async fn main() {
         Some(("moves", sub_matches)) => {
             let pokemon_name = get_required_string("pokemon", sub_matches);
             let type_name = get_optional_string("type_name", sub_matches);
+            let category = get_optional_string("category", sub_matches);
 
-            MovesCommand::execute(client, pokemon_name, type_name).await;
+            MovesCommand::execute(client, pokemon_name, type_name, category).await;
         }
         Some(("move", sub_matches)) => {
             let move_name = get_required_string("move", sub_matches);
@@ -71,6 +72,8 @@ fn parse_moves_command() -> Command {
             arg!(-p --pokemon <POKEMON_NAME> "The name of the pokemon you want to see moves for")
                 .required(true),
             arg!(-t --type_name <TYPE_NAME> "The type of moves you want to see").required(false),
+            arg!(-c --category <CATEGORY> "Only show moves for a specific category")
+                .required(false),
         ])
         .arg_required_else_help(true)
 }
