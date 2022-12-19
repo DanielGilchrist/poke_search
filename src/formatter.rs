@@ -1,19 +1,19 @@
 use std::rc::Rc;
 
-use rustemon::{model::{moves::Move, pokemon::{Ability, Pokemon}}};
+use rustemon::model::{
+    moves::Move,
+    pokemon::{Ability, Pokemon},
+};
 
 pub struct FormatAbility {
-  ability: Ability,
-  pokemon: Rc<Pokemon>
+    ability: Ability,
+    pokemon: Rc<Pokemon>,
 }
 
 impl FormatAbility {
-  pub fn new(ability: Ability, pokemon: Rc<Pokemon>) -> Self {
-    FormatAbility {
-      ability,
-      pokemon,
+    pub fn new(ability: Ability, pokemon: Rc<Pokemon>) -> Self {
+        FormatAbility { ability, pokemon }
     }
-  }
 }
 
 pub trait FormatModel {
@@ -100,46 +100,48 @@ impl FormatModel for Pokemon {
 }
 
 impl FormatModel for FormatAbility {
-  fn format(&self) -> String {
-    let mut output = String::new();
+    fn format(&self) -> String {
+        let mut output = String::new();
 
-    let ability_name = split_and_capitalise(&self.ability.name);
-    output.push_str(&formatln("Name", &ability_name));
+        let ability_name = split_and_capitalise(&self.ability.name);
+        output.push_str(&formatln("Name", &ability_name));
 
-    let hidden_value = self.ability
-      .pokemon
-      .iter()
-      .cloned()
-      .find_map(|ability_pokemon| {
-        if ability_pokemon.pokemon.name == self.pokemon.name {
-          Some(ability_pokemon.is_hidden)
-        } else {
-          None
-        }
-      })
-      .unwrap()
-      .to_string();
+        let hidden_value = self
+            .ability
+            .pokemon
+            .iter()
+            .cloned()
+            .find_map(|ability_pokemon| {
+                if ability_pokemon.pokemon.name == self.pokemon.name {
+                    Some(ability_pokemon.is_hidden)
+                } else {
+                    None
+                }
+            })
+            .unwrap()
+            .to_string();
 
-    output.push_str(&formatln("Hidden", &hidden_value));
+        output.push_str(&formatln("Hidden", &hidden_value));
 
-    let ability_entry = self.ability
-      .effect_entries
-      .iter()
-      .cloned()
-      .find_map(|verbose_effect| {
-        if verbose_effect.language.name == "en" {
-          Some(verbose_effect.effect)
-        } else {
-          None
-        }
-      })
-      .unwrap()
-      .replace('\n', " ");
+        let ability_entry = self
+            .ability
+            .effect_entries
+            .iter()
+            .cloned()
+            .find_map(|verbose_effect| {
+                if verbose_effect.language.name == "en" {
+                    Some(verbose_effect.effect)
+                } else {
+                    None
+                }
+            })
+            .unwrap()
+            .replace('\n', " ");
 
-    output.push_str(&formatln("Description", &ability_entry));
+        output.push_str(&formatln("Description", &ability_entry));
 
-    output
-  }
+        output
+    }
 }
 
 pub fn capitalise(s: &str) -> String {
