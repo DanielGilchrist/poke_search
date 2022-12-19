@@ -1,40 +1,58 @@
-use rustemon::model::moves::Move;
+use std::rc::Rc;
 
-pub fn format(move_: &Move) -> String {
-    let mut output = String::new();
+use rustemon::model::{
+    moves::Move,
+    pokemon::{Ability, Pokemon},
+};
 
-    let formatted_name = split_and_capitalise(&move_.name);
+pub struct FormatAbility {
+    ability: Ability,
+    pokemon: Rc<Pokemon>,
+}
 
-    output.push_str(&formatln("Name", &formatted_name));
-    output.push_str(&formatln("Type", &move_.type_.name));
-    output.push_str(&formatln("Damage Type", &move_.damage_class.name));
+impl FormatAbility {
+    pub fn new(ability: Ability, pokemon: Rc<Pokemon>) -> Self {
+        FormatAbility { ability, pokemon }
+    }
+}
 
-    let power = parse_maybe_i64(move_.power);
-    output.push_str(&formatln("Power", &power));
-    output.push_str(&formatln("Accuracy", &parse_maybe_i64(move_.accuracy)));
-    output.push_str(&formatln("PP", &parse_maybe_i64(move_.pp)));
+pub trait FormatModel {
+    fn format(&self) -> String;
+}
 
-    let flavour_text = move_
-        .flavor_text_entries
-        .iter()
-        .cloned()
-        .find_map(|entry| {
-            if entry.language.name == "en" {
-                Some(entry.flavor_text)
-            } else {
-                None
-            }
-        })
-        .unwrap()
-        .replace('\n', " ");
+impl FormatModel for Move {
+    fn format(&self) -> String {
+        let mut output = String::new();
 
-    output.push_str(&formatln("Description", &flavour_text));
+        let formatted_name = split_and_capitalise(&self.name);
 
-    let effect_chance = format!("{}%", parse_maybe_i64(move_.effect_chance));
-    move_
-        .effect_entries
-        .iter()
-        .for_each(|entry| {
+        output.push_str(&formatln("Name", &formatted_name));
+        output.push_str(&formatln("Type", &self.type_.name));
+        output.push_str(&formatln("Damage Type", &self.damage_class.name));
+
+        let power = parse_maybe_i64(self.power);
+        output.push_str(&formatln("Power", &power));
+        output.push_str(&formatln("Accuracy", &parse_maybe_i64(self.accuracy)));
+        output.push_str(&formatln("PP", &parse_maybe_i64(self.pp)));
+
+        let flavour_text = self
+            .flavor_text_entries
+            .iter()
+            .cloned()
+            .find_map(|entry| {
+                if entry.language.name == "en" {
+                    Some(entry.flavor_text)
+                } else {
+                    None
+                }
+            })
+            .unwrap()
+            .replace('\n', " ");
+
+        output.push_str(&formatln("Description", &flavour_text));
+
+        let effect_chance = format!("{}%", parse_maybe_i64(self.effect_chance));
+        self.effect_entries.iter().for_each(|entry| {
             let description = if power == "-" {
                 entry.effect.replace('\n', " ").replace("  ", " ")
             } else {
@@ -46,7 +64,84 @@ pub fn format(move_: &Move) -> String {
             output.push_str(&formatln("Effect", &description));
         });
 
-    output
+        output
+    }
+}
+
+impl FormatModel for Pokemon {
+    fn format(&self) -> String {
+        let mut output = String::new();
+        let formatted_name = split_and_capitalise(&self.name);
+
+        output.push_str(&formatln("Name", &formatted_name));
+
+        let joined_types = self
+            .types
+            .iter()
+            .cloned()
+            .map(|pokemon_type| capitalise(&pokemon_type.type_.name))
+            .collect::<Vec<_>>()
+            .join(" | ");
+
+        output.push_str(&formatln("Type", &joined_types));
+
+        let joined_abilities = self
+            .abilities
+            .iter()
+            .cloned()
+            .map(|pokemon_ability| split_and_capitalise(&pokemon_ability.ability.name))
+            .collect::<Vec<_>>()
+            .join(" | ");
+
+        output.push_str(&formatln("Abilities", &joined_abilities));
+
+        output
+    }
+}
+
+impl FormatModel for FormatAbility {
+    fn format(&self) -> String {
+        let mut output = String::new();
+
+        let ability_name = split_and_capitalise(&self.ability.name);
+        output.push_str(&formatln("Name", &ability_name));
+
+        let hidden_value = self
+            .ability
+            .pokemon
+            .iter()
+            .cloned()
+            .find_map(|ability_pokemon| {
+                if ability_pokemon.pokemon.name == self.pokemon.name {
+                    Some(ability_pokemon.is_hidden)
+                } else {
+                    None
+                }
+            })
+            .unwrap()
+            .to_string();
+
+        output.push_str(&formatln("Hidden", &hidden_value));
+
+        let ability_entry = self
+            .ability
+            .effect_entries
+            .iter()
+            .cloned()
+            .find_map(|verbose_effect| {
+                if verbose_effect.language.name == "en" {
+                    Some(verbose_effect.effect)
+                } else {
+                    None
+                }
+            })
+            .unwrap()
+            .replace('\n', " ");
+
+        output.push_str(&formatln("Description", &ability_entry));
+
+        output
+    }
 }
 
 pub fn capitalise(s: &str) -> String {

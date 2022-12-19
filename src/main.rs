@@ -1,9 +1,11 @@
 mod formatter;
 
-use clap::{arg, Command};
+use clap::{arg, ArgMatches, Command};
 
 mod commands;
-use commands::{move_command::MoveCommand, moves_command::MovesCommand};
+use commands::{
+    move_command::MoveCommand, moves_command::MovesCommand, pokemon_command::PokemonCommand,
+};
 
 #[tokio::main]
 async fn main() {
@@ -11,26 +13,43 @@ async fn main() {
 
     match parse_commands().get_matches().subcommand() {
         Some(("moves", sub_matches)) => {
-            let pokemon_name = parse_name(sub_matches.get_one::<String>("pokemon")).unwrap();
-
-            let type_name = sub_matches
-                .get_one::<String>("type_name")
-                .map(|s| s.to_owned());
+            let pokemon_name = get_required_string("pokemon", sub_matches);
+            let type_name = get_optional_string("type_name", sub_matches);
 
             MovesCommand::execute(client, pokemon_name, type_name).await;
         }
         Some(("move", sub_matches)) => {
-            let move_name = parse_name(sub_matches.get_one::<String>("move")).unwrap();
-
-            let include_learned_by = sub_matches
-                .get_one::<bool>("learned_by")
-                .unwrap_or(&false)
-                .to_owned();
+            let move_name = get_required_string("move", sub_matches);
+            let include_learned_by = get_optional_bool("learned_by", sub_matches);
 
             MoveCommand::execute(client, move_name, include_learned_by).await;
         }
+        Some(("pokemon", sub_matches)) => {
+            let pokemon_name = get_required_string("pokemon", sub_matches);
+
+            PokemonCommand::execute(client, pokemon_name).await;
+        }
         _ => (),
     };
+}
+
+fn parse_name(name: Option<&String>) -> Option<String> {
+    name.map(|n| n.to_lowercase().split(' ').collect::<Vec<_>>().join("-"))
+}
+
+fn get_optional_string(command: &str, sub_matches: &ArgMatches) -> Option<String> {
+    parse_name(sub_matches.get_one::<String>(command))
+}
+
+fn get_required_string(command: &str, sub_matches: &ArgMatches) -> String {
+    get_optional_string(command, sub_matches).unwrap()
+}
+
+fn get_optional_bool(command: &str, sub_matches: &ArgMatches) -> bool {
+    sub_matches
+        .get_one::<bool>(command)
+        .unwrap_or(&false)
+        .to_owned()
 }
 
 fn parse_commands() -> Command {
@@ -38,7 +57,11 @@ fn parse_commands() -> Command {
         .about("Search for pokemon information from the command line")
         .subcommand_required(true)
         .arg_required_else_help(true)
-        .subcommands([parse_moves_command(), parse_move_command()])
+        .subcommands([
+            parse_moves_command(),
+            parse_move_command(),
+            parse_pokemon_command(),
+        ])
 }
 
 fn parse_moves_command() -> Command {
@@ -62,6 +85,8 @@ fn parse_move_command() -> Command {
         .arg_required_else_help(true)
 }
 
-fn parse_name(name: Option<&String>) -> Option<String> {
-    name.map(|n| n.to_lowercase().split(' ').collect::<Vec<_>>().join("-"))
+fn parse_pokemon_command() -> Command {
+    Command::new("pokemon")
+        .about("See information about a pokemon")
+        .args([arg!(pokemon: <POKEMON_NAME>).required(true)])
 }
