@@ -1,4 +1,5 @@
 mod formatter;
+mod pokemon_names;
 
 use clap::{arg, ArgMatches, Command};
 
