@@ -4,9 +4,9 @@ use crate::{
 };
 
 use futures::{stream, StreamExt};
-use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use std::{process::exit, rc::Rc};
 
+use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use rustemon::{client::RustemonClient, model::pokemon::Pokemon, pokemon::pokemon, Follow};
 
 static STAT_NAMES: &[&str] = &[
