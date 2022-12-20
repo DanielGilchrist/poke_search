@@ -5,6 +5,7 @@ use clap::{arg, ArgMatches, Command};
 mod commands;
 use commands::{
     move_command::MoveCommand, moves_command::MovesCommand, pokemon_command::PokemonCommand,
+    type_command::TypeCommand,
 };
 
 #[tokio::main]
@@ -29,6 +30,11 @@ async fn main() {
             let pokemon_name = get_required_string("pokemon", sub_matches);
 
             PokemonCommand::execute(client, pokemon_name).await;
+        }
+        Some(("type", sub_matches)) => {
+            let type_name = get_required_string("type_name", sub_matches);
+
+            TypeCommand::execute(client, type_name).await;
         }
         _ => (),
     };
@@ -62,6 +68,7 @@ fn parse_commands() -> Command {
             parse_moves_command(),
             parse_move_command(),
             parse_pokemon_command(),
+            parse_type_command(),
         ])
 }
 
@@ -92,4 +99,10 @@ fn parse_pokemon_command() -> Command {
     Command::new("pokemon")
         .about("See information about a pokemon")
         .args([arg!(pokemon: <POKEMON_NAME>).required(true)])
+}
+
+fn parse_type_command() -> Command {
+    Command::new("type")
+        .about("See information about a specific type")
+        .args([arg!(type_name: <TYPE_NAME>).required(true)])
 }
