@@ -14,3 +14,4 @@ clap = "4.0.29"
 futures = "0.3.25"
 rustemon = "3.0.1"
 tokio = { version = "1.23.0", features = ["macros", "rt-multi-thread"] }
+ngrammatic = "0.3.4"
