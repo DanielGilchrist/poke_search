@@ -78,8 +78,7 @@ impl TypeCommand {
 
         let mut type_names = types
             .iter()
-            .cloned()
-            .map(|type_resource| type_resource.name)
+            .map(|type_resource| type_resource.name.to_owned())
             .collect::<Vec<_>>();
 
         type_names.sort();

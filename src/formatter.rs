@@ -38,10 +38,9 @@ impl FormatModel for Move {
         let flavour_text = self
             .flavor_text_entries
             .iter()
-            .cloned()
             .find_map(|entry| {
                 if entry.language.name == "en" {
-                    Some(entry.flavor_text)
+                    Some(&entry.flavor_text)
                 } else {
                     None
                 }
@@ -78,7 +77,6 @@ impl FormatModel for Pokemon {
         let joined_types = self
             .types
             .iter()
-            .cloned()
             .map(|pokemon_type| capitalise(&pokemon_type.type_.name))
             .collect::<Vec<_>>()
             .join(" | ");
@@ -88,7 +86,6 @@ impl FormatModel for Pokemon {
         let joined_abilities = self
             .abilities
             .iter()
-            .cloned()
             .map(|pokemon_ability| split_and_capitalise(&pokemon_ability.ability.name))
             .collect::<Vec<_>>()
             .join(" | ");
@@ -110,7 +107,6 @@ impl FormatModel for FormatAbility {
             .ability
             .pokemon
             .iter()
-            .cloned()
             .find_map(|ability_pokemon| {
                 if ability_pokemon.pokemon.name == self.pokemon.name {
                     Some(ability_pokemon.is_hidden)
@@ -127,10 +123,9 @@ impl FormatModel for FormatAbility {
             .ability
             .effect_entries
             .iter()
-            .cloned()
             .find_map(|verbose_effect| {
                 if verbose_effect.language.name == "en" {
-                    Some(verbose_effect.effect)
+                    Some(&verbose_effect.effect)
                 } else {
                     None
                 }
