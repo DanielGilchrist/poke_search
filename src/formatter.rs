@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use rustemon::model::{
     moves::Move,
-    pokemon::{Ability, Pokemon},
+    pokemon::{Ability, Pokemon, PokemonMove},
 };
 
 pub struct FormatAbility {
@@ -16,26 +16,41 @@ impl FormatAbility {
     }
 }
 
+pub struct FormatMove {
+  pub move_: Move,
+  pokemon_move: Option<PokemonMove>,
+}
+
+impl FormatMove {
+  pub fn new(move_: Move, pokemon_move: Option<PokemonMove>) -> Self {
+    FormatMove {
+      move_,
+      pokemon_move
+    }
+  }
+}
+
 pub trait FormatModel {
     fn format(&self) -> String;
 }
 
-impl FormatModel for Move {
+impl FormatModel for FormatMove {
     fn format(&self) -> String {
         let mut output = String::new();
 
-        let formatted_name = split_and_capitalise(&self.name);
+        let formatted_name = split_and_capitalise(&self.move_.name);
 
         output.push_str(&formatln("Name", &formatted_name));
-        output.push_str(&formatln("Type", &self.type_.name));
-        output.push_str(&formatln("Damage Type", &self.damage_class.name));
+        output.push_str(&formatln("Type", &self.move_.type_.name));
+        output.push_str(&formatln("Damage Type", &self.move_.damage_class.name));
 
-        let power = parse_maybe_i64(self.power);
+        let power = parse_maybe_i64(self.move_.power);
         output.push_str(&formatln("Power", &power));
-        output.push_str(&formatln("Accuracy", &parse_maybe_i64(self.accuracy)));
-        output.push_str(&formatln("PP", &parse_maybe_i64(self.pp)));
+        output.push_str(&formatln("Accuracy", &parse_maybe_i64(self.move_.accuracy)));
+        output.push_str(&formatln("PP", &parse_maybe_i64(self.move_.pp)));
+        output.push_str(&formatln("Priority", &self.move_.priority.to_string()));
 
-        let flavour_text = self
+        let flavour_text = self.move_
             .flavor_text_entries
             .iter()
             .cloned()
@@ -51,8 +66,8 @@ impl FormatModel for Move {
 
         output.push_str(&formatln("Description", &flavour_text));
 
-        let effect_chance = format!("{}%", parse_maybe_i64(self.effect_chance));
-        self.effect_entries.iter().for_each(|entry| {
+        let effect_chance = format!("{}%", parse_maybe_i64(self.move_.effect_chance));
+        self.move_.effect_entries.iter().for_each(|entry| {
             let description = if power == "-" {
                 entry.effect.replace('\n', " ").replace("  ", " ")
             } else {
