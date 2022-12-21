@@ -17,17 +17,17 @@ impl FormatAbility {
 }
 
 pub struct FormatMove {
-  pub move_: Move,
-  pokemon_move: Option<PokemonMove>,
+    pub move_: Move,
+    pokemon_move: Option<PokemonMove>,
 }
 
 impl FormatMove {
-  pub fn new(move_: Move, pokemon_move: Option<PokemonMove>) -> Self {
-    FormatMove {
-      move_,
-      pokemon_move
+    pub fn new(move_: Move, pokemon_move: Option<PokemonMove>) -> Self {
+        FormatMove {
+            move_,
+            pokemon_move,
+        }
     }
-  }
 }
 
 pub trait FormatModel {
@@ -50,7 +50,8 @@ impl FormatModel for FormatMove {
         output.push_str(&formatln("PP", &parse_maybe_i64(self.move_.pp)));
         output.push_str(&formatln("Priority", &self.move_.priority.to_string()));
 
-        let flavour_text = self.move_
+        let flavour_text = self
+            .move_
             .flavor_text_entries
             .iter()
             .cloned()

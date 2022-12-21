@@ -1,12 +1,13 @@
-use crate::{formatter, formatter::{FormatModel, FormatMove}};
+use crate::{
+    formatter,
+    formatter::{FormatModel, FormatMove},
+};
 
-use std::{process::exit};
+use std::process::exit;
 
 use rustemon::{
     client::RustemonClient,
-    model::{
-        pokemon::{Pokemon, PokemonMove},
-    },
+    model::pokemon::{Pokemon, PokemonMove},
     pokemon::pokemon,
     Follow,
 };
@@ -78,10 +79,10 @@ impl MovesCommand {
                 let client_ref = &self.client;
 
                 async move {
-                  FormatMove::new(
-                    pokemon_move.move_.follow(client_ref).await.unwrap(),
-                    Some(pokemon_move.clone()),
-                  )
+                    FormatMove::new(
+                        pokemon_move.move_.follow(client_ref).await.unwrap(),
+                        Some(pokemon_move.clone()),
+                    )
                 }
             })
             .buffer_unordered(100)
@@ -112,7 +113,7 @@ impl MovesCommand {
             Some(category) => processed_moves
                 .into_iter()
                 .filter_map(|format_move| {
-                  let move_ = &format_move.move_;
+                    let move_ = &format_move.move_;
 
                     if &move_.damage_class.name == category {
                         Some(format_move)
@@ -124,18 +125,20 @@ impl MovesCommand {
             None => processed_moves,
         };
 
-        processed_moves.sort_by_key(|moves| (&moves.move_).power);
+        processed_moves.sort_by_key(|moves| moves.move_.power);
         processed_moves.reverse();
 
         processed_moves
     }
 
     fn build_output(&self, moves: Vec<FormatMove>) -> String {
-        moves.into_iter().fold(String::new(), |mut output, format_move| {
-          output.push_str(&format_move.format());
-          output.push_str("\n\n");
+        moves
+            .into_iter()
+            .fold(String::new(), |mut output, format_move| {
+                output.push_str(&format_move.format());
+                output.push_str("\n\n");
 
-          output
-        })
+                output
+            })
     }
 }
