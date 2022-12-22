@@ -182,6 +182,10 @@ pub fn white(str: &str) -> String {
     format_colour(str.white())
 }
 
+pub fn green(str: &str) -> String {
+    format_colour(str.green())
+}
+
 pub fn bright_red(str: &str) -> String {
     format_colour(str.bright_red())
 }
