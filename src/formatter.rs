@@ -5,17 +5,6 @@ use rustemon::model::{
     pokemon::{Ability, Pokemon, PokemonMove},
 };
 
-pub struct FormatAbility {
-    ability: Ability,
-    pokemon: Rc<Pokemon>,
-}
-
-impl FormatAbility {
-    pub fn new(ability: Ability, pokemon: Rc<Pokemon>) -> Self {
-        FormatAbility { ability, pokemon }
-    }
-}
-
 pub struct FormatMove {
     pub move_: Move,
     pokemon_move: Option<PokemonMove>,
@@ -112,15 +101,26 @@ impl FormatModel for Pokemon {
     }
 }
 
-impl FormatModel for FormatAbility {
-    fn format(&self) -> String {
-        let mut output = String::new();
+pub struct FormatAbility {
+    ability: Ability,
+    pokemon: Rc<Pokemon>,
+}
 
-        let ability_name = split_and_capitalise(&self.ability.name);
-        output.push_str(&formatln("Name", &ability_name));
+impl FormatAbility {
+    pub fn new(ability: Ability, pokemon: Rc<Pokemon>) -> Self {
+        FormatAbility { ability, pokemon }
+    }
 
-        let hidden_value = self
-            .ability
+    fn build_description(&self, output: &mut String) {
+        let hidden_value = self.hidden_value();
+        output.push_str(&formatln("Hidden", &hidden_value));
+
+        let ability_effect = self.ability_effect();
+        output.push_str(&formatln("Description", &ability_effect));
+    }
+
+    fn hidden_value(&self) -> String {
+        self.ability
             .pokemon
             .iter()
             .find_map(|ability_pokemon| {
@@ -131,12 +131,11 @@ impl FormatModel for FormatAbility {
                 }
             })
             .unwrap()
-            .to_string();
+            .to_string()
+    }
 
-        output.push_str(&formatln("Hidden", &hidden_value));
-
-        let ability_entry = self
-            .ability
+    fn ability_effect(&self) -> String {
+        self.ability
             .effect_entries
             .iter()
             .find_map(|verbose_effect| {
@@ -147,9 +146,18 @@ impl FormatModel for FormatAbility {
                 }
             })
             .unwrap()
-            .replace('\n', " ");
+            .replace('\n', " ")
+    }
+}
 
-        output.push_str(&formatln("Description", &ability_entry));
+impl FormatModel for FormatAbility {
+    fn format(&self) -> String {
+        let mut output = String::new();
+
+        let ability_name = split_and_capitalise(&self.ability.name);
+        output.push_str(&formatln("Name", &ability_name));
+
+        self.build_description(&mut output);
 
         output
     }

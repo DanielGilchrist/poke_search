@@ -26,10 +26,7 @@ impl TypeCommand {
         let mut output = String::new();
 
         output.push_str(&format!("{} Type\n\n", formatter::capitalise(&type_.name)));
-
-        self.build_offense(&type_relations, &mut output);
-        output.push('\n');
-        self.build_defense(&type_relations, &mut output);
+        self.build_damage_details(&type_relations, &mut output);
 
         println!("{}", output);
     }
@@ -44,24 +41,22 @@ impl TypeCommand {
         }
     }
 
-    fn build_offense(&self, type_relations: &TypeRelations, output: &mut String) {
+    fn build_damage_details(&self, type_relations: &TypeRelations, output: &mut String) {
+        let headers = ("No Damage\n", "Half Damage\n", "Double Damage\n");
+
+        // offensive type information
         output.push_str("Offense\n");
+        self.build_types_output(headers.0, &type_relations.no_damage_to, output);
+        self.build_types_output(headers.1, &type_relations.half_damage_to, output);
+        self.build_types_output(headers.2, &type_relations.double_damage_to, output);
 
-        self.build_types_output("No damage\n", &type_relations.no_damage_to, output);
-        self.build_types_output("Half damage\n", &type_relations.half_damage_to, output);
-        self.build_types_output("Double damage\n", &type_relations.double_damage_to, output);
-    }
+        output.push('\n');
 
-    fn build_defense(&self, type_relations: &TypeRelations, output: &mut String) {
+        // defensive type information
         output.push_str("Defense\n");
-
-        self.build_types_output("No damage\n", &type_relations.no_damage_from, output);
-        self.build_types_output("Half damage\n", &type_relations.half_damage_from, output);
-        self.build_types_output(
-            "Double damage\n",
-            &type_relations.double_damage_from,
-            output,
-        );
+        self.build_types_output(headers.0, &type_relations.no_damage_from, output);
+        self.build_types_output(headers.1, &type_relations.half_damage_from, output);
+        self.build_types_output(headers.2, &type_relations.double_damage_from, output);
     }
 
     fn build_types_output(
@@ -78,7 +73,7 @@ impl TypeCommand {
 
         let mut type_names = types
             .iter()
-            .map(|type_resource| type_resource.name.to_owned())
+            .map(|type_resource| type_resource.name.as_str())
             .collect::<Vec<_>>();
 
         type_names.sort();
