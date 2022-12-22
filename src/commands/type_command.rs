@@ -50,17 +50,17 @@ impl TypeCommand {
         // offensive type information
         output.push_str(&formatter::white("Offense\n"));
         self.build_types_output(
-            &formatter::bright_red(headers.0),
+            &formatter::red(headers.0),
             &type_relations.no_damage_to,
             output,
         );
         self.build_types_output(
-            &formatter::bright_yellow(headers.1),
+            &formatter::bright_red(headers.1),
             &type_relations.half_damage_to,
             output,
         );
         self.build_types_output(
-            &formatter::bright_green(headers.2),
+            &formatter::green(headers.2),
             &type_relations.double_damage_to,
             output,
         );
@@ -80,7 +80,7 @@ impl TypeCommand {
             output,
         );
         self.build_types_output(
-            &formatter::bright_red(headers.2),
+            &formatter::red(headers.2),
             &type_relations.double_damage_from,
             output,
         );
