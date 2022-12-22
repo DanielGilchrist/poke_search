@@ -28,7 +28,7 @@ impl TypeCommand {
         let type_relations = type_.damage_relations;
         let mut output = String::new();
 
-        output.push_str(&format!("\n{}\n\n", &self.fetch_coloured_name(&type_.name)));
+        output.push_str(&format!("\n{}\n\n", &type_colours::fetch(&type_.name)));
         self.build_damage_details(&type_relations, &mut output);
 
         println!("{}", output);
@@ -99,15 +99,11 @@ impl TypeCommand {
         output.push_str(header);
         let mut type_names = types
             .iter()
-            .map(|type_resource| self.fetch_coloured_name(&type_resource.name))
+            .map(|type_resource| type_colours::fetch(&type_resource.name))
             .collect::<Vec<_>>();
 
         type_names.sort();
 
         output.push_str(&format!("  {}\n", type_names.join(" | ")));
-    }
-
-    fn fetch_coloured_name(&self, type_name: &str) -> String {
-        type_colours::TYPE_MAP.get(type_name).unwrap().to_owned()
     }
 }

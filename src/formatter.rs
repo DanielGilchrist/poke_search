@@ -1,3 +1,5 @@
+use crate::type_colours::{self};
+
 use std::rc::Rc;
 
 use colored::*;
@@ -67,7 +69,7 @@ impl FormatModel for Pokemon {
         let joined_types = self
             .types
             .iter()
-            .map(|pokemon_type| capitalise(&pokemon_type.type_.name))
+            .map(|pokemon_type| type_colours::fetch(&pokemon_type.type_.name))
             .collect::<Vec<_>>()
             .join(" | ");
 

@@ -2,7 +2,7 @@ use colored::*;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
-pub static TYPE_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
+static TYPE_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
     HashMap::from([
         (
             String::from("bug"),
@@ -78,3 +78,7 @@ pub static TYPE_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
         ),
     ])
 });
+
+pub fn fetch(type_name: &str) -> String {
+  TYPE_MAP.get(type_name).unwrap().to_owned()
+}
