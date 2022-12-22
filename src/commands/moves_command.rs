@@ -125,7 +125,7 @@ impl MovesCommand {
             None => processed_moves,
         };
 
-        processed_moves.sort_by_key(|moves| moves.move_.power);
+        processed_moves.sort_by_key(|format_move| format_move.move_.power);
         processed_moves.reverse();
 
         processed_moves
