@@ -1123,6 +1123,7 @@ dependencies = [
  "colored",
  "futures",
  "ngrammatic",
+ "once_cell",
  "rustemon",
  "tokio",
 ]

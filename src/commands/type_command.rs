@@ -1,4 +1,7 @@
-use crate::formatter::{self};
+use crate::{
+    formatter::{self},
+    type_colours::{self},
+};
 use std::process::exit;
 
 use rustemon::{
@@ -25,7 +28,7 @@ impl TypeCommand {
         let type_relations = type_.damage_relations;
         let mut output = String::new();
 
-        output.push_str(&format!("{} Type\n\n", formatter::capitalise(&type_.name)));
+        output.push_str(&format!("{}\n\n", &self.fetch_coloured_name(&type_.name)));
         self.build_damage_details(&type_relations, &mut output);
 
         println!("{}", output);
@@ -94,14 +97,17 @@ impl TypeCommand {
         }
 
         output.push_str(header);
-
         let mut type_names = types
             .iter()
-            .map(|type_resource| type_resource.name.as_str())
+            .map(|type_resource| self.fetch_coloured_name(&type_resource.name))
             .collect::<Vec<_>>();
 
         type_names.sort();
 
         output.push_str(&format!("  {}\n", type_names.join(" | ")));
+    }
+
+    fn fetch_coloured_name(&self, type_name: &str) -> String {
+        type_colours::TYPE_MAP.get(type_name).unwrap().to_owned()
     }
 }
