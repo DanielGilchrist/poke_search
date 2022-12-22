@@ -1,4 +1,7 @@
-use crate::formatter::{self};
+use crate::{
+    formatter::{self},
+    type_colours::{self},
+};
 use std::process::exit;
 
 use rustemon::{
@@ -25,7 +28,7 @@ impl TypeCommand {
         let type_relations = type_.damage_relations;
         let mut output = String::new();
 
-        output.push_str(&format!("{} Type\n\n", formatter::capitalise(&type_.name)));
+        output.push_str(&format!("\n{}\n\n", &type_colours::fetch(&type_.name)));
         self.build_damage_details(&type_relations, &mut output);
 
         println!("{}", output);
@@ -42,21 +45,45 @@ impl TypeCommand {
     }
 
     fn build_damage_details(&self, type_relations: &TypeRelations, output: &mut String) {
-        let headers = ("No Damage\n", "Half Damage\n", "Double Damage\n");
+        let headers = ("0x\n", "0.5x\n", "2x\n");
 
         // offensive type information
-        output.push_str("Offense\n");
-        self.build_types_output(headers.0, &type_relations.no_damage_to, output);
-        self.build_types_output(headers.1, &type_relations.half_damage_to, output);
-        self.build_types_output(headers.2, &type_relations.double_damage_to, output);
+        output.push_str(&formatter::white("Offense\n"));
+        self.build_types_output(
+            &formatter::bright_red(headers.0),
+            &type_relations.no_damage_to,
+            output,
+        );
+        self.build_types_output(
+            &formatter::bright_yellow(headers.1),
+            &type_relations.half_damage_to,
+            output,
+        );
+        self.build_types_output(
+            &formatter::bright_green(headers.2),
+            &type_relations.double_damage_to,
+            output,
+        );
 
         output.push('\n');
 
         // defensive type information
-        output.push_str("Defense\n");
-        self.build_types_output(headers.0, &type_relations.no_damage_from, output);
-        self.build_types_output(headers.1, &type_relations.half_damage_from, output);
-        self.build_types_output(headers.2, &type_relations.double_damage_from, output);
+        output.push_str(&formatter::white("Defense\n"));
+        self.build_types_output(
+            &formatter::bright_green(headers.0),
+            &type_relations.no_damage_from,
+            output,
+        );
+        self.build_types_output(
+            &formatter::bright_yellow(headers.1),
+            &type_relations.half_damage_from,
+            output,
+        );
+        self.build_types_output(
+            &formatter::bright_red(headers.2),
+            &type_relations.double_damage_from,
+            output,
+        );
     }
 
     fn build_types_output(
@@ -70,10 +97,9 @@ impl TypeCommand {
         }
 
         output.push_str(header);
-
         let mut type_names = types
             .iter()
-            .map(|type_resource| type_resource.name.as_str())
+            .map(|type_resource| type_colours::fetch(&type_resource.name))
             .collect::<Vec<_>>();
 
         type_names.sort();
