@@ -70,12 +70,12 @@ impl TypeCommand {
         // defensive type information
         output.push_str(&formatter::white("Defense\n"));
         self.build_types_output(
-            &formatter::bright_green(headers.0),
+            &formatter::green(headers.0),
             &type_relations.no_damage_from,
             output,
         );
         self.build_types_output(
-            &formatter::bright_yellow(headers.1),
+            &formatter::bright_green(headers.1),
             &type_relations.half_damage_from,
             output,
         );
