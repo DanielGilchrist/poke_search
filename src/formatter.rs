@@ -19,7 +19,7 @@ impl FormatModel for Move {
         let formatted_name = split_and_capitalise(&self.name);
 
         output.push_str(&formatln("Name", &formatted_name));
-        output.push_str(&formatln("Type", &self.type_.name));
+        output.push_str(&formatln("Type", &type_colours::fetch(&self.type_.name)));
         output.push_str(&formatln("Damage Type", &self.damage_class.name));
 
         let power = parse_maybe_i64(self.power);
