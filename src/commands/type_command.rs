@@ -45,18 +45,42 @@ impl TypeCommand {
         let headers = ("No Damage\n", "Half Damage\n", "Double Damage\n");
 
         // offensive type information
-        output.push_str("Offense\n");
-        self.build_types_output(headers.0, &type_relations.no_damage_to, output);
-        self.build_types_output(headers.1, &type_relations.half_damage_to, output);
-        self.build_types_output(headers.2, &type_relations.double_damage_to, output);
+        output.push_str(&formatter::red("Offense\n"));
+        self.build_types_output(
+            &formatter::bright_red(headers.0),
+            &type_relations.no_damage_to,
+            output,
+        );
+        self.build_types_output(
+            &formatter::bright_yellow(headers.1),
+            &type_relations.half_damage_to,
+            output,
+        );
+        self.build_types_output(
+            &formatter::bright_green(headers.2),
+            &type_relations.double_damage_to,
+            output,
+        );
 
         output.push('\n');
 
         // defensive type information
-        output.push_str("Defense\n");
-        self.build_types_output(headers.0, &type_relations.no_damage_from, output);
-        self.build_types_output(headers.1, &type_relations.half_damage_from, output);
-        self.build_types_output(headers.2, &type_relations.double_damage_from, output);
+        output.push_str(&formatter::green("Defense\n"));
+        self.build_types_output(
+            &formatter::bright_green(headers.0),
+            &type_relations.no_damage_from,
+            output,
+        );
+        self.build_types_output(
+            &formatter::bright_yellow(headers.1),
+            &type_relations.half_damage_from,
+            output,
+        );
+        self.build_types_output(
+            &formatter::bright_red(headers.2),
+            &type_relations.double_damage_from,
+            output,
+        );
     }
 
     fn build_types_output(

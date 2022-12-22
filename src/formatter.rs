@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use colored::*;
 use rustemon::model::{
     moves::Move,
     pokemon::{Ability, Pokemon},
@@ -172,4 +173,29 @@ fn parse_maybe_i64(value: Option<i64>) -> String {
         Some(value) => value.to_string(),
         None => String::from("-"),
     }
+}
+
+// Colours
+pub fn red(str: &str) -> String {
+    format_colour(str.red())
+}
+
+pub fn bright_red(str: &str) -> String {
+    format_colour(str.bright_red())
+}
+
+pub fn bright_yellow(str: &str) -> String {
+    format_colour(str.bright_yellow())
+}
+
+pub fn green(str: &str) -> String {
+    format_colour(str.green())
+}
+
+pub fn bright_green(str: &str) -> String {
+    format_colour(str.bright_green())
+}
+
+fn format_colour(coloured_string: ColoredString) -> String {
+    format!("{}", coloured_string)
 }
