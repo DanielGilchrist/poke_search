@@ -28,7 +28,7 @@ impl TypeCommand {
         let type_relations = type_.damage_relations;
         let mut output = String::new();
 
-        output.push_str(&format!("{}\n\n", &self.fetch_coloured_name(&type_.name)));
+        output.push_str(&format!("\n{}\n\n", &self.fetch_coloured_name(&type_.name)));
         self.build_damage_details(&type_relations, &mut output);
 
         println!("{}", output);
@@ -45,10 +45,10 @@ impl TypeCommand {
     }
 
     fn build_damage_details(&self, type_relations: &TypeRelations, output: &mut String) {
-        let headers = ("No Damage\n", "Half Damage\n", "Double Damage\n");
+        let headers = ("0x\n", "0.5x\n", "2x\n");
 
         // offensive type information
-        output.push_str(&formatter::red("Offense\n"));
+        output.push_str(&formatter::white("Offense\n"));
         self.build_types_output(
             &formatter::bright_red(headers.0),
             &type_relations.no_damage_to,
@@ -68,7 +68,7 @@ impl TypeCommand {
         output.push('\n');
 
         // defensive type information
-        output.push_str(&formatter::green("Defense\n"));
+        output.push_str(&formatter::white("Defense\n"));
         self.build_types_output(
             &formatter::bright_green(headers.0),
             &type_relations.no_damage_from,
