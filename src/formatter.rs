@@ -5,6 +5,10 @@ use rustemon::model::{
     pokemon::{Ability, Pokemon, PokemonMove},
 };
 
+pub trait FormatModel {
+    fn format(&self) -> String;
+}
+
 pub struct FormatMove {
     pub move_: Move,
     pokemon_move: Option<PokemonMove>,
@@ -17,30 +21,31 @@ impl FormatMove {
             pokemon_move,
         }
     }
-}
 
-pub trait FormatModel {
-    fn format(&self) -> String;
-}
-
-impl FormatModel for FormatMove {
-    fn format(&self) -> String {
-        let mut output = String::new();
-
+    fn build_summary(&self, output: &mut String) {
         let formatted_name = split_and_capitalise(&self.move_.name);
 
         output.push_str(&formatln("Name", &formatted_name));
         output.push_str(&formatln("Type", &self.move_.type_.name));
         output.push_str(&formatln("Damage Type", &self.move_.damage_class.name));
+    }
 
+    fn build_details(&self, output: &mut String) {
         let power = parse_maybe_i64(self.move_.power);
+
         output.push_str(&formatln("Power", &power));
         output.push_str(&formatln("Accuracy", &parse_maybe_i64(self.move_.accuracy)));
         output.push_str(&formatln("PP", &parse_maybe_i64(self.move_.pp)));
         output.push_str(&formatln("Priority", &self.move_.priority.to_string()));
 
-        let flavour_text = self
-            .move_
+        let flavour_text = self.flavour_text();
+        output.push_str(&formatln("Description", &flavour_text));
+
+        self.build_effects(power, output);
+    }
+
+    fn flavour_text(&self) -> String {
+        self.move_
             .flavor_text_entries
             .iter()
             .find_map(|entry| {
@@ -51,10 +56,10 @@ impl FormatModel for FormatMove {
                 }
             })
             .unwrap()
-            .replace('\n', " ");
+            .replace('\n', " ")
+    }
 
-        output.push_str(&formatln("Description", &flavour_text));
-
+    fn build_effects(&self, power: String, output: &mut String) {
         let effect_chance = format!("{}%", parse_maybe_i64(self.move_.effect_chance));
         self.move_.effect_entries.iter().for_each(|entry| {
             let description = if power == "-" {
@@ -67,19 +72,38 @@ impl FormatModel for FormatMove {
 
             output.push_str(&formatln("Effect", &description));
         });
+    }
+}
+
+impl FormatModel for FormatMove {
+    fn format(&self) -> String {
+        let mut output = String::new();
+
+        self.build_summary(&mut output);
+        self.build_details(&mut output);
 
         output
     }
 }
 
-impl FormatModel for Pokemon {
-    fn format(&self) -> String {
-        let mut output = String::new();
-        let formatted_name = split_and_capitalise(&self.name);
+pub struct FormatPokemon(pub Pokemon);
 
+impl FormatPokemon {
+    pub fn new(pokemon: Pokemon) -> Self {
+        FormatPokemon(pokemon)
+    }
+
+    fn build_summary(&self, output: &mut String) {
+        let formatted_name = split_and_capitalise(&self.0.name);
         output.push_str(&formatln("Name", &formatted_name));
 
+        self.build_joined_types(output);
+        self.build_joined_abilities(output);
+    }
+
+    fn build_joined_types(&self, output: &mut String) {
         let joined_types = self
+            .0
             .types
             .iter()
             .map(|pokemon_type| capitalise(&pokemon_type.type_.name))
@@ -87,8 +111,11 @@ impl FormatModel for Pokemon {
             .join(" | ");
 
         output.push_str(&formatln("Type", &joined_types));
+    }
 
+    fn build_joined_abilities(&self, output: &mut String) {
         let joined_abilities = self
+            .0
             .abilities
             .iter()
             .map(|pokemon_ability| split_and_capitalise(&pokemon_ability.ability.name))
@@ -96,6 +123,14 @@ impl FormatModel for Pokemon {
             .join(" | ");
 
         output.push_str(&formatln("Abilities", &joined_abilities));
+    }
+}
+
+impl FormatModel for FormatPokemon {
+    fn format(&self) -> String {
+        let mut output = String::new();
+
+        self.build_summary(&mut output);
 
         output
     }
