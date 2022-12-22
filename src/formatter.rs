@@ -1,5 +1,8 @@
+use crate::type_colours::{self};
+
 use std::rc::Rc;
 
+use colored::*;
 use rustemon::model::{
     moves::Move,
     pokemon::{Ability, Pokemon},
@@ -16,7 +19,7 @@ impl FormatModel for Move {
         let formatted_name = split_and_capitalise(&self.name);
 
         output.push_str(&formatln("Name", &formatted_name));
-        output.push_str(&formatln("Type", &self.type_.name));
+        output.push_str(&formatln("Type", &type_colours::fetch(&self.type_.name)));
         output.push_str(&formatln("Damage Type", &self.damage_class.name));
 
         let power = parse_maybe_i64(self.power);
@@ -66,7 +69,7 @@ impl FormatModel for Pokemon {
         let joined_types = self
             .types
             .iter()
-            .map(|pokemon_type| capitalise(&pokemon_type.type_.name))
+            .map(|pokemon_type| type_colours::fetch(&pokemon_type.type_.name))
             .collect::<Vec<_>>()
             .join(" | ");
 
@@ -172,4 +175,25 @@ fn parse_maybe_i64(value: Option<i64>) -> String {
         Some(value) => value.to_string(),
         None => String::from("-"),
     }
+}
+
+// Colours
+pub fn white(str: &str) -> String {
+    format_colour(str.white())
+}
+
+pub fn bright_red(str: &str) -> String {
+    format_colour(str.bright_red())
+}
+
+pub fn bright_yellow(str: &str) -> String {
+    format_colour(str.bright_yellow())
+}
+
+pub fn bright_green(str: &str) -> String {
+    format_colour(str.bright_green())
+}
+
+fn format_colour(coloured_string: ColoredString) -> String {
+    format!("{}", coloured_string)
 }
