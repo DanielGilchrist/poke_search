@@ -68,7 +68,7 @@ impl PokemonCommand {
         let search_results = corpus.search(&self.pokemon_name, 0.25);
         let search_result = search_results.first().map(|r| r.to_owned())?;
 
-        if search_result.similarity > 0.5 {
+        if search_result.similarity > 0.4 {
             Some(search_result.text)
         } else {
             None
