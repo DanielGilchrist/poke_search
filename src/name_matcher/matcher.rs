@@ -1,4 +1,6 @@
-use crate::pokemon_names::POKEMON_NAMES;
+use crate::name_matcher::{
+    move_names::MOVE_NAMES, pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES,
+};
 
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
@@ -37,4 +39,12 @@ impl NameMatcher {
 
 pub fn pokemon_matcher() -> NameMatcher {
     NameMatcher::new(Lazy::force(&POKEMON_NAMES).to_owned())
+}
+
+pub fn type_matcher() -> NameMatcher {
+    NameMatcher::new(Lazy::force(&TYPE_NAMES).to_owned())
+}
+
+pub fn move_matcher() -> NameMatcher {
+    NameMatcher::new(Lazy::force(&MOVE_NAMES).to_owned())
 }

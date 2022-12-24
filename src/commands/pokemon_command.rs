@@ -1,6 +1,6 @@
 use crate::{
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
-    name_matcher::{self},
+    name_matcher::matcher,
 };
 
 use futures::{stream, StreamExt};
@@ -49,7 +49,7 @@ impl PokemonCommand {
         match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
             Ok(pokemon) => pokemon,
             Err(_) => {
-                let pokemon_matcher = name_matcher::pokemon_matcher();
+                let pokemon_matcher = matcher::pokemon_matcher();
                 match pokemon_matcher.find_match(&self.pokemon_name) {
                     Some(similar_name) => {
                         println!("Unknown pokemon \"{}\"", self.pokemon_name);
