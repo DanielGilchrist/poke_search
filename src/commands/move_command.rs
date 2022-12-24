@@ -1,4 +1,7 @@
-use crate::formatter::{self, FormatModel};
+use crate::{
+    formatter::{self, FormatModel},
+    name_matcher::matcher,
+};
 
 use std::process::exit;
 
@@ -50,8 +53,18 @@ impl MoveCommand {
         match move_::get_by_name(&self.move_name, &self.client).await {
             Ok(move_) => move_,
             Err(_) => {
-                println!("Move \"{}\" doesn't exist", self.move_name);
-                exit(1)
+                let move_matcher = matcher::move_matcher();
+                match move_matcher.find_match(&self.move_name) {
+                    Some(similar_name) => {
+                        println!("Unknown move \"{}\"", self.move_name);
+                        println!("Did you mean \"{}\"?", similar_name);
+                        exit(1);
+                    }
+                    None => {
+                        println!("Move \"{}\" doesn't exist", self.move_name);
+                        exit(1)
+                    }
+                }
             }
         }
     }
