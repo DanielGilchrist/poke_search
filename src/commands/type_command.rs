@@ -117,7 +117,7 @@ impl TypeCommand {
 
         let coloured_types = type_names
             .iter()
-            .map(|type_name| type_colours::fetch(&type_name))
+            .map(|type_name| type_colours::fetch(type_name))
             .collect::<Vec<_>>();
 
         output.push_str(&format!("  {}\n", coloured_types.join(" | ")));

@@ -29,7 +29,10 @@ impl FormatMove {
         let formatted_name = split_and_capitalise(&self.move_.name);
 
         output.push_str(&formatln("Name", &formatted_name));
-        output.push_str(&formatln("Type", &type_colours::fetch(&self.move_.type_.name)));
+        output.push_str(&formatln(
+            "Type",
+            &type_colours::fetch(&self.move_.type_.name),
+        ));
         output.push_str(&formatln("Damage Type", &self.move_.damage_class.name));
     }
 
