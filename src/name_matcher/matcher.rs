@@ -1,4 +1,4 @@
-use crate::pokemon_names::POKEMON_NAMES;
+use crate::name_matcher::pokemon_names::POKEMON_NAMES;
 
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
