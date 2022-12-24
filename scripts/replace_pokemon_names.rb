@@ -15,12 +15,22 @@ FILE_LOCATION = File.expand_path("../src/pokemon_names.rs", __dir__)
 parsed_response = HTTParty.get(URL).parsed_response
 csv = CSV.parse(parsed_response)
 pokemon_names = csv.map { |line| line.fetch(1) }.sort
-joined_names = pokemon_names.map { |name| "    \"#{name}\",\n" }.join.rstrip
+
+joined_names = pokemon_names.map do |name|
+  "        String::from(\"#{name}\"),\n"
+end
+  .join
+  .rstrip
 
 file_contents = <<~CONTENT
-pub static POKEMON_NAMES: &[&str] = &[
+use once_cell::sync::Lazy;
+
+pub static POKEMON_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
+    vec![
 #{joined_names}
-];
+    ]
+});
+
 
 CONTENT
 

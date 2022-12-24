@@ -1,6 +1,7 @@
 use crate::{
     formatter,
     formatter::{FormatModel, FormatMove},
+    name_matcher::{self},
 };
 
 use std::process::exit;
@@ -67,8 +68,18 @@ impl MovesCommand {
         match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
             Ok(pokemon) => pokemon,
             Err(_) => {
-                println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
-                exit(1);
+                let pokemon_matcher = name_matcher::pokemon_matcher();
+                match pokemon_matcher.find_match(&self.pokemon_name) {
+                    Some(similar_name) => {
+                        println!("Unknown pokemon \"{}\"", self.pokemon_name);
+                        println!("Did you mean \"{}\"?", similar_name);
+                        exit(1);
+                    }
+                    None => {
+                        println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
+                        exit(1);
+                    }
+                };
             }
         }
     }

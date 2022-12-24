@@ -1,12 +1,11 @@
 use crate::{
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
-    pokemon_names::POKEMON_NAMES,
+    name_matcher::{self},
 };
 
 use futures::{stream, StreamExt};
 use std::{process::exit, rc::Rc};
 
-use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use rustemon::{client::RustemonClient, model::pokemon::Pokemon, pokemon::pokemon, Follow};
 
 static STAT_NAMES: &[&str] = &[
@@ -50,7 +49,8 @@ impl PokemonCommand {
         match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
             Ok(pokemon) => pokemon,
             Err(_) => {
-                match self.find_match() {
+                let pokemon_matcher = name_matcher::pokemon_matcher();
+                match pokemon_matcher.find_match(&self.pokemon_name) {
                     Some(similar_name) => {
                         println!("Unknown pokemon \"{}\"", self.pokemon_name);
                         println!("Did you mean \"{}\"?", similar_name);
@@ -63,26 +63,6 @@ impl PokemonCommand {
                 };
             }
         }
-    }
-
-    fn find_match(&self) -> Option<String> {
-        let corpus = self.build_corpus();
-        let search_results = corpus.search(&self.pokemon_name, 0.25);
-        let search_result = search_results.first().map(|r| r.to_owned())?;
-
-        if search_result.similarity > 0.5 {
-            Some(search_result.text)
-        } else {
-            None
-        }
-    }
-
-    fn build_corpus(&self) -> Corpus {
-        let mut corpus = CorpusBuilder::new().arity(2).pad_full(Pad::Auto).finish();
-
-        POKEMON_NAMES.iter().for_each(|name| corpus.add_text(name));
-
-        corpus
     }
 
     fn build_summary(&self, pokemon: &FormatPokemon, output: &mut String) {

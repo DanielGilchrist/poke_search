@@ -233,12 +233,16 @@ pub fn white(str: &str) -> String {
     format_colour(str.white())
 }
 
-pub fn bright_red(str: &str) -> String {
-    format_colour(str.bright_red())
+pub fn green(str: &str) -> String {
+    format_colour(str.green())
 }
 
-pub fn bright_yellow(str: &str) -> String {
-    format_colour(str.bright_yellow())
+pub fn red(str: &str) -> String {
+    format_colour(str.red())
+}
+
+pub fn bright_red(str: &str) -> String {
+    format_colour(str.bright_red())
 }
 
 pub fn bright_green(str: &str) -> String {
