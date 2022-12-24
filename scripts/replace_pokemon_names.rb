@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 #
-# Used to fetch and replace pokemon names for src/pokemon_names.rs from the PokeAPI repo
+# Used to fetch and replace pokemon names for src/name_matcher/pokemon_names.rs from the PokeAPI repo
 #
 # requires:
 # gem install httparty
@@ -10,7 +10,7 @@ require "csv"
 require "httparty"
 
 URL = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv"
-FILE_LOCATION = File.expand_path("../src/pokemon_names.rs", __dir__)
+FILE_LOCATION = File.expand_path("../src/name_matcher/pokemon_names.rs", __dir__)
 
 parsed_response = HTTParty.get(URL).parsed_response
 csv = CSV.parse(parsed_response)
