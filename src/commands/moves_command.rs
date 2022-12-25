@@ -68,17 +68,7 @@ impl MovesCommand {
             Ok(pokemon) => pokemon,
             Err(_) => {
                 let pokemon_matcher = matcher::pokemon_matcher();
-                match pokemon_matcher.find_match(&self.pokemon_name) {
-                    Some(similar_name) => {
-                        println!("Unknown pokemon \"{}\"", self.pokemon_name);
-                        println!("Did you mean \"{}\"?", similar_name);
-                        exit(1);
-                    }
-                    None => {
-                        println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
-                        exit(1);
-                    }
-                };
+                matcher::handle_incorrect_name(&self.pokemon_name, "pokemon", pokemon_matcher);
             }
         }
     }

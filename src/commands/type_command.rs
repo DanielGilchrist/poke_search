@@ -39,18 +39,8 @@ impl TypeCommand {
         match type_::get_by_name(&self.type_name, &self.client).await {
             Ok(type_) => type_,
             Err(_) => {
-                let type_matcher = matcher::type_matcher();
-                match type_matcher.find_match(&self.type_name) {
-                    Some(similar_name) => {
-                        println!("Unknown type \"{}\"", self.type_name);
-                        println!("Did you mean \"{}\"?", similar_name);
-                        exit(1);
-                    }
-                    None => {
-                        println!("Type \"{}\" doesn't exist", self.type_name);
-                        exit(1);
-                    }
-                }
+              let type_matcher = matcher::type_matcher();
+              matcher::handle_incorrect_name(&self.type_name, "type", type_matcher);
             }
         }
     }

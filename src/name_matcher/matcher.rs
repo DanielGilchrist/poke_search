@@ -1,6 +1,11 @@
-use crate::name_matcher::{
+use crate::{
+  name_matcher::{
     move_names::MOVE_NAMES, pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES,
+  },
+  formatter::capitalise,
 };
+
+use std::process::exit;
 
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
@@ -35,6 +40,20 @@ impl NameMatcher {
 
         corpus
     }
+}
+
+pub fn handle_incorrect_name(name: &str, keyword: &str, name_matcher: NameMatcher) -> ! {
+  match name_matcher.find_match(name) {
+      Some(similar_name) => {
+          println!("Unknown {} \"{}\"", keyword, name);
+          println!("Did you mean \"{}\"?", similar_name);
+          exit(1);
+      }
+      None => {
+          println!("{} \"{}\" doesn't exist", capitalise(keyword), name);
+          exit(1);
+      }
+  }
 }
 
 pub fn pokemon_matcher() -> NameMatcher {

@@ -54,17 +54,7 @@ impl MoveCommand {
             Ok(move_) => move_,
             Err(_) => {
                 let move_matcher = matcher::move_matcher();
-                match move_matcher.find_match(&self.move_name) {
-                    Some(similar_name) => {
-                        println!("Unknown move \"{}\"", self.move_name);
-                        println!("Did you mean \"{}\"?", similar_name);
-                        exit(1);
-                    }
-                    None => {
-                        println!("Move \"{}\" doesn't exist", self.move_name);
-                        exit(1)
-                    }
-                }
+                matcher::handle_incorrect_name(&self.move_name, "move", move_matcher);
             }
         }
     }
