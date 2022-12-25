@@ -52,10 +52,7 @@ impl MoveCommand {
     async fn fetch_move(&self) -> Move {
         match move_::get_by_name(&self.move_name, &self.client).await {
             Ok(move_) => move_,
-            Err(_) => {
-                let move_matcher = matcher::move_matcher();
-                matcher::handle_incorrect_name(&self.move_name, "move", move_matcher);
-            }
+            Err(_) => matcher::try_suggest_name(&self.move_name, matcher::MatcherType::Move),
         }
     }
 }

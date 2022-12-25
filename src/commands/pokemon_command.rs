@@ -46,10 +46,7 @@ impl PokemonCommand {
     async fn fetch_pokemon(&self) -> Pokemon {
         match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
             Ok(pokemon) => pokemon,
-            Err(_) => {
-              let pokemon_matcher = matcher::pokemon_matcher();
-              matcher::handle_incorrect_name(&self.pokemon_name, "pokemon", pokemon_matcher);
-            }
+            Err(_) => matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon),
         }
     }
 

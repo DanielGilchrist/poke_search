@@ -38,10 +38,7 @@ impl TypeCommand {
     async fn fetch_type(&self) -> Type {
         match type_::get_by_name(&self.type_name, &self.client).await {
             Ok(type_) => type_,
-            Err(_) => {
-              let type_matcher = matcher::type_matcher();
-              matcher::handle_incorrect_name(&self.type_name, "type", type_matcher);
-            }
+            Err(_) => matcher::try_suggest_name(&self.type_name, matcher::MatcherType::Type),
         }
     }
 
