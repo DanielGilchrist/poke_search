@@ -47,18 +47,8 @@ impl PokemonCommand {
         match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
             Ok(pokemon) => pokemon,
             Err(_) => {
-                let pokemon_matcher = matcher::pokemon_matcher();
-                match pokemon_matcher.find_match(&self.pokemon_name) {
-                    Some(similar_name) => {
-                        println!("Unknown pokemon \"{}\"", self.pokemon_name);
-                        println!("Did you mean \"{}\"?", similar_name);
-                        exit(1);
-                    }
-                    None => {
-                        println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
-                        exit(1);
-                    }
-                };
+              let pokemon_matcher = matcher::pokemon_matcher();
+              matcher::handle_incorrect_name(&self.pokemon_name, "pokemon", pokemon_matcher);
             }
         }
     }
