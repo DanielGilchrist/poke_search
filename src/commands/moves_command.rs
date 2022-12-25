@@ -1,7 +1,5 @@
 use crate::{formatter, formatter::FormatModel, name_matcher::matcher};
 
-use std::process::exit;
-
 use rustemon::{
     client::RustemonClient,
     model::{

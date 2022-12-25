@@ -4,7 +4,7 @@ use crate::{
 };
 
 use futures::{stream, StreamExt};
-use std::{process::exit, rc::Rc};
+use std::rc::Rc;
 
 use rustemon::{client::RustemonClient, model::pokemon::Pokemon, pokemon::pokemon, Follow};
 

@@ -3,8 +3,6 @@ use crate::{
     name_matcher::matcher,
 };
 
-use std::process::exit;
-
 use rustemon::{client::RustemonClient, model::moves::Move, moves::move_};
 
 pub struct MoveCommand {

@@ -3,7 +3,6 @@ use crate::{
     name_matcher::matcher,
     type_colours::{self},
 };
-use std::process::exit;
 
 use rustemon::{
     client::RustemonClient,
