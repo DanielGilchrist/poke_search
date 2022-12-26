@@ -11,6 +11,7 @@ use rustemon::{
         resource::NamedApiResource,
     },
     pokemon::type_,
+    pokemon::ability
 };
 
 pub struct TypeCommand {
