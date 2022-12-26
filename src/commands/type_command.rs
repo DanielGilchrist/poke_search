@@ -10,7 +10,6 @@ use rustemon::{
         pokemon::{Type, TypeRelations},
         resource::NamedApiResource,
     },
-    pokemon::ability,
     pokemon::type_,
 };
 
