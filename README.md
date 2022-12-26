@@ -27,7 +27,7 @@ alias poke_search_cli="/link/to/poke_search_cli/target/release/poke_search_cli"
 # Usage
 See the `help` command for a list of commands that can be run
 ```sh
-❯ ./target/debug/poke_search_cli help
+❯ poke_search_cli help
 Search for pokemon information from the command line
 
 Usage: poke_search_cli <COMMAND>
