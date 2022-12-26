@@ -10,8 +10,8 @@ use rustemon::{
         pokemon::{Type, TypeRelations},
         resource::NamedApiResource,
     },
+    pokemon::ability,
     pokemon::type_,
-    pokemon::ability
 };
 
 pub struct TypeCommand {
