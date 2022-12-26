@@ -52,7 +52,7 @@ impl TypeCommand {
             output,
         );
         self.build_types_output(
-          &formatter::bright_red(headers.1),
+            &formatter::bright_red(headers.1),
             &type_relations.half_damage_to,
             output,
         );
