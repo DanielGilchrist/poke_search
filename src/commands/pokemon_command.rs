@@ -1,5 +1,5 @@
 use crate::{
-    formatter::{self, FormatAbility, FormatModel},
+    formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
 };
 
@@ -33,12 +33,14 @@ impl PokemonCommand {
     }
 
     async fn _execute(&self) {
-        let pokemon = Rc::new(self.fetch_pokemon().await);
+        let pokemon = self.fetch_pokemon().await;
+        let format_pokemon = FormatPokemon::new(pokemon.clone());
+        let pokemon_rc = Rc::new(pokemon);
         let mut output = String::new();
 
-        self.build_summary(&pokemon, &mut output);
-        self.build_stat_output(&pokemon, &mut output);
-        self.build_ability_output(&pokemon, &mut output).await;
+        self.build_summary(&format_pokemon, &mut output);
+        self.build_stat_output(&pokemon_rc, &mut output);
+        self.build_ability_output(&pokemon_rc, &mut output).await;
 
         println!("{}", output);
     }
@@ -50,7 +52,7 @@ impl PokemonCommand {
         }
     }
 
-    fn build_summary(&self, pokemon: &Rc<Pokemon>, output: &mut String) {
+    fn build_summary(&self, pokemon: &FormatPokemon, output: &mut String) {
         output.push_str("Summary\n");
         output.push_str(&pokemon.format());
     }

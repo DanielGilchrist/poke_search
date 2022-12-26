@@ -96,11 +96,16 @@ impl TypeCommand {
         output.push_str(header);
         let mut type_names = types
             .iter()
-            .map(|type_resource| type_colours::fetch(&type_resource.name))
+            .map(|type_resource| &type_resource.name)
             .collect::<Vec<_>>();
 
         type_names.sort();
 
-        output.push_str(&format!("  {}\n", type_names.join(" | ")));
+        let coloured_types = type_names
+            .iter()
+            .map(|type_name| type_colours::fetch(type_name))
+            .collect::<Vec<_>>();
+
+        output.push_str(&format!("  {}\n", coloured_types.join(" | ")));
     }
 }
