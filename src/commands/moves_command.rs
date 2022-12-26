@@ -75,9 +75,18 @@ impl MovesCommand {
                 let client_ref = &self.client;
 
                 async move {
-                    FormatMove::new(
-                        pokemon_move.move_.follow(client_ref).await.unwrap(),
-                        Some(pokemon_move.clone()),
+                    let version_group_details = pokemon_move.version_group_details.last().unwrap();
+                    let move_learn_method = version_group_details
+                        .move_learn_method
+                        .follow(client_ref)
+                        .await
+                        .unwrap();
+                    let move_ = pokemon_move.move_.follow(client_ref).await.unwrap();
+
+                    FormatMove::with_details(
+                        move_,
+                        move_learn_method,
+                        version_group_details.level_learned_at,
                     )
                 }
             })

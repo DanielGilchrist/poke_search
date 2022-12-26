@@ -23,7 +23,7 @@ impl MoveCommand {
     }
 
     async fn _execute(&self) {
-        let format_move = FormatMove::new(self.fetch_move().await, None);
+        let format_move = FormatMove::new(self.fetch_move().await);
 
         let mut output = String::from("Move\n");
 

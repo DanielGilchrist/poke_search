@@ -4,24 +4,45 @@ use std::rc::Rc;
 
 use colored::*;
 use rustemon::model::{
-    moves::Move,
-    pokemon::{Ability, Pokemon, PokemonMove},
+    moves::{Move, MoveLearnMethod},
+    pokemon::{Ability, Pokemon},
 };
 
 pub trait FormatModel {
     fn format(&self) -> String;
 }
 
+struct MoveDetails {
+    level_learned_at: i64,
+    move_learn_method: MoveLearnMethod,
+}
+
 pub struct FormatMove {
     pub move_: Move,
-    pokemon_move: Option<PokemonMove>,
+    move_details: Option<MoveDetails>,
 }
 
 impl FormatMove {
-    pub fn new(move_: Move, pokemon_move: Option<PokemonMove>) -> Self {
+    pub fn new(move_: Move) -> Self {
         FormatMove {
             move_,
-            pokemon_move,
+            move_details: None,
+        }
+    }
+
+    pub fn with_details(
+        move_: Move,
+        move_learn_method: MoveLearnMethod,
+        level_learned_at: i64,
+    ) -> Self {
+        let move_details = Some(MoveDetails {
+            move_learn_method,
+            level_learned_at,
+        });
+
+        FormatMove {
+            move_,
+            move_details,
         }
     }
 
@@ -79,6 +100,28 @@ impl FormatMove {
             output.push_str(&formatln("Effect", &description));
         });
     }
+
+    fn build_move_learn_details(&self, output: &mut String) {
+        if let Some(move_details) = &self.move_details {
+            let description = self.find_move_learn_description(&move_details.move_learn_method);
+            output.push_str(&formatln("Learn Method", &description));
+
+            let level_learned_at = move_details.level_learned_at;
+            if level_learned_at > 0 {
+                output.push_str(&formatln("Learn Level", &level_learned_at.to_string()));
+            }
+        }
+    }
+
+    fn find_move_learn_description(&self, move_learn_method: &MoveLearnMethod) -> String {
+        move_learn_method
+            .descriptions
+            .iter()
+            .find(|description| description.language.name == "en")
+            .unwrap()
+            .description
+            .to_owned()
+    }
 }
 
 impl FormatModel for FormatMove {
@@ -87,6 +130,7 @@ impl FormatModel for FormatMove {
 
         self.build_summary(&mut output);
         self.build_details(&mut output);
+        self.build_move_learn_details(&mut output);
 
         output
     }
