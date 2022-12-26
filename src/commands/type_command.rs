@@ -3,7 +3,6 @@ use crate::{
     name_matcher::matcher,
     type_colours::{self},
 };
-use std::process::exit;
 
 use rustemon::{
     client::RustemonClient,
@@ -38,20 +37,7 @@ impl TypeCommand {
     async fn fetch_type(&self) -> Type {
         match type_::get_by_name(&self.type_name, &self.client).await {
             Ok(type_) => type_,
-            Err(_) => {
-                let type_matcher = matcher::type_matcher();
-                match type_matcher.find_match(&self.type_name) {
-                    Some(similar_name) => {
-                        println!("Unknown type \"{}\"", self.type_name);
-                        println!("Did you mean \"{}\"?", similar_name);
-                        exit(1);
-                    }
-                    None => {
-                        println!("Type \"{}\" doesn't exist", self.type_name);
-                        exit(1);
-                    }
-                }
-            }
+            Err(_) => matcher::try_suggest_name(&self.type_name, matcher::MatcherType::Type),
         }
     }
 

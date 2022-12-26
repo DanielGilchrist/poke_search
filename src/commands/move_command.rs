@@ -3,8 +3,6 @@ use crate::{
     name_matcher::matcher,
 };
 
-use std::process::exit;
-
 use rustemon::{client::RustemonClient, model::moves::Move, moves::move_};
 
 pub struct MoveCommand {
@@ -52,20 +50,7 @@ impl MoveCommand {
     async fn fetch_move(&self) -> Move {
         match move_::get_by_name(&self.move_name, &self.client).await {
             Ok(move_) => move_,
-            Err(_) => {
-                let move_matcher = matcher::move_matcher();
-                match move_matcher.find_match(&self.move_name) {
-                    Some(similar_name) => {
-                        println!("Unknown move \"{}\"", self.move_name);
-                        println!("Did you mean \"{}\"?", similar_name);
-                        exit(1);
-                    }
-                    None => {
-                        println!("Move \"{}\" doesn't exist", self.move_name);
-                        exit(1)
-                    }
-                }
-            }
+            Err(_) => matcher::try_suggest_name(&self.move_name, matcher::MatcherType::Move),
         }
     }
 }

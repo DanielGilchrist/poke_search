@@ -4,8 +4,6 @@ use crate::{
     name_matcher::matcher,
 };
 
-use std::process::exit;
-
 use rustemon::{
     client::RustemonClient,
     model::pokemon::{Pokemon, PokemonMove},
@@ -67,20 +65,7 @@ impl MovesCommand {
     async fn fetch_pokemon(&self) -> Pokemon {
         match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
             Ok(pokemon) => pokemon,
-            Err(_) => {
-                let pokemon_matcher = matcher::pokemon_matcher();
-                match pokemon_matcher.find_match(&self.pokemon_name) {
-                    Some(similar_name) => {
-                        println!("Unknown pokemon \"{}\"", self.pokemon_name);
-                        println!("Did you mean \"{}\"?", similar_name);
-                        exit(1);
-                    }
-                    None => {
-                        println!("Pokemon \"{}\" doesn't exist", self.pokemon_name);
-                        exit(1);
-                    }
-                };
-            }
+            Err(_) => matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon),
         }
     }
 
