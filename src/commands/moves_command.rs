@@ -1,11 +1,12 @@
-use crate::{formatter, formatter::FormatModel, name_matcher::matcher};
+use crate::{
+    formatter,
+    formatter::{FormatModel, FormatMove},
+    name_matcher::matcher,
+};
 
 use rustemon::{
     client::RustemonClient,
-    model::{
-        moves::Move,
-        pokemon::{Pokemon, PokemonMove},
-    },
+    model::pokemon::{Pokemon, PokemonMove},
     pokemon::pokemon,
     Follow,
 };
@@ -68,27 +69,43 @@ impl MovesCommand {
         }
     }
 
-    async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<Move> {
+    async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {
         stream::iter(pokemon_moves)
-            .map(|move_resource| {
+            .map(|pokemon_move| {
                 let client_ref = &self.client;
 
-                async move { move_resource.move_.follow(client_ref).await.unwrap() }
+                async move {
+                    let version_group_details = pokemon_move.version_group_details.last().unwrap();
+                    let move_learn_method = version_group_details
+                        .move_learn_method
+                        .follow(client_ref)
+                        .await
+                        .unwrap();
+                    let move_ = pokemon_move.move_.follow(client_ref).await.unwrap();
+
+                    FormatMove::with_details(
+                        move_,
+                        move_learn_method,
+                        version_group_details.level_learned_at,
+                    )
+                }
             })
             .buffer_unordered(100)
             .collect::<Vec<_>>()
             .await
     }
 
-    fn process_moves(&self, moves: Vec<Move>) -> Vec<Move> {
+    fn process_moves(&self, moves: Vec<FormatMove>) -> Vec<FormatMove> {
         let mut processed_moves = moves;
 
         processed_moves = match &self.type_name {
             Some(type_name) => processed_moves
                 .into_iter()
-                .filter_map(|move_| {
+                .filter_map(|format_move| {
+                    let move_ = &format_move.move_;
+
                     if &move_.type_.name == type_name {
-                        Some(move_)
+                        Some(format_move)
                     } else {
                         None
                     }
@@ -100,9 +117,11 @@ impl MovesCommand {
         processed_moves = match &self.category {
             Some(category) => processed_moves
                 .into_iter()
-                .filter_map(|move_| {
+                .filter_map(|format_move| {
+                    let move_ = &format_move.move_;
+
                     if &move_.damage_class.name == category {
-                        Some(move_)
+                        Some(format_move)
                     } else {
                         None
                     }
@@ -111,18 +130,20 @@ impl MovesCommand {
             None => processed_moves,
         };
 
-        processed_moves.sort_by_key(|move_| move_.power);
+        processed_moves.sort_by_key(|format_move| format_move.move_.power);
         processed_moves.reverse();
 
         processed_moves
     }
 
-    fn build_output(&self, moves: Vec<Move>) -> String {
-        moves.into_iter().fold(String::new(), |mut output, move_| {
-            output.push_str(&move_.format());
-            output.push_str("\n\n");
+    fn build_output(&self, moves: Vec<FormatMove>) -> String {
+        moves
+            .into_iter()
+            .fold(String::new(), |mut output, format_move| {
+                output.push_str(&format_move.format());
+                output.push_str("\n\n");
 
-            output
-        })
+                output
+            })
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    formatter::{self, FormatModel},
+    formatter::{self, FormatModel, FormatMove},
     name_matcher::matcher,
 };
 
@@ -23,16 +23,16 @@ impl MoveCommand {
     }
 
     async fn _execute(&self) {
-        let move_ = self.fetch_move().await;
+        let format_move = FormatMove::new(self.fetch_move().await);
 
         let mut output = String::from("Move\n");
 
-        output.push_str(&move_.format());
+        output.push_str(&format_move.format());
 
         if self.include_learned_by {
             output.push_str("\nLearned by:\n");
 
-            let mut learned_by_pokemon = move_.learned_by_pokemon;
+            let mut learned_by_pokemon = format_move.move_.learned_by_pokemon;
             learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
 
             let formatted_pokemon = learned_by_pokemon
