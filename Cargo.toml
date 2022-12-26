@@ -7,7 +7,9 @@ rust-version = "1.65.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [profile.release]
-lto = true
+lto = true        # Enable Link Time Optimisation
+strip = true      # Strip symbols
+panic = "abort"   # Don't include backtrace when panics occur
 
 [dependencies]
 clap = "4.0.29"
