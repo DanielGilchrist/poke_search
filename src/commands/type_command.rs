@@ -184,7 +184,7 @@ impl TypeCommand {
 
         type_names::TYPE_NAMES.iter().for_each(|type_name| {
             if no_damage_from_types.contains(type_name) {
-                 // no-op
+                // no-op
             } else {
                 let half_damage_score = -half_damage_counts.get(type_name).unwrap_or(&0);
                 let double_damage_score = double_damage_counts.get(type_name).unwrap_or(&0);
@@ -207,7 +207,7 @@ impl TypeCommand {
                     }
 
                     _ => {
-                         // no-op
+                        // no-op
                     }
                 }
             }
