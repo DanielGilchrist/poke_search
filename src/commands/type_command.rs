@@ -48,12 +48,8 @@ impl TypeCommand {
         self.build_type_header(&type_, &second_type, &mut output);
 
         match second_type {
-            Some(second_type) => {
-                self.build_dual_damage_details(&type_, &second_type, &mut output);
-            }
-            None => {
-                self.build_single_damage_details(&type_, &mut output);
-            }
+            Some(second_type) => self.build_dual_damage_details(&type_, &second_type, &mut output),
+            None => self.build_single_damage_details(&type_, &mut output),
         }
 
         println!("{}", output);

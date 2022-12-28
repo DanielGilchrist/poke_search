@@ -22,23 +22,27 @@ async fn main() {
 
             MovesCommand::execute(client, pokemon_name, type_name, category).await;
         }
+
         Some(("move", sub_matches)) => {
             let move_name = get_required_string("move", sub_matches);
             let include_learned_by = get_optional_bool("learned_by", sub_matches);
 
             MoveCommand::execute(client, move_name, include_learned_by).await;
         }
+
         Some(("pokemon", sub_matches)) => {
             let pokemon_name = get_required_string("pokemon", sub_matches);
 
             PokemonCommand::execute(client, pokemon_name).await;
         }
+
         Some(("type", sub_matches)) => {
             let type_name = get_required_string("type_name", sub_matches);
             let second_type_name = get_optional_string("second_type_name", sub_matches);
 
             TypeCommand::execute(client, type_name, second_type_name).await;
         }
+
         _ => (),
     };
 }
