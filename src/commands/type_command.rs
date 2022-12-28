@@ -184,7 +184,7 @@ impl TypeCommand {
 
         type_names::TYPE_NAMES.iter().for_each(|type_name| {
             if no_damage_from_types.contains(type_name) {
-                () // no-op
+                 // no-op
             } else {
                 let half_damage_score = -half_damage_counts.get(type_name).unwrap_or(&0);
                 let double_damage_score = double_damage_counts.get(type_name).unwrap_or(&0);
@@ -207,7 +207,7 @@ impl TypeCommand {
                     }
 
                     _ => {
-                        () // no-op
+                         // no-op
                     }
                 }
             }
@@ -219,7 +219,7 @@ impl TypeCommand {
             output,
         );
         self.build_types_output(
-            &&formatter::bright_green(TYPE_HEADERS.2),
+            &formatter::bright_green(TYPE_HEADERS.2),
             &half_damage_types,
             output,
         );
@@ -251,17 +251,17 @@ impl TypeCommand {
         let mut hash_set = HashSet::new();
 
         a.into_iter().for_each(|e| {
-            hash_set.insert(e.to_owned());
+            hash_set.insert(e);
         });
 
         b.into_iter().for_each(|e| {
-            hash_set.insert(e.to_owned());
+            hash_set.insert(e);
         });
 
         hash_set
     }
 
-    fn to_type_names(&self, resources: &Vec<NamedApiResource<Type>>) -> Vec<String> {
+    fn to_type_names(&self, resources: &[NamedApiResource<Type>]) -> Vec<String> {
         resources
             .iter()
             .map(|type_resource| type_resource.name.to_owned())
@@ -274,7 +274,7 @@ impl TypeCommand {
     {
         let mut iter = type_names.into_iter().peekable();
 
-        if !iter.peek().is_some() {
+        if iter.peek().is_none() {
             return;
         }
 
