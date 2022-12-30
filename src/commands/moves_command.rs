@@ -1,3 +1,5 @@
+use std::os::unix::process;
+
 use crate::{
     formatter,
     formatter::{FormatModel, FormatMove},
@@ -18,6 +20,8 @@ pub struct MovesCommand {
     pokemon_name: String,
     type_name: Option<String>,
     category: Option<String>,
+    physical: bool,
+    special: bool,
 }
 
 impl MovesCommand {
@@ -26,12 +30,16 @@ impl MovesCommand {
         pokemon_name: String,
         type_name: Option<String>,
         category: Option<String>,
+        physical: bool,
+        special: bool,
     ) {
         MovesCommand {
             client,
             pokemon_name,
             type_name,
             category,
+            physical,
+            special,
         }
         ._execute()
         .await;
@@ -117,18 +125,20 @@ impl MovesCommand {
         processed_moves = match &self.category {
             Some(category) => processed_moves
                 .into_iter()
-                .filter_map(|format_move| {
-                    let move_ = &format_move.move_;
-
-                    if &move_.damage_class.name == category {
-                        Some(format_move)
-                    } else {
-                        None
-                    }
-                })
+                .filter(|format_move| &format_move.move_.damage_class.name == category)
                 .collect::<Vec<_>>(),
             None => processed_moves,
         };
+
+        processed_moves = if self.physical {
+            processed_moves
+                .into_iter()
+                .filter(|format_move| &format_move.move_.flavor_text_entries)
+        } else if self.special {
+
+        } else {
+          processed_moves
+        }
 
         processed_moves.sort_by_key(|format_move| format_move.move_.power);
         processed_moves.reverse();

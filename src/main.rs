@@ -19,13 +19,15 @@ async fn main() {
             let pokemon_name = get_required_string("pokemon", sub_matches);
             let type_name = get_optional_string("type_name", sub_matches);
             let category = get_optional_string("category", sub_matches);
+            let physical = get_bool("physical", sub_matches);
+            let special = get_bool("special", sub_matches);
 
-            MovesCommand::execute(client, pokemon_name, type_name, category).await;
+            MovesCommand::execute(client, pokemon_name, type_name, category, phyisical, special).await;
         }
 
         Some(("move", sub_matches)) => {
             let move_name = get_required_string("move", sub_matches);
-            let include_learned_by = get_optional_bool("learned_by", sub_matches);
+            let include_learned_by = get_bool("learned_by", sub_matches);
 
             MoveCommand::execute(client, move_name, include_learned_by).await;
         }
@@ -59,7 +61,7 @@ fn get_required_string(command: &str, sub_matches: &ArgMatches) -> String {
     get_optional_string(command, sub_matches).unwrap()
 }
 
-fn get_optional_bool(command: &str, sub_matches: &ArgMatches) -> bool {
+fn get_bool(command: &str, sub_matches: &ArgMatches) -> bool {
     sub_matches
         .get_one::<bool>(command)
         .unwrap_or(&false)
@@ -86,8 +88,9 @@ fn parse_moves_command() -> Command {
             arg!(-p --pokemon <POKEMON_NAME> "The name of the pokemon you want to see moves for")
                 .required(true),
             arg!(-t --type_name <TYPE_NAME> "The type of moves you want to see").required(false),
-            arg!(-c --category <CATEGORY> "Only show moves for a specific category")
-                .required(false),
+            arg!(-c --category <CATEGORY> "Only show moves for a specific category").required(false),
+            arg!(special: -s <SPECIAL> "Filter to only special attacks").required(false),
+            arg!(physical: -p <PHYSICAL> "Filter to only physical attacks").required(false),
         ])
         .arg_required_else_help(true)
 }
