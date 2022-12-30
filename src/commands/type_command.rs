@@ -230,17 +230,17 @@ impl TypeCommand {
     fn build_type_counter(&self, a: Vec<String>, b: Vec<String>) -> HashMap<String, i8> {
         let mut counts: HashMap<String, i8> = HashMap::new();
 
-        let mut update_map = |vec: Vec<String>| {
-            vec.iter().for_each(|t| {
-                let value = counts.entry(t.to_owned()).or_insert(0);
-                *value += 1;
-            });
-        };
-
-        update_map(a);
-        update_map(b);
+        self.increment_counts(&mut counts, &a);
+        self.increment_counts(&mut counts, &b);
 
         counts
+    }
+
+    fn increment_counts(&self, counts: &mut HashMap<String, i8>, vec: &[String]) {
+        vec.iter().for_each(|t| {
+            let value = counts.entry(t.to_owned()).or_insert(0);
+            *value += 1;
+        });
     }
 
     fn build_combined_hash_set(&self, a: Vec<String>, b: Vec<String>) -> HashSet<String> {
