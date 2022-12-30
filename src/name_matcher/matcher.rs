@@ -63,21 +63,14 @@ pub fn try_suggest_name(name: &str, matcher_type: MatcherType) -> ! {
 }
 
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
-    match matcher_type {
-        MatcherType::Move => (move_matcher(), String::from("move")),
-        MatcherType::Pokemon => (pokemon_matcher(), String::from("pokemon")),
-        MatcherType::Type => (type_matcher(), String::from("type")),
-    }
-}
+    let names_and_keyword = match matcher_type {
+        MatcherType::Move => (&MOVE_NAMES, "move"),
+        MatcherType::Pokemon => (&POKEMON_NAMES, "pokemon"),
+        MatcherType::Type => (&TYPE_NAMES, "type"),
+    };
 
-fn pokemon_matcher() -> NameMatcher {
-    NameMatcher::new(Lazy::force(&POKEMON_NAMES).to_owned())
-}
-
-fn type_matcher() -> NameMatcher {
-    NameMatcher::new(Lazy::force(&TYPE_NAMES).to_owned())
-}
-
-fn move_matcher() -> NameMatcher {
-    NameMatcher::new(Lazy::force(&MOVE_NAMES).to_owned())
+    (
+        NameMatcher::new(Lazy::force(names_and_keyword.0).to_owned()),
+        String::from(names_and_keyword.1),
+    )
 }
