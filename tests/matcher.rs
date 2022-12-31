@@ -1,10 +1,28 @@
+// use poke_search_cli::client::{Client, ClientImplementation};
+
 use assert_cmd::{cargo::CargoError, prelude::*};
 use predicates::prelude::*;
+use poke_search_cli::client::MockClientImplementation;
 
 use std::process::Command;
 
+use rustemon::error::Error;
+
 #[test]
 fn pokemon_move_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
+    let incorrect_name = "flamhrower";
+
+    let mut mock_implementation = MockClientImplementation::new();
+    mock_implementation.expect_fetch_move()
+        .with(mockall::predicate::eq(incorrect_name))
+        .once()
+        .returning(|_x| {
+          println!("It works!!!!");
+          Err(Error::FollowEmptyURL)
+        });
+
+    mock_implementation.checkpoint();
+
     let mut cmd = build_command()?;
     let incorrect_name = "flamhrower";
 

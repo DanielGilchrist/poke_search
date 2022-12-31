@@ -1,5 +1,5 @@
+use poke_search_cli::client::{Client, ClientImplementation};
 use crate::{
-    client::{Client, ClientImplementation},
     formatter::{self, FormatModel, FormatMove},
     name_matcher::matcher,
 };

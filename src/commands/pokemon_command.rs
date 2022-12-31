@@ -1,5 +1,5 @@
+use poke_search_cli::client::{Client, ClientImplementation};
 use crate::{
-    client::{Client, ClientImplementation},
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
 };
@@ -7,7 +7,7 @@ use crate::{
 use futures::{stream, StreamExt};
 use std::rc::Rc;
 
-use rustemon::{model::pokemon::Pokemon, pokemon::pokemon, Follow};
+use rustemon::model::pokemon::Pokemon;
 
 static STAT_NAMES: &[&str] = &[
     "HP",

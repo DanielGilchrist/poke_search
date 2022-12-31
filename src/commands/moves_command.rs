@@ -1,5 +1,5 @@
+use poke_search_cli::client::{Client, ClientImplementation};
 use crate::{
-    client::{Client, ClientImplementation},
     formatter,
     formatter::{FormatModel, FormatMove},
     name_matcher::matcher,
@@ -68,7 +68,7 @@ impl MovesCommand {
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {
         stream::iter(pokemon_moves)
             .map(|pokemon_move| {
-                let client_ref = &self.client;
+                let _client_ref = &self.client;
 
                 async move {
                     let version_group_details = pokemon_move.version_group_details.last().unwrap();

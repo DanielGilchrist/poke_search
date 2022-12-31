@@ -1,9 +1,8 @@
-mod client;
 mod formatter;
 mod name_matcher;
 mod type_colours;
 
-use crate::client::Client;
+use poke_search_cli::client::Client;
 
 use clap::{arg, ArgMatches, Command};
 
