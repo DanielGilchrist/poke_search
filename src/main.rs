@@ -1,6 +1,9 @@
+mod client;
 mod formatter;
 mod name_matcher;
 mod type_colours;
+
+use crate::client::Client;
 
 use clap::{arg, ArgMatches, Command};
 
@@ -12,7 +15,7 @@ use commands::{
 
 #[tokio::main]
 async fn main() {
-    let client = rustemon::client::RustemonClient::default();
+    let client = Client::default();
 
     match parse_commands().get_matches().subcommand() {
         Some(("moves", sub_matches)) => {

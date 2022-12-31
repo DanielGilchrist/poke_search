@@ -1,18 +1,19 @@
 use crate::{
+    client::{Client, ClientImplementation},
     formatter::{self, FormatModel, FormatMove},
     name_matcher::matcher,
 };
 
-use rustemon::{client::RustemonClient, model::moves::Move, moves::move_};
+use rustemon::model::moves::Move;
 
 pub struct MoveCommand {
-    client: RustemonClient,
+    client: Client,
     move_name: String,
     include_learned_by: bool,
 }
 
 impl MoveCommand {
-    pub async fn execute(client: RustemonClient, move_name: String, include_learned_by: bool) {
+    pub async fn execute(client: Client, move_name: String, include_learned_by: bool) {
         MoveCommand {
             client,
             move_name,
@@ -48,7 +49,7 @@ impl MoveCommand {
     }
 
     async fn fetch_move(&self) -> Move {
-        match move_::get_by_name(&self.move_name, &self.client).await {
+        match self.client.fetch_move(&self.move_name).await {
             Ok(move_) => move_,
             Err(_) => matcher::try_suggest_name(&self.move_name, matcher::MatcherType::Move),
         }

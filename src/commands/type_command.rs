@@ -1,4 +1,5 @@
 use crate::{
+    client::{Client, ClientImplementation},
     formatter::{self},
     name_matcher::{matcher, type_names},
     type_colours::{self},
@@ -6,26 +7,18 @@ use crate::{
 
 use std::collections::{HashMap, HashSet};
 
-use rustemon::{
-    client::RustemonClient,
-    model::{pokemon::Type, resource::NamedApiResource},
-    pokemon::type_,
-};
+use rustemon::model::{pokemon::Type, resource::NamedApiResource};
 
 const TYPE_HEADERS: (&str, &str, &str, &str, &str) = ("0x\n", "0.25x\n", "0.5x\n", "2x\n", "4x\n");
 
 pub struct TypeCommand {
-    client: RustemonClient,
+    client: Client,
     type_name: String,
     second_type_name: Option<String>,
 }
 
 impl TypeCommand {
-    pub async fn execute(
-        client: RustemonClient,
-        type_name: String,
-        second_type_name: Option<String>,
-    ) {
+    pub async fn execute(client: Client, type_name: String, second_type_name: Option<String>) {
         TypeCommand {
             client,
             type_name,
@@ -56,7 +49,7 @@ impl TypeCommand {
     }
 
     async fn fetch_type(&self, type_name: &str) -> Type {
-        match type_::get_by_name(type_name, &self.client).await {
+        match self.client.fetch_type(type_name).await {
             Ok(type_) => type_,
             Err(_) => matcher::try_suggest_name(type_name, matcher::MatcherType::Type),
         }

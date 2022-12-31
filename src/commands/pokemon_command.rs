@@ -1,4 +1,5 @@
 use crate::{
+    client::{Client, ClientImplementation},
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
 };
@@ -6,7 +7,7 @@ use crate::{
 use futures::{stream, StreamExt};
 use std::rc::Rc;
 
-use rustemon::{client::RustemonClient, model::pokemon::Pokemon, pokemon::pokemon, Follow};
+use rustemon::{model::pokemon::Pokemon, pokemon::pokemon, Follow};
 
 static STAT_NAMES: &[&str] = &[
     "HP",
@@ -18,12 +19,12 @@ static STAT_NAMES: &[&str] = &[
 ];
 
 pub struct PokemonCommand {
-    client: RustemonClient,
+    client: Client,
     pokemon_name: String,
 }
 
 impl PokemonCommand {
-    pub async fn execute(client: RustemonClient, pokemon_name: String) {
+    pub async fn execute(client: Client, pokemon_name: String) {
         PokemonCommand {
             client,
             pokemon_name,
@@ -46,7 +47,7 @@ impl PokemonCommand {
     }
 
     async fn fetch_pokemon(&self) -> Pokemon {
-        match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
+        match self.client.fetch_pokemon(&self.pokemon_name).await {
             Ok(pokemon) => pokemon,
             Err(_) => matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon),
         }
@@ -76,11 +77,10 @@ impl PokemonCommand {
         output.push_str("\nAbilities\n");
         stream::iter(&pokemon.abilities)
             .map(|a| {
-                let client_ref = &self.client;
                 let pokemon_ref = &pokemon;
 
                 async move {
-                    let ability = a.ability.follow(client_ref).await.unwrap();
+                    let ability = self.client.fetch_ability(&a.ability.name).await.unwrap();
 
                     FormatAbility::new(ability, Rc::clone(pokemon_ref))
                 }

@@ -1,20 +1,16 @@
 use crate::{
+    client::{Client, ClientImplementation},
     formatter,
     formatter::{FormatModel, FormatMove},
     name_matcher::matcher,
 };
 
-use rustemon::{
-    client::RustemonClient,
-    model::pokemon::{Pokemon, PokemonMove},
-    pokemon::pokemon,
-    Follow,
-};
+use rustemon::model::pokemon::{Pokemon, PokemonMove};
 
 use futures::{stream, StreamExt};
 
 pub struct MovesCommand {
-    client: RustemonClient,
+    client: Client,
     pokemon_name: String,
     type_name: Option<String>,
     category: Option<String>,
@@ -22,7 +18,7 @@ pub struct MovesCommand {
 
 impl MovesCommand {
     pub async fn execute(
-        client: RustemonClient,
+        client: Client,
         pokemon_name: String,
         type_name: Option<String>,
         category: Option<String>,
@@ -63,7 +59,7 @@ impl MovesCommand {
     }
 
     async fn fetch_pokemon(&self) -> Pokemon {
-        match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
+        match self.client.fetch_pokemon(&self.pokemon_name).await {
             Ok(pokemon) => pokemon,
             Err(_) => matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon),
         }
@@ -76,12 +72,18 @@ impl MovesCommand {
 
                 async move {
                     let version_group_details = pokemon_move.version_group_details.last().unwrap();
-                    let move_learn_method = version_group_details
-                        .move_learn_method
-                        .follow(client_ref)
+
+                    let move_learn_method = self
+                        .client
+                        .fetch_move_learn_method(&version_group_details.move_learn_method.name)
                         .await
                         .unwrap();
-                    let move_ = pokemon_move.move_.follow(client_ref).await.unwrap();
+
+                    let move_ = self
+                        .client
+                        .fetch_move(&pokemon_move.move_.name)
+                        .await
+                        .unwrap();
 
                     FormatMove::with_details(
                         move_,
