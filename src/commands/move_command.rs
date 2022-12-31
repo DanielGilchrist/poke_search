@@ -1,8 +1,8 @@
+use crate::client::ClientImplementation;
 use crate::{
     formatter::{self, FormatModel, FormatMove},
     name_matcher::matcher,
 };
-use poke_search_cli::client::ClientImplementation;
 
 use rustemon::model::moves::Move;
 

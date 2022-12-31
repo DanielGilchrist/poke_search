@@ -1,9 +1,9 @@
+use crate::client::ClientImplementation;
 use crate::{
     formatter::{self},
     name_matcher::{matcher, type_names},
     type_colours::{self},
 };
-use poke_search_cli::client::ClientImplementation;
 
 use std::collections::{HashMap, HashSet};
 

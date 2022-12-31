@@ -1,8 +1,9 @@
+mod client;
 mod formatter;
 mod name_matcher;
 mod type_colours;
 
-use poke_search_cli::client::{Client, ClientImplementation};
+use crate::client::{Client, ClientImplementation};
 
 use clap::{arg, ArgMatches, Command};
 
@@ -131,7 +132,7 @@ async fn run(client: &dyn ClientImplementation, matches: ArgMatches) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use poke_search_cli::client::MockClientImplementation;
+    use crate::client::MockClientImplementation;
 
     use rustemon::{error::Error, model::pokemon::Type};
 

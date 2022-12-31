@@ -1,9 +1,9 @@
+use crate::client::ClientImplementation;
 use crate::{
     formatter,
     formatter::{FormatModel, FormatMove},
     name_matcher::matcher,
 };
-use poke_search_cli::client::ClientImplementation;
 
 use rustemon::model::pokemon::{Pokemon, PokemonMove};
 
