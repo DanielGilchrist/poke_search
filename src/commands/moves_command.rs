@@ -1,32 +1,28 @@
+use crate::client::ClientImplementation;
 use crate::{
     formatter,
     formatter::{FormatModel, FormatMove},
     name_matcher::matcher,
 };
 
-use rustemon::{
-    client::RustemonClient,
-    model::pokemon::{Pokemon, PokemonMove},
-    pokemon::pokemon,
-    Follow,
-};
+use rustemon::model::pokemon::{Pokemon, PokemonMove};
 
 use futures::{stream, StreamExt};
 
-pub struct MovesCommand {
-    client: RustemonClient,
+pub struct MovesCommand<'a> {
+    client: &'a dyn ClientImplementation,
     pokemon_name: String,
     type_name: Option<String>,
     category: Option<String>,
 }
 
-impl MovesCommand {
+impl MovesCommand<'_> {
     pub async fn execute(
-        client: RustemonClient,
+        client: &dyn ClientImplementation,
         pokemon_name: String,
         type_name: Option<String>,
         category: Option<String>,
-    ) {
+    ) -> String {
         MovesCommand {
             client,
             pokemon_name,
@@ -34,54 +30,70 @@ impl MovesCommand {
             category,
         }
         ._execute()
-        .await;
+        .await
     }
 
-    async fn _execute(&self) {
-        let pokemon = self.fetch_pokemon().await;
-        let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
-        let move_output = self.build_output(moves);
+    async fn _execute(&self) -> String {
+        let mut output = String::new();
 
-        let pokemon_name = formatter::capitalise(&pokemon.name);
-        println!("Pokemon: {}", pokemon_name);
+        match self.fetch_pokemon().await {
+            None => {
+                let suggestion =
+                    matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
+                output.push_str(&suggestion);
+            }
 
-        if !move_output.is_empty() {
-            println!("Moves:");
-            println!("{}", move_output);
-        } else {
-            match &self.type_name {
-                Some(type_name) => {
-                    println!(
-                        "{} has no {} type moves",
-                        pokemon_name,
-                        formatter::capitalise(type_name)
-                    );
+            Some(pokemon) => {
+                let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
+                let move_output = self.build_output(moves);
+
+                let pokemon_name = formatter::capitalise(&pokemon.name);
+                println!("Pokemon: {}", pokemon_name);
+
+                if !move_output.is_empty() {
+                    output.push_str("Moves:\n");
+                    output.push_str(&move_output);
+                } else {
+                    match &self.type_name {
+                        Some(type_name) => {
+                            println!(
+                                "{} has no {} type moves",
+                                pokemon_name,
+                                formatter::capitalise(type_name)
+                            );
+                        }
+                        None => (),
+                    };
                 }
-                None => (),
-            };
-        }
+            }
+        };
+
+        output
     }
 
-    async fn fetch_pokemon(&self) -> Pokemon {
-        match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
-            Ok(pokemon) => pokemon,
-            Err(_) => matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon),
-        }
+    async fn fetch_pokemon(&self) -> Option<Pokemon> {
+        self.client.fetch_pokemon(&self.pokemon_name).await.ok()
     }
 
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {
         stream::iter(pokemon_moves)
             .map(|pokemon_move| {
-                let client_ref = &self.client;
+                let _client_ref = &self.client;
 
                 async move {
                     let version_group_details = pokemon_move.version_group_details.last().unwrap();
-                    let move_learn_method = version_group_details
-                        .move_learn_method
-                        .follow(client_ref)
+
+                    let move_learn_method = self
+                        .client
+                        .fetch_move_learn_method(&version_group_details.move_learn_method.name)
                         .await
                         .unwrap();
-                    let move_ = pokemon_move.move_.follow(client_ref).await.unwrap();
+
+                    let move_ = self
+                        .client
+                        .fetch_move(&pokemon_move.move_.name)
+                        .await
+                        .unwrap();
 
                     FormatMove::with_details(
                         move_,

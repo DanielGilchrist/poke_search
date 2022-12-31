@@ -1,3 +1,4 @@
+use crate::client::ClientImplementation;
 use crate::{
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
@@ -6,7 +7,7 @@ use crate::{
 use futures::{stream, StreamExt};
 use std::rc::Rc;
 
-use rustemon::{client::RustemonClient, model::pokemon::Pokemon, pokemon::pokemon, Follow};
+use rustemon::model::pokemon::Pokemon;
 
 static STAT_NAMES: &[&str] = &[
     "HP",
@@ -17,39 +18,46 @@ static STAT_NAMES: &[&str] = &[
     "Speed",
 ];
 
-pub struct PokemonCommand {
-    client: RustemonClient,
+pub struct PokemonCommand<'a> {
+    client: &'a dyn ClientImplementation,
     pokemon_name: String,
 }
 
-impl PokemonCommand {
-    pub async fn execute(client: RustemonClient, pokemon_name: String) {
+impl PokemonCommand<'_> {
+    pub async fn execute(client: &dyn ClientImplementation, pokemon_name: String) -> String {
         PokemonCommand {
             client,
             pokemon_name,
         }
         ._execute()
-        .await;
+        .await
     }
 
-    async fn _execute(&self) {
-        let pokemon = self.fetch_pokemon().await;
-        let format_pokemon = FormatPokemon::new(pokemon.clone());
-        let pokemon_rc = Rc::new(pokemon);
+    async fn _execute(&self) -> String {
         let mut output = String::new();
 
-        self.build_summary(&format_pokemon, &mut output);
-        self.build_stat_output(&pokemon_rc, &mut output);
-        self.build_ability_output(&pokemon_rc, &mut output).await;
+        match self.fetch_pokemon().await {
+            Some(pokemon) => {
+                let format_pokemon = FormatPokemon::new(pokemon.clone());
+                let pokemon_rc = Rc::new(pokemon);
 
-        println!("{}", output);
+                self.build_summary(&format_pokemon, &mut output);
+                self.build_stat_output(&pokemon_rc, &mut output);
+                self.build_ability_output(&pokemon_rc, &mut output).await;
+            }
+
+            None => {
+                let suggestion =
+                    matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
+                output.push_str(&suggestion);
+            }
+        };
+
+        output
     }
 
-    async fn fetch_pokemon(&self) -> Pokemon {
-        match pokemon::get_by_name(&self.pokemon_name, &self.client).await {
-            Ok(pokemon) => pokemon,
-            Err(_) => matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon),
-        }
+    async fn fetch_pokemon(&self) -> Option<Pokemon> {
+        self.client.fetch_pokemon(&self.pokemon_name).await.ok()
     }
 
     fn build_summary(&self, pokemon: &FormatPokemon, output: &mut String) {
@@ -76,11 +84,10 @@ impl PokemonCommand {
         output.push_str("\nAbilities\n");
         stream::iter(&pokemon.abilities)
             .map(|a| {
-                let client_ref = &self.client;
                 let pokemon_ref = &pokemon;
 
                 async move {
-                    let ability = a.ability.follow(client_ref).await.unwrap();
+                    let ability = self.client.fetch_ability(&a.ability.name).await.unwrap();
 
                     FormatAbility::new(ability, Rc::clone(pokemon_ref))
                 }
