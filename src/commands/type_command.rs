@@ -3,7 +3,7 @@ use crate::{
     name_matcher::{matcher, type_names},
     type_colours::{self},
 };
-use poke_search_cli::client::{ClientImplementation};
+use poke_search_cli::client::ClientImplementation;
 
 use std::collections::{HashMap, HashSet};
 

@@ -3,8 +3,6 @@ use crate::{
     name_matcher::{move_names::MOVE_NAMES, pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES},
 };
 
-
-
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
 
