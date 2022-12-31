@@ -1,8 +1,8 @@
-use poke_search_cli::client::{Client, ClientImplementation};
 use crate::{
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
 };
+use poke_search_cli::client::{Client, ClientImplementation};
 
 use futures::{stream, StreamExt};
 use std::rc::Rc;
@@ -18,39 +18,46 @@ static STAT_NAMES: &[&str] = &[
     "Speed",
 ];
 
-pub struct PokemonCommand {
-    client: Client,
+pub struct PokemonCommand<'a> {
+    client: &'a dyn ClientImplementation,
     pokemon_name: String,
 }
 
-impl PokemonCommand {
-    pub async fn execute(client: Client, pokemon_name: String) {
+impl PokemonCommand<'_> {
+    pub async fn execute(client: &dyn ClientImplementation, pokemon_name: String) -> String {
         PokemonCommand {
             client,
             pokemon_name,
         }
         ._execute()
-        .await;
+        .await
     }
 
-    async fn _execute(&self) {
-        let pokemon = self.fetch_pokemon().await;
-        let format_pokemon = FormatPokemon::new(pokemon.clone());
-        let pokemon_rc = Rc::new(pokemon);
+    async fn _execute(&self) -> String {
         let mut output = String::new();
 
-        self.build_summary(&format_pokemon, &mut output);
-        self.build_stat_output(&pokemon_rc, &mut output);
-        self.build_ability_output(&pokemon_rc, &mut output).await;
+        match self.fetch_pokemon().await {
+            Some(pokemon) => {
+                let format_pokemon = FormatPokemon::new(pokemon.clone());
+                let pokemon_rc = Rc::new(pokemon);
 
-        println!("{}", output);
+                self.build_summary(&format_pokemon, &mut output);
+                self.build_stat_output(&pokemon_rc, &mut output);
+                self.build_ability_output(&pokemon_rc, &mut output).await;
+            }
+
+            None => {
+                let suggestion =
+                    matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
+                output.push_str(&suggestion);
+            }
+        };
+
+        output
     }
 
-    async fn fetch_pokemon(&self) -> Pokemon {
-        match self.client.fetch_pokemon(&self.pokemon_name).await {
-            Ok(pokemon) => pokemon,
-            Err(_) => matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon),
-        }
+    async fn fetch_pokemon(&self) -> Option<Pokemon> {
+        self.client.fetch_pokemon(&self.pokemon_name).await.ok()
     }
 
     fn build_summary(&self, pokemon: &FormatPokemon, output: &mut String) {

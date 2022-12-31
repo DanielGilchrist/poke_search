@@ -1,9 +1,9 @@
-use poke_search_cli::client::{Client, ClientImplementation};
 use crate::{
     formatter::{self},
     name_matcher::{matcher, type_names},
     type_colours::{self},
 };
+use poke_search_cli::client::{Client, ClientImplementation};
 
 use std::collections::{HashMap, HashSet};
 
@@ -11,14 +11,18 @@ use rustemon::model::{pokemon::Type, resource::NamedApiResource};
 
 const TYPE_HEADERS: (&str, &str, &str, &str, &str) = ("0x\n", "0.25x\n", "0.5x\n", "2x\n", "4x\n");
 
-pub struct TypeCommand {
-    client: Client,
+pub struct TypeCommand<'a> {
+    client: &'a dyn ClientImplementation,
     type_name: String,
     second_type_name: Option<String>,
 }
 
-impl TypeCommand {
-    pub async fn execute(client: Client, type_name: String, second_type_name: Option<String>) {
+impl TypeCommand<'_> {
+    pub async fn execute(
+        client: &dyn ClientImplementation,
+        type_name: String,
+        second_type_name: Option<String>,
+    ) -> String {
         TypeCommand {
             client,
             type_name,
@@ -28,34 +32,44 @@ impl TypeCommand {
         .await
     }
 
-    async fn _execute(&self) {
-        let type_ = self.fetch_type(&self.type_name).await;
-        let second_type = if let Some(second_type_name) = &self.second_type_name {
-            Some(self.fetch_type(second_type_name).await)
-        } else {
-            None
-        };
+    async fn _execute(&self) -> String {
+        let mut output = String::new();
 
-        let mut output = String::from("\n");
+        match self.fetch_type(&self.type_name).await {
+            Some(type_) => {
+                match &self.second_type_name {
+                    Some(second_type_name) => match self.fetch_type(second_type_name).await {
+                        Some(second_type) => {
+                            self.build_dual_damage_details(&type_, &second_type, &mut output)
+                        }
 
-        self.build_type_header(&type_, &second_type, &mut output);
+                        None => {
+                            self.handle_invalid_type(&second_type_name, &mut output);
+                        }
+                    },
 
-        match second_type {
-            Some(second_type) => self.build_dual_damage_details(&type_, &second_type, &mut output),
-            None => self.build_single_damage_details(&type_, &mut output),
+                    None => self.build_single_damage_details(&type_, &mut output),
+                };
+            }
+
+            None => {
+                self.handle_invalid_type(&self.type_name, &mut output);
+            }
         }
 
-        println!("{}", output);
+        output
     }
 
-    async fn fetch_type(&self, type_name: &str) -> Type {
-        match self.client.fetch_type(type_name).await {
-            Ok(type_) => type_,
-            Err(_) => matcher::try_suggest_name(type_name, matcher::MatcherType::Type),
-        }
+    async fn fetch_type(&self, type_name: &str) -> Option<Type> {
+        self.client.fetch_type(type_name).await.ok()
     }
 
-    fn build_type_header(&self, type_: &Type, second_type: &Option<Type>, output: &mut String) {
+    fn handle_invalid_type(&self, type_name: &str, output: &mut String) {
+        let suggestion = matcher::try_suggest_name(type_name, matcher::MatcherType::Type);
+        output.push_str(&suggestion);
+    }
+
+    fn build_type_header(&self, type_: &Type, second_type: Option<&Type>, output: &mut String) {
         let formatted_type = self.formatted_type(type_);
 
         let result = match second_type {
@@ -70,7 +84,7 @@ impl TypeCommand {
     }
 
     fn build_single_type_header(&self, type_: &Type, output: &mut String) {
-        self.build_type_header(type_, &None, output);
+        self.build_type_header(type_, None, output);
     }
 
     fn formatted_type(&self, type_: &Type) -> String {
@@ -78,6 +92,8 @@ impl TypeCommand {
     }
 
     fn build_single_damage_details(&self, type_: &Type, output: &mut String) {
+        self.build_single_type_header(&type_, output);
+
         output.push_str(&formatter::white("Offense\n"));
 
         self.build_offense_output(type_, output);
@@ -88,6 +104,8 @@ impl TypeCommand {
     }
 
     fn build_dual_damage_details(&self, type_: &Type, second_type: &Type, output: &mut String) {
+        self.build_type_header(&type_, Some(second_type), output);
+
         output.push_str(&formatter::white("Offense\n"));
 
         self.build_single_type_header(type_, output);

@@ -1,28 +1,28 @@
-use poke_search_cli::client::{Client, ClientImplementation};
 use crate::{
     formatter,
     formatter::{FormatModel, FormatMove},
     name_matcher::matcher,
 };
+use poke_search_cli::client::ClientImplementation;
 
 use rustemon::model::pokemon::{Pokemon, PokemonMove};
 
 use futures::{stream, StreamExt};
 
-pub struct MovesCommand {
-    client: Client,
+pub struct MovesCommand<'a> {
+    client: &'a dyn ClientImplementation,
     pokemon_name: String,
     type_name: Option<String>,
     category: Option<String>,
 }
 
-impl MovesCommand {
+impl MovesCommand<'_> {
     pub async fn execute(
-        client: Client,
+        client: &dyn ClientImplementation,
         pokemon_name: String,
         type_name: Option<String>,
         category: Option<String>,
-    ) {
+    ) -> String {
         MovesCommand {
             client,
             pokemon_name,
@@ -30,39 +30,49 @@ impl MovesCommand {
             category,
         }
         ._execute()
-        .await;
+        .await
     }
 
-    async fn _execute(&self) {
-        let pokemon = self.fetch_pokemon().await;
-        let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
-        let move_output = self.build_output(moves);
+    async fn _execute(&self) -> String {
+        let mut output = String::new();
 
-        let pokemon_name = formatter::capitalise(&pokemon.name);
-        println!("Pokemon: {}", pokemon_name);
+        match self.fetch_pokemon().await {
+            None => {
+                let suggestion =
+                    matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
+                output.push_str(&suggestion);
+            }
 
-        if !move_output.is_empty() {
-            println!("Moves:");
-            println!("{}", move_output);
-        } else {
-            match &self.type_name {
-                Some(type_name) => {
-                    println!(
-                        "{} has no {} type moves",
-                        pokemon_name,
-                        formatter::capitalise(type_name)
-                    );
+            Some(pokemon) => {
+                let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
+                let move_output = self.build_output(moves);
+
+                let pokemon_name = formatter::capitalise(&pokemon.name);
+                println!("Pokemon: {}", pokemon_name);
+
+                if !move_output.is_empty() {
+                    output.push_str("Moves:\n");
+                    output.push_str(&format!("{}", move_output));
+                } else {
+                    match &self.type_name {
+                        Some(type_name) => {
+                            println!(
+                                "{} has no {} type moves",
+                                pokemon_name,
+                                formatter::capitalise(type_name)
+                            );
+                        }
+                        None => (),
+                    };
                 }
-                None => (),
-            };
-        }
+            }
+        };
+
+        output
     }
 
-    async fn fetch_pokemon(&self) -> Pokemon {
-        match self.client.fetch_pokemon(&self.pokemon_name).await {
-            Ok(pokemon) => pokemon,
-            Err(_) => matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon),
-        }
+    async fn fetch_pokemon(&self) -> Option<Pokemon> {
+        self.client.fetch_pokemon(&self.pokemon_name).await.ok()
     }
 
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {

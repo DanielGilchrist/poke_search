@@ -46,20 +46,24 @@ impl NameMatcher {
     }
 }
 
-pub fn try_suggest_name(name: &str, matcher_type: MatcherType) -> ! {
+pub fn try_suggest_name(name: &str, matcher_type: MatcherType) -> String {
     let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
+    let mut output = String::new();
 
     match name_matcher.find_match(name) {
-        Some(similar_name) => {
-            println!("Unknown {} \"{}\"", keyword, name);
-            println!("Did you mean \"{}\"?", similar_name);
-            exit(1);
-        }
-        None => {
-            println!("{} \"{}\" doesn't exist", capitalise(&keyword), name);
-            exit(1);
-        }
+        Some(similar_name) => output.push_str(&format!(
+            "Unknown {} \"{}\"\nDid you mean \"{}\"?",
+            keyword, name, similar_name
+        )),
+
+        None => output.push_str(&format!(
+            "{} \"{}\" doesn't exist",
+            capitalise(&keyword),
+            name
+        )),
     }
+
+    output
 }
 
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
