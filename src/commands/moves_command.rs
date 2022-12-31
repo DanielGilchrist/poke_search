@@ -52,7 +52,7 @@ impl MovesCommand<'_> {
 
                 if !move_output.is_empty() {
                     output.push_str("Moves:\n");
-                    output.push_str(&format!("{}", move_output));
+                    output.push_str(&move_output);
                 } else {
                     match &self.type_name {
                         Some(type_name) => {

@@ -3,7 +3,7 @@ use crate::{
     name_matcher::{matcher, type_names},
     type_colours::{self},
 };
-use poke_search_cli::client::{Client, ClientImplementation};
+use poke_search_cli::client::{ClientImplementation};
 
 use std::collections::{HashMap, HashSet};
 
@@ -44,7 +44,7 @@ impl TypeCommand<'_> {
                         }
 
                         None => {
-                            self.handle_invalid_type(&second_type_name, &mut output);
+                            self.handle_invalid_type(second_type_name, &mut output);
                         }
                     },
 
@@ -92,7 +92,7 @@ impl TypeCommand<'_> {
     }
 
     fn build_single_damage_details(&self, type_: &Type, output: &mut String) {
-        self.build_single_type_header(&type_, output);
+        self.build_single_type_header(type_, output);
 
         output.push_str(&formatter::white("Offense\n"));
 
@@ -104,7 +104,7 @@ impl TypeCommand<'_> {
     }
 
     fn build_dual_damage_details(&self, type_: &Type, second_type: &Type, output: &mut String) {
-        self.build_type_header(&type_, Some(second_type), output);
+        self.build_type_header(type_, Some(second_type), output);
 
         output.push_str(&formatter::white("Offense\n"));
 

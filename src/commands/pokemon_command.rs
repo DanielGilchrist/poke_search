@@ -2,7 +2,7 @@ use crate::{
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
 };
-use poke_search_cli::client::{Client, ClientImplementation};
+use poke_search_cli::client::{ClientImplementation};
 
 use futures::{stream, StreamExt};
 use std::rc::Rc;
