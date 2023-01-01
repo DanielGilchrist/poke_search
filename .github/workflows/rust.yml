@@ -16,11 +16,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Toolchain
+      run: |
+        rustup update
+        rustup component add clippy
+        rustup install 1.66.0
+
     - name: Check format
       run: cargo fmt --check
+
     - name: Clippy
       run: cargo clippy -- -D warnings
+
     - name: Build
       run: cargo build --verbose
+
     - name: Run tests
       run: cargo test --verbose
