@@ -1,5 +1,6 @@
-use crate::client::ClientImplementation;
 use crate::{
+    builder::Builder,
+    client::ClientImplementation,
     formatter::{self, FormatModel, FormatMove},
     name_matcher::matcher,
 };
@@ -7,6 +8,7 @@ use crate::{
 use rustemon::model::moves::Move;
 
 pub struct MoveCommand<'a> {
+    builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     move_name: String,
     include_learned_by: bool,
@@ -17,28 +19,31 @@ impl MoveCommand<'_> {
         client: &dyn ClientImplementation,
         move_name: String,
         include_learned_by: bool,
-    ) -> String {
+    ) -> Builder {
+        let mut builder = Builder::default();
+
         MoveCommand {
+            builder: &mut builder,
             client,
             move_name,
             include_learned_by,
         }
         ._execute()
-        .await
+        .await;
+
+        builder
     }
 
-    async fn _execute(&self) -> String {
-        let mut output = String::new();
-
+    async fn _execute(&mut self) {
         match self.fetch_move().await {
             Some(move_) => {
                 let format_move = FormatMove::new(move_);
 
-                output.push_str("Move\n");
-                output.push_str(&format_move.format());
+                self.builder.append("Move\n");
+                self.builder.append(format_move.format());
 
                 if self.include_learned_by {
-                    output.push_str("\nLearned by:\n");
+                    self.builder.append("\nLearned by:\n");
 
                     let mut learned_by_pokemon = format_move.move_.learned_by_pokemon;
                     learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
@@ -51,18 +56,16 @@ impl MoveCommand<'_> {
                         .collect::<Vec<_>>()
                         .join("\n");
 
-                    output.push_str(&formatted_pokemon);
+                    self.builder.append(formatted_pokemon);
                 }
             }
 
             None => {
                 let suggestion =
                     matcher::try_suggest_name(&self.move_name, matcher::MatcherType::Move);
-                output.push_str(&suggestion);
+                self.builder.append(suggestion);
             }
         }
-
-        output
     }
 
     async fn fetch_move(&self) -> Option<Move> {

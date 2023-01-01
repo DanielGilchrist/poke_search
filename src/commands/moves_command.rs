@@ -1,5 +1,6 @@
-use crate::client::ClientImplementation;
 use crate::{
+    builder::Builder,
+    client::ClientImplementation,
     formatter,
     formatter::{FormatModel, FormatMove},
     name_matcher::matcher,
@@ -9,7 +10,10 @@ use rustemon::model::pokemon::{Pokemon, PokemonMove};
 
 use futures::{stream, StreamExt};
 
+const BUILDER_CAPACITY: usize = 50000;
+
 pub struct MovesCommand<'a> {
+    builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     pokemon_name: String,
     type_name: Option<String>,
@@ -22,25 +26,28 @@ impl MovesCommand<'_> {
         pokemon_name: String,
         type_name: Option<String>,
         category: Option<String>,
-    ) -> String {
+    ) -> Builder {
+        let mut builder = Builder::new(BUILDER_CAPACITY);
+
         MovesCommand {
+            builder: &mut builder,
             client,
             pokemon_name,
             type_name,
             category,
         }
         ._execute()
-        .await
+        .await;
+
+        builder
     }
 
-    async fn _execute(&self) -> String {
-        let mut output = String::new();
-
+    async fn _execute(&mut self) {
         match self.fetch_pokemon().await {
             None => {
                 let suggestion =
                     matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
-                output.push_str(&suggestion);
+                self.builder.append(suggestion);
             }
 
             Some(pokemon) => {
@@ -51,8 +58,8 @@ impl MovesCommand<'_> {
                 println!("Pokemon: {}", pokemon_name);
 
                 if !move_output.is_empty() {
-                    output.push_str("Moves:\n");
-                    output.push_str(&move_output);
+                    self.builder.append("Moves:\n");
+                    self.builder.append(move_output);
                 } else {
                     match &self.type_name {
                         Some(type_name) => {
@@ -67,8 +74,6 @@ impl MovesCommand<'_> {
                 }
             }
         };
-
-        output
     }
 
     async fn fetch_pokemon(&self) -> Option<Pokemon> {
