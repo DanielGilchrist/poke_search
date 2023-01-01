@@ -1,5 +1,6 @@
-use crate::client::ClientImplementation;
 use crate::{
+    builder::Builder,
+    client::ClientImplementation,
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
 };
@@ -19,54 +20,56 @@ static STAT_NAMES: &[&str] = &[
 ];
 
 pub struct PokemonCommand<'a> {
+    builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     pokemon_name: String,
 }
 
 impl PokemonCommand<'_> {
-    pub async fn execute(client: &dyn ClientImplementation, pokemon_name: String) -> String {
+    pub async fn execute(client: &dyn ClientImplementation, pokemon_name: String) -> Builder {
+        let mut builder = Builder::default();
+
         PokemonCommand {
+            builder: &mut builder,
             client,
             pokemon_name,
         }
         ._execute()
-        .await
+        .await;
+
+        builder
     }
 
-    async fn _execute(&self) -> String {
-        let mut output = String::new();
-
+    async fn _execute(&mut self) {
         match self.fetch_pokemon().await {
             Some(pokemon) => {
                 let format_pokemon = FormatPokemon::new(pokemon.clone());
                 let pokemon_rc = Rc::new(pokemon);
 
-                self.build_summary(&format_pokemon, &mut output);
-                self.build_stat_output(&pokemon_rc, &mut output);
-                self.build_ability_output(&pokemon_rc, &mut output).await;
+                self.build_summary(&format_pokemon);
+                self.build_stat_output(&pokemon_rc);
+                self.build_ability_output(&pokemon_rc).await;
             }
 
             None => {
                 let suggestion =
                     matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
-                output.push_str(&suggestion);
+                self.builder.append(suggestion);
             }
         };
-
-        output
     }
 
     async fn fetch_pokemon(&self) -> Option<Pokemon> {
         self.client.fetch_pokemon(&self.pokemon_name).await.ok()
     }
 
-    fn build_summary(&self, pokemon: &FormatPokemon, output: &mut String) {
-        output.push_str("Summary\n");
-        output.push_str(&pokemon.format());
+    fn build_summary(&mut self, pokemon: &FormatPokemon) {
+        self.builder.append("Summary\n");
+        self.builder.append(pokemon.format());
     }
 
-    fn build_stat_output(&self, pokemon: &Rc<Pokemon>, output: &mut String) {
-        output.push_str("\nStats\n");
+    fn build_stat_output(&mut self, pokemon: &Rc<Pokemon>) {
+        self.builder.append("\nStats\n");
         let mut stat_total = 0;
         pokemon.stats.iter().enumerate().for_each(|(index, stat)| {
             // This assumes the stats returned from the API are always in the same order.
@@ -75,19 +78,22 @@ impl PokemonCommand<'_> {
             let stat_name = STAT_NAMES[index];
             let stat_amount = stat.base_stat;
             stat_total += stat_amount;
-            output.push_str(&formatter::formatln(stat_name, &stat_amount.to_string()));
+            self.builder
+                .append(formatter::formatln(stat_name, &stat_amount.to_string()));
         });
-        output.push_str(&formatter::formatln("Total", &stat_total.to_string()));
+        self.builder
+            .append(formatter::formatln("Total", &stat_total.to_string()));
     }
 
-    async fn build_ability_output(&self, pokemon: &Rc<Pokemon>, output: &mut String) {
-        output.push_str("\nAbilities\n");
+    async fn build_ability_output(&mut self, pokemon: &Rc<Pokemon>) {
+        self.builder.append("\nAbilities\n");
         stream::iter(&pokemon.abilities)
             .map(|a| {
                 let pokemon_ref = &pokemon;
+                let client_ref = &self.client;
 
                 async move {
-                    let ability = self.client.fetch_ability(&a.ability.name).await.unwrap();
+                    let ability = client_ref.fetch_ability(&a.ability.name).await.unwrap();
 
                     FormatAbility::new(ability, Rc::clone(pokemon_ref))
                 }
@@ -97,7 +103,7 @@ impl PokemonCommand<'_> {
             .await
             .into_iter()
             .for_each(|ability| {
-                output.push_str(&format!("{}\n", ability.format()));
+                self.builder.append(format!("{}\n", ability.format()));
             });
     }
 }

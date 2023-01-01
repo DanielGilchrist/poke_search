@@ -1,9 +1,13 @@
+mod builder;
 mod client;
 mod formatter;
 mod name_matcher;
 mod type_colours;
 
-use crate::client::{Client, ClientImplementation};
+use crate::{
+    builder::Builder,
+    client::{Client, ClientImplementation},
+};
 
 use clap::{arg, ArgMatches, Command};
 
@@ -18,9 +22,7 @@ async fn main() {
     let client = Client::default();
     let matches = parse_commands().get_matches();
 
-    let output = run(&client, matches).await;
-
-    println!("{}", output);
+    run(&client, matches).await.print();
 }
 
 fn parse_name(name: Option<&String>) -> Option<String> {
@@ -93,8 +95,8 @@ fn parse_type_command() -> Command {
         ])
 }
 
-async fn run(client: &dyn ClientImplementation, matches: ArgMatches) -> String {
-    let output = match matches.subcommand() {
+async fn run(client: &dyn ClientImplementation, matches: ArgMatches) -> Builder {
+    match matches.subcommand() {
         Some(("moves", sub_matches)) => {
             let pokemon_name = get_required_string("pokemon", sub_matches);
             let type_name = get_optional_string("type_name", sub_matches);
@@ -123,10 +125,8 @@ async fn run(client: &dyn ClientImplementation, matches: ArgMatches) -> String {
             TypeCommand::execute(client, type_name, second_type_name).await
         }
 
-        _ => String::new(),
-    };
-
-    output
+        _ => Builder::empty(),
+    }
 }
 
 #[cfg(test)]
@@ -151,7 +151,7 @@ mod tests {
         let matches = command.get_matches_from(vec!["move", incorrect_name]);
 
         let expected = build_suggestion("move", incorrect_name, "flamethrower");
-        let actual = run(&mock_client, matches).await;
+        let actual = run(&mock_client, matches).await.to_string();
 
         assert_eq!(expected, actual);
 
@@ -173,7 +173,7 @@ mod tests {
         let matches = command.get_matches_from(vec!["pokemon", incorrect_name]);
 
         let expected = build_suggestion("pokemon", incorrect_name, "pikachu");
-        let actual = run(&mock_client, matches).await;
+        let actual = run(&mock_client, matches).await.to_string();
 
         assert_eq!(expected, actual);
 
@@ -195,7 +195,7 @@ mod tests {
         let matches = command.get_matches_from(vec!["type", incorrect_name]);
 
         let expected = build_suggestion("type", incorrect_name, "dragon");
-        let actual = run(&mock_client, matches).await;
+        let actual = run(&mock_client, matches).await.to_string();
 
         assert_eq!(expected, actual);
 
@@ -225,7 +225,7 @@ mod tests {
         let matches = command.get_matches_from(vec!["type", correct_name, "-s", incorrect_name]);
 
         let expected = build_suggestion("type", incorrect_name, "psychic");
-        let actual = run(&mock_client, matches).await;
+        let actual = run(&mock_client, matches).await.to_string();
 
         assert_eq!(expected, actual);
 
