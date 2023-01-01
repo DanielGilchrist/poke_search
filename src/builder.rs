@@ -33,11 +33,10 @@ impl Default for Builder {
 }
 
 impl fmt::Display for Builder {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-      write!(f, "{}", self.0)
-  }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
-
 
 pub trait Appendable {
     fn to_appendable(&self) -> &str;
