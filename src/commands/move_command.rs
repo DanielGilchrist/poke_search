@@ -20,7 +20,11 @@ impl MoveCommand<'_> {
         move_name: String,
         include_learned_by: bool,
     ) -> Builder {
-        let mut builder = Builder::default();
+        let mut builder = if include_learned_by {
+            Builder::new(3000)
+        } else {
+            Builder::default()
+        };
 
         MoveCommand {
             builder: &mut builder,

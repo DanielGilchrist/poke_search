@@ -1,6 +1,6 @@
 use std::fmt;
 
-const DEFAULT_CAPACITY: usize = 1024;
+const DEFAULT_CAPACITY: usize = 1500;
 
 pub struct Builder(String);
 
@@ -10,7 +10,7 @@ impl Builder {
     }
 
     pub fn empty() -> Self {
-        Self(String::new())
+        Self::new(0)
     }
 
     pub fn append<T: Appendable>(&mut self, str: T) {
@@ -28,7 +28,7 @@ impl Builder {
 
 impl Default for Builder {
     fn default() -> Self {
-        Self(String::with_capacity(DEFAULT_CAPACITY))
+        Self::new(DEFAULT_CAPACITY)
     }
 }
 
