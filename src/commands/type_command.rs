@@ -40,22 +40,23 @@ impl TypeCommand<'_> {
     }
 
     async fn _execute(&mut self) {
+        // TODO: Is there a way to get around this clone?
         let type_name_ref = &self.type_name.clone();
-        let type_ = if let Some(type_) = self.fetch_type(type_name_ref).await {
-            type_
-        } else {
+        let Some(type_) = self.fetch_type(type_name_ref).await else {
             self.handle_invalid_type(type_name_ref);
             return;
         };
 
+        // TODO: Is there a way to get around this clone?
         let second_type_name_ref = &self.second_type_name.clone();
-        match second_type_name_ref {
-            Some(second_type_name) => match self.fetch_type(second_type_name).await {
-                Some(second_type) => self.build_dual_damage_details(&type_, &second_type),
-                None => self.handle_invalid_type(second_type_name),
-            },
+        let Some(second_type_name) = second_type_name_ref else {
+            self.build_single_damage_details(&type_);
+            return;
+        };
 
-            None => self.build_single_damage_details(&type_),
+        match self.fetch_type(second_type_name).await {
+            Some(second_type) => self.build_dual_damage_details(&type_, &second_type),
+            None => self.handle_invalid_type(second_type_name),
         };
     }
 
@@ -71,12 +72,11 @@ impl TypeCommand<'_> {
     fn build_type_header(&mut self, type_: &Type, second_type: Option<&Type>) {
         let formatted_type = self.formatted_type(type_);
 
-        let result = match second_type {
-            Some(second_type) => {
-                let second_formatted_type = self.formatted_type(second_type);
-                format!("{} | {}", formatted_type, second_formatted_type)
-            }
-            None => formatted_type,
+        let result = if let Some(second_type) = second_type {
+            let second_formatted_type = self.formatted_type(second_type);
+            format!("{} | {}", formatted_type, second_formatted_type)
+        } else {
+            formatted_type
         };
 
         self.builder.append(format!("{}\n\n", result));
@@ -178,10 +178,10 @@ impl TypeCommand<'_> {
         let mut double_damage_types: HashSet<String> = HashSet::new();
         let mut quad_damage_types: HashSet<String> = HashSet::new();
 
-        type_names::TYPE_NAMES.iter().for_each(|type_name| {
-            if no_damage_from_types.contains(type_name) {
-                // no-op
-            } else {
+        type_names::TYPE_NAMES
+            .iter()
+            .filter(|type_name| !no_damage_from_types.contains(type_name.as_str()))
+            .for_each(|type_name| {
                 let half_damage_score = -half_damage_counts.get(type_name).unwrap_or(&0);
                 let double_damage_score = double_damage_counts.get(type_name).unwrap_or(&0);
 
@@ -206,8 +206,7 @@ impl TypeCommand<'_> {
                         // no-op
                     }
                 }
-            }
-        });
+            });
 
         self.build_types_output(&formatter::green(TYPE_HEADERS.1), &quarter_damage_types);
         self.build_types_output(&formatter::bright_green(TYPE_HEADERS.2), &half_damage_types);

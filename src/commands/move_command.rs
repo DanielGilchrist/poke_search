@@ -39,40 +39,41 @@ impl MoveCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        match self.fetch_move().await {
-            Some(move_) => {
-                let format_move = FormatMove::new(move_);
+        let Some(move_) = self.fetch_move().await else {
+            let suggestion = matcher::try_suggest_name(&self.move_name, matcher::MatcherType::Move);
 
-                self.builder.append("Move\n");
-                self.builder.append(format_move.format());
+            self.builder.append(suggestion);
+            return;
+        };
 
-                if self.include_learned_by {
-                    self.builder.append("\nLearned by:\n");
+        let mut format_move = FormatMove::new(move_);
 
-                    let mut learned_by_pokemon = format_move.move_.learned_by_pokemon;
-                    learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
+        self.builder.append("Move\n");
+        self.builder.append(format_move.format());
 
-                    let formatted_pokemon = learned_by_pokemon
-                        .into_iter()
-                        .map(|pokemon| {
-                            format!("  {}", formatter::split_and_capitalise(&pokemon.name))
-                        })
-                        .collect::<Vec<_>>()
-                        .join("\n");
-
-                    self.builder.append(formatted_pokemon);
-                }
-            }
-
-            None => {
-                let suggestion =
-                    matcher::try_suggest_name(&self.move_name, matcher::MatcherType::Move);
-                self.builder.append(suggestion);
-            }
-        }
+        self.maybe_build_learned_by(&mut format_move);
     }
 
     async fn fetch_move(&self) -> Option<Move> {
         self.client.fetch_move(&self.move_name).await.ok()
+    }
+
+    fn maybe_build_learned_by(&mut self, format_move: &mut FormatMove) {
+        if self.include_learned_by {
+            return;
+        }
+
+        self.builder.append("\nLearned by:\n");
+
+        let learned_by_pokemon = &mut format_move.move_.learned_by_pokemon;
+        learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
+
+        let formatted_pokemon = learned_by_pokemon
+            .into_iter()
+            .map(|pokemon| format!("  {}", formatter::split_and_capitalise(&pokemon.name)))
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        self.builder.append(formatted_pokemon);
     }
 }

@@ -43,37 +43,35 @@ impl MovesCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        match self.fetch_pokemon().await {
-            None => {
-                let suggestion =
-                    matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
-                self.builder.append(suggestion);
-            }
+        let Some(pokemon) = self.fetch_pokemon().await else {
+            let suggestion =
+                matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
 
-            Some(pokemon) => {
-                let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
-                let move_output = self.build_output(moves);
-
-                let pokemon_name = formatter::capitalise(&pokemon.name);
-                println!("Pokemon: {}", pokemon_name);
-
-                if !move_output.is_empty() {
-                    self.builder.append("Moves:\n");
-                    self.builder.append(move_output);
-                } else {
-                    match &self.type_name {
-                        Some(type_name) => {
-                            println!(
-                                "{} has no {} type moves",
-                                pokemon_name,
-                                formatter::capitalise(type_name)
-                            );
-                        }
-                        None => (),
-                    };
-                }
-            }
+            self.builder.append(suggestion);
+            return;
         };
+
+        let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
+        let move_output = self.build_output(moves);
+        let pokemon_name = formatter::capitalise(&pokemon.name);
+
+        // This should only happen when using a type filter
+        if move_output.is_empty() {
+            if let Some(type_name) = &self.type_name {
+                println!(
+                    "{} has no {} type moves",
+                    pokemon_name,
+                    formatter::capitalise(type_name)
+                );
+            };
+
+            return;
+        }
+
+        println!("Pokemon: {}", pokemon_name);
+
+        self.builder.append("Moves:\n");
+        self.builder.append(move_output);
     }
 
     async fn fetch_pokemon(&self) -> Option<Pokemon> {
