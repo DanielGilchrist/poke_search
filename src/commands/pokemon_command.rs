@@ -54,6 +54,7 @@ impl PokemonCommand<'_> {
             None => {
                 let suggestion =
                     matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
+
                 self.builder.append(suggestion);
             }
         };
