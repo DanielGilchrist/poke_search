@@ -69,7 +69,7 @@ impl MoveCommand<'_> {
         learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
 
         let formatted_pokemon = learned_by_pokemon
-            .into_iter()
+            .iter_mut()
             .map(|pokemon| format!("  {}", formatter::split_and_capitalise(&pokemon.name)))
             .collect::<Vec<_>>()
             .join("\n");
