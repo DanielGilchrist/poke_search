@@ -55,18 +55,18 @@ impl MovesCommand<'_> {
         let move_output = self.build_output(moves);
         let pokemon_name = formatter::capitalise(&pokemon.name);
 
-        // This should only happen when using a type filter
-        if move_output.is_empty() {
-            if let Some(type_name) = &self.type_name {
+        if let Some(type_name) = &self.type_name {
+            // move_output can be empty only if a type_name filter is passed and there are no moves of that type
+            if move_output.is_empty() {
                 println!(
                     "{} has no {} type moves",
                     pokemon_name,
                     formatter::capitalise(type_name)
                 );
-            };
 
-            return;
-        }
+                return;
+            }
+        };
 
         println!("Pokemon: {}", pokemon_name);
 
