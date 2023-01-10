@@ -80,30 +80,26 @@ impl MovesCommand<'_> {
 
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {
         stream::iter(pokemon_moves)
-            .map(|pokemon_move| {
-                let _client_ref = &self.client;
+            .map(|pokemon_move| async move {
+                let version_group_details = pokemon_move.version_group_details.last().unwrap();
 
-                async move {
-                    let version_group_details = pokemon_move.version_group_details.last().unwrap();
+                let move_learn_method = self
+                    .client
+                    .fetch_move_learn_method(&version_group_details.move_learn_method.name)
+                    .await
+                    .unwrap();
 
-                    let move_learn_method = self
-                        .client
-                        .fetch_move_learn_method(&version_group_details.move_learn_method.name)
-                        .await
-                        .unwrap();
+                let move_ = self
+                    .client
+                    .fetch_move(&pokemon_move.move_.name)
+                    .await
+                    .unwrap();
 
-                    let move_ = self
-                        .client
-                        .fetch_move(&pokemon_move.move_.name)
-                        .await
-                        .unwrap();
-
-                    FormatMove::with_details(
-                        move_,
-                        move_learn_method,
-                        version_group_details.level_learned_at,
-                    )
-                }
+                FormatMove::with_details(
+                    move_,
+                    move_learn_method,
+                    version_group_details.level_learned_at,
+                )
             })
             .buffer_unordered(100)
             .collect::<Vec<_>>()
