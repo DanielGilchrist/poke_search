@@ -1284,4 +1284,3 @@ pub static POKEMON_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
         String::from("zygarde-complete"),
     ]
 });
-

@@ -29,7 +29,6 @@ def fetch_and_replace(url, file_name)
   #{joined_names}
       ]
   });
-
   CONTENT
 
   absolute_path = File.expand_path("../src/name_matcher/#{file_name}.rs", __dir__)

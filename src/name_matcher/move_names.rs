@@ -923,4 +923,3 @@ pub static MOVE_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
         String::from("zippy-zap"),
     ]
 });
-
