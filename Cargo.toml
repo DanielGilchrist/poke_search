@@ -12,12 +12,12 @@ strip = true      # Strip symbols
 panic = "abort"   # Don't include backtrace when panics occur
 
 [dependencies]
-clap = "4.0.29"
-futures = "0.3.25"
-rustemon = "3.0.1"
-tokio = { version = "1.23.0", features = ["macros", "rt-multi-thread"] }
-ngrammatic = "0.3.4"
+clap = "4"
+futures = "0"
+rustemon = "3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+ngrammatic = "0"
 colored = "2"
-once_cell = "1.16.0"
-async-trait = "0.1.60"
-mockall = "0.9.1"
+once_cell = "1"
+async-trait = "0"
+mockall = "0"
