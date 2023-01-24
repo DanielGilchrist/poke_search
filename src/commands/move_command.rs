@@ -59,7 +59,7 @@ impl MoveCommand<'_> {
     }
 
     fn maybe_build_learned_by(&mut self, format_move: &mut FormatMove) {
-        if self.include_learned_by {
+        if !self.include_learned_by {
             return;
         }
 
