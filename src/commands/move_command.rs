@@ -51,18 +51,16 @@ impl MoveCommand<'_> {
         self.builder.append("Move\n");
         self.builder.append(format_move.format());
 
-        self.maybe_build_learned_by(&mut format_move);
+        if !self.include_learned_by {
+          self.build_learned_by(&mut format_move);
+        }
     }
 
     async fn fetch_move(&self) -> Option<Move> {
         self.client.fetch_move(&self.move_name).await.ok()
     }
 
-    fn maybe_build_learned_by(&mut self, format_move: &mut FormatMove) {
-        if !self.include_learned_by {
-            return;
-        }
-
+    fn build_learned_by(&mut self, format_move: &mut FormatMove) {
         self.builder.append("\nLearned by:\n");
 
         let learned_by_pokemon = &mut format_move.move_.learned_by_pokemon;
