@@ -52,7 +52,7 @@ impl MoveCommand<'_> {
         self.builder.append(format_move.format());
 
         if !self.include_learned_by {
-          self.build_learned_by(&mut format_move);
+            self.build_learned_by(&mut format_move);
         }
     }
 
