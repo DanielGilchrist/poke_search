@@ -65,14 +65,15 @@ impl FormatMove {
         output.push_str(&formatln("PP", &parse_maybe_i64(self.move_.pp)));
         output.push_str(&formatln("Priority", &self.move_.priority.to_string()));
 
-        let flavour_text = self.flavour_text();
-        output.push_str(&formatln("Description", &flavour_text));
+        if let Some(flavour_text) = self.flavour_text() {
+          output.push_str(&formatln("Description", &flavour_text));
+        }
 
         self.build_effects(power, output);
     }
 
-    fn flavour_text(&self) -> String {
-        self.move_
+    fn flavour_text(&self) -> Option<String> {
+        let text = self.move_
             .flavor_text_entries
             .iter()
             .find_map(|entry| {
@@ -81,9 +82,9 @@ impl FormatMove {
                 } else {
                     None
                 }
-            })
-            .unwrap()
-            .replace('\n', " ")
+            })?;
+
+        Some(text.replace('\n', " "))
     }
 
     fn build_effects(&self, power: String, output: &mut String) {
