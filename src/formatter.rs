@@ -66,23 +66,20 @@ impl FormatMove {
         output.push_str(&formatln("Priority", &self.move_.priority.to_string()));
 
         if let Some(flavour_text) = self.flavour_text() {
-          output.push_str(&formatln("Description", &flavour_text));
+            output.push_str(&formatln("Description", &flavour_text));
         }
 
         self.build_effects(power, output);
     }
 
     fn flavour_text(&self) -> Option<String> {
-        let text = self.move_
-            .flavor_text_entries
-            .iter()
-            .find_map(|entry| {
-                if entry.language.name == "en" {
-                    Some(&entry.flavor_text)
-                } else {
-                    None
-                }
-            })?;
+        let text = self.move_.flavor_text_entries.iter().find_map(|entry| {
+            if entry.language.name == "en" {
+                Some(&entry.flavor_text)
+            } else {
+                None
+            }
+        })?;
 
         Some(text.replace('\n', " "))
     }
