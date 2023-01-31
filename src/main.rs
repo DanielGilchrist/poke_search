@@ -25,12 +25,22 @@ async fn main() {
     run(&client, matches).await.print();
 }
 
-fn parse_name(name: Option<&String>) -> Option<String> {
-    name.map(|n| n.to_lowercase().split(' ').collect::<Vec<_>>().join("-"))
+fn parse_name(name: &str) -> String {
+    name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
+}
+
+fn parse_optional_name(name: Option<&String>) -> Option<String> {
+    name.map(|s| parse_name(s))
 }
 
 fn get_optional_string(command: &str, sub_matches: &ArgMatches) -> Option<String> {
-    parse_name(sub_matches.get_one::<String>(command))
+    parse_optional_name(sub_matches.get_one::<String>(command))
+}
+
+fn get_optional_strings(command: &str, sub_matches: &ArgMatches) -> Option<Vec<String>> {
+    sub_matches
+        .get_one::<String>(command)
+        .map(|category| category.split(',').map(parse_name).collect::<Vec<_>>())
 }
 
 fn get_required_string(command: &str, sub_matches: &ArgMatches) -> String {
@@ -99,10 +109,10 @@ async fn run(client: &dyn ClientImplementation, matches: ArgMatches) -> Builder 
     match matches.subcommand() {
         Some(("moves", sub_matches)) => {
             let pokemon_name = get_required_string("pokemon", sub_matches);
-            let type_name = get_optional_string("type_name", sub_matches);
-            let category = get_optional_string("category", sub_matches);
+            let type_names = get_optional_strings("type_name", sub_matches);
+            let categories = get_optional_strings("category", sub_matches);
 
-            MovesCommand::execute(client, pokemon_name, type_name, category).await
+            MovesCommand::execute(client, pokemon_name, type_names, categories).await
         }
 
         Some(("move", sub_matches)) => {
