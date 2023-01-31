@@ -16,16 +16,16 @@ pub struct MovesCommand<'a> {
     builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     pokemon_name: String,
-    type_name: Option<String>,
-    category: Option<String>,
+    type_names: Option<Vec<String>>,
+    categories: Option<Vec<String>>,
 }
 
 impl MovesCommand<'_> {
     pub async fn execute(
         client: &dyn ClientImplementation,
         pokemon_name: String,
-        type_name: Option<String>,
-        category: Option<String>,
+        type_names: Option<Vec<String>>,
+        categories: Option<Vec<String>>,
     ) -> Builder {
         let mut builder = Builder::new(BUILDER_CAPACITY);
 
@@ -33,8 +33,8 @@ impl MovesCommand<'_> {
             builder: &mut builder,
             client,
             pokemon_name,
-            type_name,
-            category,
+            type_names,
+            categories,
         }
         ._execute()
         .await;
@@ -55,13 +55,17 @@ impl MovesCommand<'_> {
         let move_output = self.build_output(moves);
         let pokemon_name = formatter::capitalise(&pokemon.name);
 
-        if let Some(type_name) = &self.type_name {
+        if let Some(type_names) = &self.type_names {
             // move_output can be empty only if a type_name filter is passed and there are no moves of that type
             if move_output.is_empty() {
                 println!(
                     "{} has no {} type moves",
                     pokemon_name,
-                    formatter::capitalise(type_name)
+                    type_names
+                        .iter()
+                        .map(|t| formatter::capitalise(t))
+                        .collect::<Vec<_>>()
+                        .join(" or ")
                 );
 
                 return;
@@ -109,13 +113,13 @@ impl MovesCommand<'_> {
     fn process_moves(&self, moves: Vec<FormatMove>) -> Vec<FormatMove> {
         let mut processed_moves = moves;
 
-        processed_moves = match &self.type_name {
-            Some(type_name) => processed_moves
+        processed_moves = match &self.type_names {
+            Some(type_names) => processed_moves
                 .into_iter()
                 .filter_map(|format_move| {
                     let move_ = &format_move.move_;
 
-                    if &move_.type_.name == type_name {
+                    if type_names.contains(&move_.type_.name) {
                         Some(format_move)
                     } else {
                         None
@@ -125,13 +129,13 @@ impl MovesCommand<'_> {
             None => processed_moves,
         };
 
-        processed_moves = match &self.category {
-            Some(category) => processed_moves
+        processed_moves = match &self.categories {
+            Some(categories) => processed_moves
                 .into_iter()
                 .filter_map(|format_move| {
                     let move_ = &format_move.move_;
 
-                    if &move_.damage_class.name == category {
+                    if categories.contains(&move_.damage_class.name) {
                         Some(format_move)
                     } else {
                         None
