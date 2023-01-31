@@ -22,7 +22,7 @@ impl Builder {
     }
 
     pub fn print(&self) {
-        println!("{}", self);
+        println!("{self}");
     }
 }
 

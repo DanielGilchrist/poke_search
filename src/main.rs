@@ -233,9 +233,6 @@ mod tests {
     }
 
     fn build_suggestion(keyword: &str, name: &str, correct_name: &str) -> String {
-        format!(
-            "Unknown {} \"{}\"\nDid you mean \"{}\"?",
-            keyword, name, correct_name
-        )
+        format!("Unknown {keyword} \"{name}\"\nDid you mean \"{correct_name}\"?")
     }
 }

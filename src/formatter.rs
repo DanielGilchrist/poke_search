@@ -295,5 +295,5 @@ pub fn bright_green(str: &str) -> String {
 }
 
 fn format_colour(coloured_string: ColoredString) -> String {
-    format!("{}", coloured_string)
+    format!("{coloured_string}")
 }
