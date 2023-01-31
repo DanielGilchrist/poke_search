@@ -68,7 +68,7 @@ impl MovesCommand<'_> {
             }
         };
 
-        println!("Pokemon: {}", pokemon_name);
+        println!("Pokemon: {pokemon_name}");
 
         self.builder.append("Moves:\n");
         self.builder.append(move_output);
