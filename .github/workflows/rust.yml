@@ -19,7 +19,7 @@ jobs:
 
     - name: Toolchain
       run: |
-        rustup install 1.66.0
+        rustup install 1.67.0
         rustup component add clippy
 
     - name: Check format
