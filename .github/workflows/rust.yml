@@ -19,9 +19,8 @@ jobs:
 
     - name: Toolchain
       run: |
-        rustup update
-        rustup component add clippy
         rustup install 1.66.0
+        rustup component add clippy
 
     - name: Check format
       run: cargo fmt --check
