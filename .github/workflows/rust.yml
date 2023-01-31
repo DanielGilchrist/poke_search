@@ -22,6 +22,7 @@ jobs:
         rustup update
         rustup default 1.67.0
         rustup component add clippy
+        rustup component add rustfmt
 
     - name: Check format
       run: cargo fmt --check
