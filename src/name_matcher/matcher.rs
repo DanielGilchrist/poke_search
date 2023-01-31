@@ -50,8 +50,7 @@ pub fn try_suggest_name(name: &str, matcher_type: MatcherType) -> String {
 
     match name_matcher.find_match(name) {
         Some(similar_name) => output.push_str(&format!(
-            "Unknown {} \"{}\"\nDid you mean \"{}\"?",
-            keyword, name, similar_name
+            "Unknown {keyword} \"{name}\"\nDid you mean \"{similar_name}\"?"
         )),
 
         None => output.push_str(&format!(

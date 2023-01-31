@@ -74,12 +74,12 @@ impl TypeCommand<'_> {
 
         let result = if let Some(second_type) = second_type {
             let second_formatted_type = self.formatted_type(second_type);
-            format!("{} | {}", formatted_type, second_formatted_type)
+            format!("{formatted_type} | {second_formatted_type}")
         } else {
             formatted_type
         };
 
-        self.builder.append(format!("{}\n\n", result));
+        self.builder.append(format!("{result}\n\n"));
     }
 
     fn build_single_type_header(&mut self, type_: &Type) {
