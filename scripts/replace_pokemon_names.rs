@@ -26,8 +26,7 @@ const URL_AND_FILENAME_PAIRS: &'static [(&'static str, &'static str)] = &[
 fn main() {
   URL_AND_FILENAME_PAIRS
     .into_iter()
-    .for_each(|pair| {
-      let (url, file_name) = pair;
+    .for_each(|(url, file_name)| {
       fetch_and_replace(url, file_name)
     })
 }
