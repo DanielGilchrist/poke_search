@@ -37,9 +37,9 @@ fn main() {
 fn fetch_and_replace(url: &str, file_name: &str) -> Result<(), Box<dyn std::error::Error>> {
   let response = reqwest::blocking::get(url)?;
   let csv = response.text()?;
-
   let mut reader = csv::Reader::from_reader(csv.as_bytes());
   let mut names = reader.records().map(|record| record.unwrap()[1].to_string()).collect::<Vec<_>>();
+
   names.sort();
 
   let joined_names = names
@@ -47,7 +47,6 @@ fn fetch_and_replace(url: &str, file_name: &str) -> Result<(), Box<dyn std::erro
     .map(|name| format!("        String::from(\"{name}\"),"))
     .collect::<Vec<_>>()
     .join("\n");
-
 
   let file_name_constant_string = file_name.to_string().to_uppercase();
   let file_contents = format!("use once_cell::sync::Lazy;
@@ -59,10 +58,16 @@ pub static {file_name_constant_string}: Lazy<Vec<String>> = Lazy::new(|| {{
 }});
 ");
 
+  write_contents(file_name, &file_contents)?;
+
+  Ok(())
+}
+
+fn write_contents(file_name: &str, file_contents: &str) -> Result<(), std::io::Error> {
   let path = determine_file_path(file_name)?;
   let mut output = File::create(path.clone())?;
-  write!(output, "{}", file_contents)?;
 
+  write!(output, "{}", file_contents)?;
   println!("Successfully saved {} to {}", file_name.replace('_', " "), path.display());
 
   Ok(())
