@@ -3,7 +3,7 @@
 //! [dependencies]
 //! csv = "1.1"
 //! relative-path = "1.7.3"
-//! reqwest = { version = "0.11", features = ["blocking", "json"] }
+//! reqwest = { version = "0.11", features = ["blocking"] }
 //! ```
 
 use std::env::current_dir;
