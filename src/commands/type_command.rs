@@ -40,15 +40,13 @@ impl TypeCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        // TODO: Is there a way to get around this clone?
-        let type_name_ref = &self.type_name.clone();
+        let type_name_ref = &self.type_name;
         let Some(type_) = self.fetch_type(type_name_ref).await else {
-            self.handle_invalid_type(type_name_ref);
+            self.handle_invalid_type(&type_name_ref.clone());
             return;
         };
 
-        // TODO: Is there a way to get around this clone?
-        let second_type_name_ref = &self.second_type_name.clone();
+        let second_type_name_ref = &self.second_type_name;
         let Some(second_type_name) = second_type_name_ref else {
             self.build_single_damage_details(&type_);
             return;
@@ -56,7 +54,7 @@ impl TypeCommand<'_> {
 
         match self.fetch_type(second_type_name).await {
             Some(second_type) => self.build_dual_damage_details(&type_, &second_type),
-            None => self.handle_invalid_type(second_type_name),
+            None => self.handle_invalid_type(&second_type_name.clone()),
         };
     }
 
