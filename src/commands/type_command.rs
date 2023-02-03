@@ -41,7 +41,7 @@ impl TypeCommand<'_> {
 
     async fn _execute(&mut self) {
         let type_name_ref = &self.type_name;
-        let Some(type_) = self.fetch_type(type_name_ref).await else {
+        let Ok(type_) = self.fetch_type(type_name_ref).await else {
             self.handle_invalid_type(&type_name_ref.clone());
             return;
         };
@@ -53,13 +53,13 @@ impl TypeCommand<'_> {
         };
 
         match self.fetch_type(second_type_name).await {
-            Some(second_type) => self.build_dual_damage_details(&type_, &second_type),
-            None => self.handle_invalid_type(&second_type_name.clone()),
+            Ok(second_type) => self.build_dual_damage_details(&type_, &second_type),
+            Err(_) => self.handle_invalid_type(&second_type_name.clone()),
         };
     }
 
-    async fn fetch_type(&self, type_name: &str) -> Option<Type> {
-        self.client.fetch_type(type_name).await.ok()
+    async fn fetch_type(&self, type_name: &str) -> Result<Type, rustemon::error::Error> {
+        self.client.fetch_type(type_name).await
     }
 
     fn handle_invalid_type(&mut self, type_name: &str) {

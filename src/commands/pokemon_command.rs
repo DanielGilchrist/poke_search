@@ -42,7 +42,7 @@ impl PokemonCommand<'_> {
 
     async fn _execute(&mut self) {
         match self.fetch_pokemon().await {
-            Some(pokemon) => {
+            Ok(pokemon) => {
                 let format_pokemon = FormatPokemon::new(pokemon.clone());
                 let pokemon_rc = Rc::new(pokemon);
 
@@ -51,7 +51,7 @@ impl PokemonCommand<'_> {
                 self.build_ability_output(&pokemon_rc).await;
             }
 
-            None => {
+            Err(_) => {
                 let suggestion =
                     matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
 
@@ -60,8 +60,8 @@ impl PokemonCommand<'_> {
         };
     }
 
-    async fn fetch_pokemon(&self) -> Option<Pokemon> {
-        self.client.fetch_pokemon(&self.pokemon_name).await.ok()
+    async fn fetch_pokemon(&self) -> Result<Pokemon, rustemon::error::Error> {
+        self.client.fetch_pokemon(&self.pokemon_name).await
     }
 
     fn build_summary(&mut self, pokemon: &FormatPokemon) {

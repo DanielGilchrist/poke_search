@@ -43,7 +43,7 @@ impl MovesCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let Some(pokemon) = self.fetch_pokemon().await else {
+        let Ok(pokemon) = self.fetch_pokemon().await else {
             let suggestion =
                 matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
 
@@ -78,8 +78,8 @@ impl MovesCommand<'_> {
         self.builder.append(move_output);
     }
 
-    async fn fetch_pokemon(&self) -> Option<Pokemon> {
-        self.client.fetch_pokemon(&self.pokemon_name).await.ok()
+    async fn fetch_pokemon(&self) -> Result<Pokemon, rustemon::error::Error> {
+        self.client.fetch_pokemon(&self.pokemon_name).await
     }
 
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {
