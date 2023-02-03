@@ -39,7 +39,7 @@ impl MoveCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let Some(move_) = self.fetch_move().await else {
+        let Ok(move_) = self.fetch_move().await else {
             let suggestion = matcher::try_suggest_name(&self.move_name, matcher::MatcherType::Move);
 
             self.builder.append(suggestion);
@@ -56,8 +56,8 @@ impl MoveCommand<'_> {
         }
     }
 
-    async fn fetch_move(&self) -> Option<Move> {
-        self.client.fetch_move(&self.move_name).await.ok()
+    async fn fetch_move(&self) -> Result<Move, rustemon::error::Error> {
+        self.client.fetch_move(&self.move_name).await
     }
 
     fn build_learned_by(&mut self, format_move: &mut FormatMove) {
