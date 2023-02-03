@@ -3,12 +3,9 @@ use crate::type_colours::{self};
 use std::rc::Rc;
 
 use colored::*;
-use rustemon::{
-    model::{
-        moves::{Move, MoveLearnMethod},
-        pokemon::{Ability, Pokemon, PokemonMoveVersion},
-    },
-    moves::move_learn_method,
+use rustemon::model::{
+    moves::{Move, MoveLearnMethod},
+    pokemon::{Ability, Pokemon, PokemonMoveVersion},
 };
 
 pub trait FormatModel {
