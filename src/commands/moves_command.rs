@@ -85,25 +85,25 @@ impl MovesCommand<'_> {
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {
         stream::iter(pokemon_moves)
             .map(|pokemon_move| async move {
-                let version_group_details = pokemon_move.version_group_details.last().unwrap();
+                let version_group_details = pokemon_move.version_group_details.last();
 
-                let move_learn_method = self
-                    .client
-                    .fetch_move_learn_method(&version_group_details.move_learn_method.name)
-                    .await
-                    .unwrap();
+                let move_learn_method = if let Some(version_group_details) = version_group_details {
+                    self.client
+                        .fetch_move_learn_method(&version_group_details.move_learn_method.name)
+                        .await
+                        .ok()
+                } else {
+                    None
+                };
 
+                // TODO: Gracecfully filter out failed requests for a move
                 let move_ = self
                     .client
                     .fetch_move(&pokemon_move.move_.name)
                     .await
                     .unwrap();
 
-                FormatMove::with_details(
-                    move_,
-                    move_learn_method,
-                    version_group_details.level_learned_at,
-                )
+                FormatMove::with_maybe_details(move_, move_learn_method, version_group_details)
             })
             .buffer_unordered(100)
             .collect::<Vec<_>>()
