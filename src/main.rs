@@ -44,7 +44,9 @@ fn get_optional_strings(command: &str, sub_matches: &ArgMatches) -> Option<Vec<S
 }
 
 fn get_required_string(command: &str, sub_matches: &ArgMatches) -> String {
-    get_optional_string(command, sub_matches).unwrap()
+    get_optional_string(command, sub_matches).unwrap_or_else(|| {
+        panic!("{}", format!("{command} is required!"));
+    })
 }
 
 fn get_optional_bool(command: &str, sub_matches: &ArgMatches) -> bool {

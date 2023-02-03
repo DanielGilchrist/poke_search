@@ -94,6 +94,7 @@ impl PokemonCommand<'_> {
                 let client_ref = &self.client;
 
                 async move {
+                    // TODO: Gracefully filter out failed requests for an ability
                     let ability = client_ref.fetch_ability(&a.ability.name).await.unwrap();
 
                     FormatAbility::new(ability, Rc::clone(pokemon_ref))

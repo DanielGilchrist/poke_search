@@ -3,9 +3,12 @@ use crate::type_colours::{self};
 use std::rc::Rc;
 
 use colored::*;
-use rustemon::model::{
-    moves::{Move, MoveLearnMethod},
-    pokemon::{Ability, Pokemon},
+use rustemon::{
+    model::{
+        moves::{Move, MoveLearnMethod},
+        pokemon::{Ability, Pokemon, PokemonMoveVersion},
+    },
+    moves::move_learn_method,
 };
 
 pub trait FormatModel {
@@ -30,20 +33,24 @@ impl FormatMove {
         }
     }
 
-    pub fn with_details(
+    pub fn with_maybe_details(
         move_: Move,
-        move_learn_method: MoveLearnMethod,
-        level_learned_at: i64,
+        move_learn_method: Option<MoveLearnMethod>,
+        version_group_details: Option<&PokemonMoveVersion>,
     ) -> Self {
-        let move_details = Some(MoveDetails {
-            move_learn_method,
-            level_learned_at,
-        });
-
-        FormatMove {
-            move_,
-            move_details,
+        if let (Some(move_learn_method), Some(version_group_details)) =
+            (move_learn_method, version_group_details)
+        {
+            return FormatMove {
+                move_,
+                move_details: Some(MoveDetails {
+                    move_learn_method,
+                    level_learned_at: version_group_details.level_learned_at,
+                }),
+            };
         }
+
+        Self::new(move_)
     }
 
     fn build_summary(&self, output: &mut String) {
@@ -101,8 +108,11 @@ impl FormatMove {
 
     fn build_move_learn_details(&self, output: &mut String) {
         if let Some(move_details) = &self.move_details {
-            let description = self.find_move_learn_description(&move_details.move_learn_method);
-            output.push_str(&formatln("Learn Method", &description));
+            if let Some(description) =
+                self.find_move_learn_description(&move_details.move_learn_method)
+            {
+                output.push_str(&formatln("Learn Method", &description));
+            }
 
             let level_learned_at = move_details.level_learned_at;
             if level_learned_at > 0 {
@@ -111,14 +121,13 @@ impl FormatMove {
         }
     }
 
-    fn find_move_learn_description(&self, move_learn_method: &MoveLearnMethod) -> String {
-        move_learn_method
+    fn find_move_learn_description(&self, move_learn_method: &MoveLearnMethod) -> Option<String> {
+        let english_description = move_learn_method
             .descriptions
             .iter()
-            .find(|description| description.language.name == "en")
-            .unwrap()
-            .description
-            .to_owned()
+            .find(|description| description.language.name == "en")?;
+
+        Some(english_description.description.to_owned())
     }
 }
 
@@ -195,30 +204,30 @@ impl FormatAbility {
     }
 
     fn build_description(&self, output: &mut String) {
-        let hidden_value = self.hidden_value();
-        output.push_str(&formatln("Hidden", &hidden_value));
+        if let Some(hidden_value) = self.hidden_value() {
+            output.push_str(&formatln("Hidden", &hidden_value));
+        }
 
-        let ability_effect = self.ability_effect();
-        output.push_str(&formatln("Description", &ability_effect));
+        if let Some(ability_effect) = self.ability_effect() {
+            output.push_str(&formatln("Description", &ability_effect));
+        }
     }
 
-    fn hidden_value(&self) -> String {
-        self.ability
-            .pokemon
-            .iter()
-            .find_map(|ability_pokemon| {
-                if ability_pokemon.pokemon.name == self.pokemon.name {
-                    Some(ability_pokemon.is_hidden)
-                } else {
-                    None
-                }
-            })
-            .unwrap()
-            .to_string()
+    fn hidden_value(&self) -> Option<String> {
+        let is_hidden = self.ability.pokemon.iter().find_map(|ability_pokemon| {
+            if ability_pokemon.pokemon.name == self.pokemon.name {
+                Some(ability_pokemon.is_hidden)
+            } else {
+                None
+            }
+        })?;
+
+        Some(is_hidden.to_string())
     }
 
-    fn ability_effect(&self) -> String {
-        self.ability
+    fn ability_effect(&self) -> Option<String> {
+        let effect = self
+            .ability
             .effect_entries
             .iter()
             .find_map(|verbose_effect| {
@@ -227,9 +236,9 @@ impl FormatAbility {
                 } else {
                     None
                 }
-            })
-            .unwrap()
-            .replace('\n', " ")
+            })?;
+
+        Some(effect.replace('\n', " "))
     }
 }
 
