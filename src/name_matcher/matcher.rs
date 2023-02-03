@@ -64,14 +64,14 @@ pub fn try_suggest_name(name: &str, matcher_type: MatcherType) -> String {
 }
 
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
-    let names_and_keyword = match matcher_type {
+    let (names, keyword) = match matcher_type {
         MatcherType::Move => (&MOVE_NAMES, "move"),
         MatcherType::Pokemon => (&POKEMON_NAMES, "pokemon"),
         MatcherType::Type => (&TYPE_NAMES, "type"),
     };
 
     (
-        NameMatcher::new(Lazy::force(names_and_keyword.0).to_owned()),
-        String::from(names_and_keyword.1),
+        NameMatcher::new(Lazy::force(names).to_owned()),
+        String::from(keyword),
     )
 }
