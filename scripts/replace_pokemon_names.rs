@@ -27,29 +27,24 @@ fn main() {
   SOURCES
     .into_iter()
     .for_each(|(url, file_name)| {
-      fetch_and_replace(url, file_name)
+      match fetch_and_replace(url, file_name) {
+        Ok(_) => (),
+        Err(error) => eprintln!("{:?}", error)
+      };
     })
 }
 
-fn fetch_and_replace(url: &str, file_name: &str) {
-  let csv = reqwest::blocking::get(url)
-    .unwrap()
-    .text()
-    .unwrap();
+fn fetch_and_replace(url: &str, file_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+  let response = reqwest::blocking::get(url)?;
+  let csv = response.text()?;
 
   let mut reader = csv::Reader::from_reader(csv.as_bytes());
-  let mut names = reader
-    .records()
-    .map(|record| record.unwrap()[1].to_string())
-    .collect::<Vec<_>>();
-
+  let mut names = reader.records().map(|record| record.unwrap()[1].to_string()).collect::<Vec<_>>();
   names.sort();
 
   let joined_names = names
     .into_iter()
-    .map(|name| {
-      format!("        String::from(\"{name}\"),")
-    })
+    .map(|name| format!("        String::from(\"{name}\"),"))
     .collect::<Vec<_>>()
     .join("\n");
 
@@ -64,17 +59,19 @@ pub static {file_name_constant_string}: Lazy<Vec<String>> = Lazy::new(|| {{
 }});
 ");
 
-  let path = determine_file_path(file_name);
-  let mut output = File::create(path.clone()).unwrap();
-  write!(output, "{}", file_contents).unwrap();
+  let path = determine_file_path(file_name)?;
+  let mut output = File::create(path.clone())?;
+  write!(output, "{}", file_contents)?;
 
   println!("Successfully saved {} to {}", file_name.replace('_', " "), path.display());
+
+  Ok(())
 }
 
-fn determine_file_path(file_name: &str) -> PathBuf {
-  let root = current_dir().unwrap();
+fn determine_file_path(file_name: &str) -> Result<PathBuf, std::io::Error> {
+  let root = current_dir()?;
   let formatted_path = format!("src/name_matcher/{file_name}.rs");
   let relative_path = RelativePath::new(&formatted_path);
 
-  relative_path.to_path(&root)
+  Ok(relative_path.to_path(&root))
 }
