@@ -12,7 +12,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use relative_path::RelativePath;
 
-const URL_AND_FILENAME_PAIRS: &'static [(&'static str, &'static str)] = &[
+const SOURCES: &'static [(&'static str, &'static str)] = &[
   (
     "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
     "pokemon_names"
@@ -24,7 +24,7 @@ const URL_AND_FILENAME_PAIRS: &'static [(&'static str, &'static str)] = &[
 ];
 
 fn main() {
-  URL_AND_FILENAME_PAIRS
+  SOURCES
     .into_iter()
     .for_each(|(url, file_name)| {
       fetch_and_replace(url, file_name)
