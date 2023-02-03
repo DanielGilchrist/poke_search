@@ -505,7 +505,6 @@ pub static POKEMON_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
         String::from("huntail"),
         String::from("hydreigon"),
         String::from("hypno"),
-        String::from("identifier"),
         String::from("igglybuff"),
         String::from("illumise"),
         String::from("impidimp"),

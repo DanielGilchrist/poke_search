@@ -387,7 +387,6 @@ pub static MOVE_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
         String::from("icicle-crash"),
         String::from("icicle-spear"),
         String::from("icy-wind"),
-        String::from("identifier"),
         String::from("imprison"),
         String::from("incinerate"),
         String::from("infernal-parade"),
