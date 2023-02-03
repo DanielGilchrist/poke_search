@@ -18,7 +18,9 @@ pub static TYPE_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
         String::from("poison"),
         String::from("psychic"),
         String::from("rock"),
+        String::from("shadow"),
         String::from("steel"),
+        String::from("unknown"),
         String::from("water"),
     ]
 });
