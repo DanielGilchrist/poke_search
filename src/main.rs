@@ -49,7 +49,7 @@ fn get_required_string(command: &str, sub_matches: &ArgMatches) -> String {
     })
 }
 
-fn get_optional_bool(command: &str, sub_matches: &ArgMatches) -> bool {
+fn get_bool(command: &str, sub_matches: &ArgMatches) -> bool {
     sub_matches
         .get_one::<bool>(command)
         .unwrap_or(&false)
@@ -95,7 +95,10 @@ fn parse_move_command() -> Command {
 fn parse_pokemon_command() -> Command {
     Command::new("pokemon")
         .about("See information about a pokemon")
-        .args([arg!(pokemon: <POKEMON_NAME>).required(true)])
+        .args([
+          arg!(pokemon: <POKEMON_NAME>).required(true),
+          arg!(-t --types "Show detailed type information").required(false),
+        ])
 }
 
 fn parse_type_command() -> Command {
@@ -119,15 +122,16 @@ async fn run(client: &dyn ClientImplementation, matches: ArgMatches) -> Builder 
 
         Some(("move", sub_matches)) => {
             let move_name = get_required_string("move", sub_matches);
-            let include_learned_by = get_optional_bool("learned_by", sub_matches);
+            let include_learned_by = get_bool("learned_by", sub_matches);
 
             MoveCommand::execute(client, move_name, include_learned_by).await
         }
 
         Some(("pokemon", sub_matches)) => {
             let pokemon_name = get_required_string("pokemon", sub_matches);
+            let show_types = get_bool("types", sub_matches);
 
-            PokemonCommand::execute(client, pokemon_name).await
+            PokemonCommand::execute(client, pokemon_name, show_types).await
         }
 
         Some(("type", sub_matches)) => {
