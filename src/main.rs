@@ -96,8 +96,8 @@ fn parse_pokemon_command() -> Command {
     Command::new("pokemon")
         .about("See information about a pokemon")
         .args([
-          arg!(pokemon: <POKEMON_NAME>).required(true),
-          arg!(-t --types "Show detailed type information").required(false),
+            arg!(pokemon: <POKEMON_NAME>).required(true),
+            arg!(-t --types "Show detailed type information").required(false),
         ])
 }
 

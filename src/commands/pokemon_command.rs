@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
-    commands::type_command::TypeCommand,
     client::ClientImplementation,
+    commands::type_command::TypeCommand,
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
 };
@@ -28,7 +28,11 @@ pub struct PokemonCommand<'a> {
 }
 
 impl PokemonCommand<'_> {
-    pub async fn execute(client: &dyn ClientImplementation, pokemon_name: String, show_types: bool) -> Builder {
+    pub async fn execute(
+        client: &dyn ClientImplementation,
+        pokemon_name: String,
+        show_types: bool,
+    ) -> Builder {
         let mut builder = Builder::default();
 
         PokemonCommand {
@@ -60,17 +64,16 @@ impl PokemonCommand<'_> {
         self.build_ability_output(&pokemon_rc).await;
 
         if self.show_types {
-          let types = &pokemon.types;
-          let (type1, type2) = (types.first().unwrap().type_.name.clone(), types.last().map(|t| t.type_.name.clone()));
+            let types = &pokemon.types;
+            let (type1, type2) = (
+                types.first().unwrap().type_.name.clone(),
+                types.last().map(|t| t.type_.name.clone()),
+            );
 
-          // TODO: We should extract the logic we need from this as it restricts what we can actually do with `TypeCommand`
-          let type_builder = TypeCommand::execute(
-            self.client,
-            type1,
-            type2,
-          ).await;
+            // TODO: We should extract the logic we need from this as it restricts what we can actually do with `TypeCommand`
+            let type_builder = TypeCommand::execute(self.client, type1, type2).await;
 
-          self.builder.append_builder(type_builder);
+            self.builder.append_builder(type_builder);
         }
     }
 

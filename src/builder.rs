@@ -18,7 +18,7 @@ impl Builder {
     }
 
     pub fn append_builder(&mut self, builder: Self) {
-      self.append(builder.to_string());
+        self.append(builder.to_string());
     }
 
     pub fn append_c(&mut self, c: char) {
