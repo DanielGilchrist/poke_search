@@ -1,6 +1,7 @@
 use crate::{
     builder::Builder,
     client::ClientImplementation,
+    commands::type_command::TypeCommand,
     formatter::{self, FormatAbility, FormatModel, FormatPokemon},
     name_matcher::matcher,
 };
@@ -23,16 +24,22 @@ pub struct PokemonCommand<'a> {
     builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     pokemon_name: String,
+    show_types: bool,
 }
 
 impl PokemonCommand<'_> {
-    pub async fn execute(client: &dyn ClientImplementation, pokemon_name: String) -> Builder {
+    pub async fn execute(
+        client: &dyn ClientImplementation,
+        pokemon_name: String,
+        show_types: bool,
+    ) -> Builder {
         let mut builder = Builder::default();
 
         PokemonCommand {
             builder: &mut builder,
             client,
             pokemon_name,
+            show_types,
         }
         ._execute()
         .await;
@@ -41,23 +48,35 @@ impl PokemonCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        match self.fetch_pokemon().await {
-            Ok(pokemon) => {
-                let format_pokemon = FormatPokemon::new(pokemon.clone());
-                let pokemon_rc = Rc::new(pokemon);
-
-                self.build_summary(&format_pokemon);
-                self.build_stat_output(&pokemon_rc);
-                self.build_ability_output(&pokemon_rc).await;
-            }
-
-            Err(_) => {
-                let suggestion =
+        let Ok(pokemon) = self.fetch_pokemon().await else {
+          let suggestion =
                     matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
 
-                self.builder.append(suggestion);
-            }
+          self.builder.append(suggestion);
+          return
         };
+
+        let format_pokemon = FormatPokemon::new(pokemon.clone());
+        let pokemon_rc = Rc::new(pokemon.clone());
+
+        self.build_summary(&format_pokemon);
+        self.build_stat_output(&pokemon_rc);
+        self.build_ability_output(&pokemon_rc).await;
+
+        if self.show_types {
+            // TODO: This implementation isn't great as we have to clone a lot. See if we can improve the design to avoid it
+            let types = &pokemon.types;
+            let (type1, type2) = (
+                types.first().unwrap().type_.name.clone(),
+                types.last().map(|t| t.type_.name.clone()),
+            );
+
+            // TODO: We should extract the logic we need from this as it restricts what we can actually do with `TypeCommand`
+            let type_builder = TypeCommand::execute(self.client, type1, type2).await;
+
+            self.builder.append("Type information\n\n");
+            self.builder.append_builder(type_builder);
+        }
     }
 
     async fn fetch_pokemon(&self) -> Result<Pokemon, rustemon::error::Error> {
