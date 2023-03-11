@@ -261,11 +261,7 @@ pub fn capitalise(s: &str) -> String {
 }
 
 pub fn split_and_capitalise(s: &str) -> String {
-    s.split('-')
-        .into_iter()
-        .map(capitalise)
-        .collect::<Vec<_>>()
-        .join(" ")
+    s.split('-').map(capitalise).collect::<Vec<_>>().join(" ")
 }
 
 pub fn formatln(title: &str, value: &str) -> String {
