@@ -9,6 +9,7 @@ use crate::{
 use futures::{stream, StreamExt};
 use std::rc::Rc;
 
+use itertools::Itertools;
 use rustemon::model::pokemon::Pokemon;
 
 static STAT_NAMES: &[&str] = &[
@@ -107,7 +108,14 @@ impl PokemonCommand<'_> {
 
     async fn build_ability_output(&mut self, pokemon: &Rc<Pokemon>) {
         self.builder.append("\nAbilities\n");
-        stream::iter(&pokemon.abilities)
+
+        let unique_pokemon_abilities = pokemon
+            .abilities
+            .iter()
+            .unique_by(|pokemon_ability| &pokemon_ability.ability.name)
+            .collect::<Vec<_>>();
+
+        stream::iter(&unique_pokemon_abilities)
             .map(|a| {
                 let pokemon_ref = &pokemon;
                 let client_ref = &self.client;
