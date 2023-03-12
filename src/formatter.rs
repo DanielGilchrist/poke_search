@@ -3,6 +3,7 @@ use crate::type_colours::{self};
 use std::rc::Rc;
 
 use colored::*;
+use itertools::Itertools;
 use rustemon::model::{
     moves::{Move, MoveLearnMethod},
     pokemon::{Ability, Pokemon, PokemonMoveVersion},
@@ -168,9 +169,14 @@ impl FormatPokemon {
     }
 
     fn build_joined_abilities(&self, output: &mut String) {
-        let joined_abilities = self
+        let unique_abilities = self
             .0
             .abilities
+            .iter()
+            .unique_by(|pokemon_ability| &pokemon_ability.ability.name)
+            .collect::<Vec<_>>();
+
+        let joined_abilities = unique_abilities
             .iter()
             .map(|pokemon_ability| split_and_capitalise(&pokemon_ability.ability.name))
             .collect::<Vec<_>>()
