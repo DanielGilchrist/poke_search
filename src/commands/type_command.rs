@@ -40,6 +40,7 @@ impl TypeCommand<'_> {
     }
 
     async fn _execute(&mut self) {
+        // TODO: Implement auto suggestions like other commands
         let type_name_ref = &self.type_name;
         let Ok(type_) = self.fetch_type(type_name_ref).await else {
             self.handle_invalid_type(&type_name_ref.clone());
