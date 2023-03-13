@@ -39,22 +39,23 @@ impl MoveCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let successful_match = match matcher::match_name(&self.move_name, matcher::MatcherType::Move) {
-          Ok(successful_match) => successful_match,
-          Err(no_match) => {
-            let output = matcher::build_unknown_name(&self.move_name, &no_match.keyword);
-            self.builder.append(output);
-            return
-          }
-        };
+        let successful_match =
+            match matcher::match_name(&self.move_name, matcher::MatcherType::Move) {
+                Ok(successful_match) => successful_match,
+                Err(no_match) => {
+                    let output = matcher::build_unknown_name(&self.move_name, &no_match.keyword);
+                    self.builder.append(output);
+                    return;
+                }
+            };
 
         let successful_match = match successful_match.certainty {
-          matcher::Certainty::Positive => successful_match,
-          matcher::Certainty::Neutral => {
-            let output = matcher::build_suggested_name(&successful_match);
-            self.builder.append(output);
-            return
-          }
+            matcher::Certainty::Positive => successful_match,
+            matcher::Certainty::Neutral => {
+                let output = matcher::build_suggested_name(&successful_match);
+                self.builder.append(output);
+                return;
+            }
         };
 
         let Ok(move_) = self.fetch_move(&successful_match.suggested_name).await else {
