@@ -7,6 +7,7 @@ use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
 
 static MIN_SIMILARITY: f32 = 0.4;
+static CERTAIN_SIMILARITY: f32 = 0.7;
 
 pub enum MatcherType {
     Pokemon,
@@ -14,7 +15,63 @@ pub enum MatcherType {
     Type,
 }
 
-pub struct NameMatcher {
+pub enum Certainty {
+  Positive,
+  Neutral
+}
+
+pub struct SuccessfulMatch {
+  pub original_name: String,
+  pub suggested_name: String,
+  pub keyword: String,
+  pub certainty: Certainty,
+}
+
+impl SuccessfulMatch {
+  pub fn new(
+    original_name: String,
+    keyword: String,
+    suggestion: Suggestion,
+  ) -> Self {
+    let certainty = if suggestion.similarity >= CERTAIN_SIMILARITY {
+      Certainty::Positive
+    } else {
+      Certainty::Neutral
+    };
+
+    let suggested_name = suggestion.name;
+
+    Self {
+      original_name,
+      suggested_name,
+      keyword,
+      certainty,
+    }
+  }
+}
+
+pub struct NoMatch {
+  pub keyword: String,
+}
+
+impl NoMatch {
+  pub fn new(keyword: String) -> Self {
+    Self { keyword }
+  }
+}
+
+pub struct Suggestion {
+  name: String,
+  similarity: f32
+}
+
+impl Suggestion {
+  pub fn new(name: String, similarity: f32) -> Self {
+    Self { name, similarity }
+  }
+}
+
+struct NameMatcher {
     names: Vec<String>,
 }
 
@@ -23,13 +80,18 @@ impl NameMatcher {
         NameMatcher { names }
     }
 
-    pub fn find_match(&self, name: &str) -> Option<String> {
+    pub fn find_match(&self, name: &str) -> Option<Suggestion> {
         let corpus = self.build_corpus();
         let search_results = corpus.search(name, 0.25);
         let search_result = search_results.first().map(|r| r.to_owned())?;
 
         if search_result.similarity > MIN_SIMILARITY {
-            Some(search_result.text)
+            let suggested_name = Suggestion::new(
+              search_result.text,
+              search_result.similarity,
+            );
+
+            Some(suggested_name)
         } else {
             None
         }
@@ -44,23 +106,62 @@ impl NameMatcher {
     }
 }
 
+pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, NoMatch> {
+  let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
+
+  match name_matcher.find_match(name) {
+    Some(suggestion) => {
+      let successful_match = SuccessfulMatch::new(
+        name.to_owned(),
+        keyword,
+        suggestion
+      );
+
+      Ok(successful_match)
+    }
+
+    None => {
+      Err(NoMatch::new(keyword))
+    }
+  }
+}
+
+pub fn build_suggested_name(successful_match: &SuccessfulMatch) -> String {
+  let keyword = &successful_match.keyword;
+  let original_name = &successful_match.original_name;
+  let similar_name = &successful_match.suggested_name;
+
+  format!(
+    "Unknown {keyword} \"{original_name}\"\nDid you mean \"{similar_name}\"?"
+  )
+}
+
+pub fn build_unknown_name(name: &str, keyword: &str) -> String {
+  format!(
+      "{} \"{}\" doesn't exist",
+      capitalise(keyword),
+      name
+  )
+}
+
 pub fn try_suggest_name(name: &str, matcher_type: MatcherType) -> String {
     let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
-    let mut output = String::new();
 
     match name_matcher.find_match(name) {
-        Some(similar_name) => output.push_str(&format!(
-            "Unknown {keyword} \"{name}\"\nDid you mean \"{similar_name}\"?"
-        )),
+        Some(suggestion) => {
+            let similar_name = suggestion.name;
 
-        None => output.push_str(&format!(
+            format!(
+              "Unknown {keyword} \"{name}\"\nDid you mean \"{similar_name}\"?"
+            )
+        },
+
+        None => format!(
             "{} \"{}\" doesn't exist",
             capitalise(&keyword),
             name
-        )),
+        ),
     }
-
-    output
 }
 
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
