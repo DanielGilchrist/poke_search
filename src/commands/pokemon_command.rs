@@ -49,18 +49,8 @@ impl PokemonCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let name_match = match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
-          Ok(successful_match) => {
-            match successful_match.certainty {
-              matcher::Certainty::Positive => successful_match,
-              matcher::Certainty::Neutral => {
-                let output = matcher::build_suggested_name(&successful_match);
-                self.builder.append(output);
-                return
-              }
-            }
-          },
-
+        let successful_match = match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
+          Ok(successful_match) => successful_match,
           Err(no_match) => {
             let output = matcher::build_unknown_name(&self.pokemon_name, &no_match.keyword);
             self.builder.append(output);
@@ -68,10 +58,17 @@ impl PokemonCommand<'_> {
           }
         };
 
-        let Ok(pokemon) = self.fetch_pokemon(&name_match.suggested_name).await else {
-          let output =
-                    matcher::build_unknown_name(&name_match.suggested_name, &name_match.keyword);
+        let successful_match = match successful_match.certainty {
+          matcher::Certainty::Positive => successful_match,
+          matcher::Certainty::Neutral => {
+            let output = matcher::build_suggested_name(&successful_match);
+            self.builder.append(output);
+            return
+          }
+        };
 
+        let Ok(pokemon) = self.fetch_pokemon(&successful_match.suggested_name).await else {
+          let output = matcher::build_unknown_name(&successful_match.suggested_name, &successful_match.keyword);
           self.builder.append(output);
           return
         };
