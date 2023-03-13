@@ -43,12 +43,29 @@ impl MovesCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let Ok(pokemon) = self.fetch_pokemon().await else {
-            let suggestion =
-                matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
+        let successful_match =
+            match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
+                Ok(successful_match) => successful_match,
+                Err(no_match) => {
+                    let output = matcher::build_unknown_name(&self.pokemon_name, &no_match.keyword);
+                    self.builder.append(output);
+                    return;
+                }
+            };
 
-            self.builder.append(suggestion);
-            return;
+        let successful_match = match successful_match.certainty {
+            matcher::Certainty::Positive => successful_match,
+            matcher::Certainty::Neutral => {
+                let output = matcher::build_suggested_name(&successful_match);
+                self.builder.append(output);
+                return;
+            }
+        };
+
+        let Ok(pokemon) = self.fetch_pokemon(&successful_match.suggested_name).await else {
+          let output = matcher::build_unknown_name(&successful_match.suggested_name, &successful_match.keyword);
+          self.builder.append(output);
+          return
         };
 
         let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
@@ -78,8 +95,8 @@ impl MovesCommand<'_> {
         self.builder.append(move_output);
     }
 
-    async fn fetch_pokemon(&self) -> Result<Pokemon, rustemon::error::Error> {
-        self.client.fetch_pokemon(&self.pokemon_name).await
+    async fn fetch_pokemon(&self, pokemon_name: &str) -> Result<Pokemon, rustemon::error::Error> {
+        self.client.fetch_pokemon(pokemon_name).await
     }
 
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {
