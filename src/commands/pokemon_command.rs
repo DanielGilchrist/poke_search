@@ -65,12 +65,13 @@ impl PokemonCommand<'_> {
         self.build_ability_output(&pokemon_rc).await;
 
         if self.show_types {
-            // TODO: This implementation isn't great as we have to clone a lot. See if we can improve the design to avoid it
-            let types = &pokemon.types;
-            let (type1, type2) = (
-                types.first().unwrap().type_.name.clone(),
-                types.last().map(|t| t.type_.name.clone()),
-            );
+            let types = pokemon
+                .types
+                .into_iter()
+                .map(|t| t.type_.name)
+                .collect::<Vec<_>>();
+
+            let (type1, type2) = (types[0].to_string(), types.get(1).map(|t| t.to_string()));
 
             // TODO: We should extract the logic we need from this as it restricts what we can actually do with `TypeCommand`
             let type_builder = TypeCommand::execute(self.client, type1, type2).await;
