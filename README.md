@@ -1,7 +1,7 @@
 # poke_search_cli
 
 # Installation
-You will need Rust 1.68.0 installed. I recommend using [`rustup`](https://rustup.rs/)
+You will need Rust 1.68.2 installed. I recommend using [`rustup`](https://rustup.rs/)
 ```sh
 # From the rustup.rs website
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -9,7 +9,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 And then run
 ```sh
-rustup default 1.68.0
+rustup default 1.68.2
 ```
 
 Then
