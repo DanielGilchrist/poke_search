@@ -106,12 +106,15 @@ impl TypeCommand<'_> {
             .collect::<Vec<_>>()
             .join("\n");
 
-        self.builder.append(formatter::white("\nPokemon\n"));
-        if formatted_pokemon.is_empty() {
+        let num_pokemon = pokemon_names.len();
+        let header = formatter::white(&format!("\nPokemon ({num_pokemon})\n"));
+        self.builder.append(header);
+
+        if num_pokemon > 0 {
+            self.builder.append(formatted_pokemon);
+        } else {
             self.builder
                 .append(formatter::red("No pokemon with this type combination."));
-        } else {
-            self.builder.append(formatted_pokemon);
         }
     }
 
