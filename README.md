@@ -44,4 +44,4 @@ Options:
 ```
 
 ### Example
-![image](https://user-images.githubusercontent.com/13454550/209565900-6de7db16-6f80-4fba-853b-d130cd05c066.png)
+<img width="622" alt="image" src="https://user-images.githubusercontent.com/13454550/231045762-a15ddd2c-1ae3-4de3-906c-8cc093a3354a.png">
