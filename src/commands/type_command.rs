@@ -83,7 +83,7 @@ impl TypeCommand<'_> {
             .map(|type_pokemon| type_pokemon.pokemon.name.clone())
             .collect::<HashSet<_>>();
 
-        let pokemon_names = if let Some(second_type) = second_type {
+        let mut pokemon_names = if let Some(second_type) = second_type {
             let second_type_pokemon_names = second_type
                 .pokemon
                 .iter()
@@ -98,6 +98,8 @@ impl TypeCommand<'_> {
             type_pokemon_names.into_iter().collect::<Vec<_>>()
         };
 
+        pokemon_names.sort();
+
         let formatted_pokemon = pokemon_names
             .iter()
             .map(|pokemon_name| format!("  {}", formatter::split_and_capitalise(pokemon_name)))
@@ -105,7 +107,12 @@ impl TypeCommand<'_> {
             .join("\n");
 
         self.builder.append(formatter::white("\nPokemon\n"));
-        self.builder.append(formatted_pokemon);
+        if formatted_pokemon.is_empty() {
+            self.builder
+                .append(formatter::red("No pokemon with this type combination."));
+        } else {
+            self.builder.append(formatted_pokemon);
+        }
     }
 
     fn handle_invalid_type(&mut self, type_name: &str) {
