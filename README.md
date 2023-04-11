@@ -1,4 +1,5 @@
 # poke_search_cli
+<img width="596" alt="image" src="https://user-images.githubusercontent.com/13454550/231265090-c50cb26f-6ef9-432d-ac11-ec213d79f695.png">
 
 # Installation
 You will need Rust 1.68.2 installed. I recommend using [`rustup`](https://rustup.rs/)
@@ -42,6 +43,3 @@ Commands:
 Options:
   -h, --help  Print help information
 ```
-
-### Example
-<img width="622" alt="image" src="https://user-images.githubusercontent.com/13454550/231045762-a15ddd2c-1ae3-4de3-906c-8cc093a3354a.png">
