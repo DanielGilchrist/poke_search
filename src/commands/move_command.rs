@@ -61,8 +61,6 @@ impl MoveCommand<'_> {
     }
 
     fn build_learned_by(&mut self, format_move: &mut FormatMove) {
-        self.builder.append("\nLearned by:\n");
-
         let learned_by_pokemon = &mut format_move.move_.learned_by_pokemon;
         learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
 
@@ -72,6 +70,8 @@ impl MoveCommand<'_> {
             .collect::<Vec<_>>()
             .join("\n");
 
+        let header = formatter::white(&format!("\nLearned by: ({})\n", learned_by_pokemon.len()));
+        self.builder.append(header);
         self.builder.append(formatted_pokemon);
     }
 }
