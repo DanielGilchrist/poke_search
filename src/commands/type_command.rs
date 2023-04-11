@@ -8,7 +8,7 @@ use crate::{
 
 use std::collections::{HashMap, HashSet};
 
-use rustemon::model::{pokemon::{Type}, resource::NamedApiResource};
+use rustemon::model::{pokemon::Type, resource::NamedApiResource};
 
 const TYPE_HEADERS: (&str, &str, &str, &str, &str) = ("0x\n", "0.25x\n", "0.5x\n", "2x\n", "4x\n");
 
@@ -77,11 +77,23 @@ impl TypeCommand<'_> {
     }
 
     fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {
-        let type_pokemon_names = type_.pokemon.iter().map(|type_pokemon| type_pokemon.pokemon.name.clone()).collect::<HashSet::<_>>();
+        let type_pokemon_names = type_
+            .pokemon
+            .iter()
+            .map(|type_pokemon| type_pokemon.pokemon.name.clone())
+            .collect::<HashSet<_>>();
 
         let pokemon_names = if let Some(second_type) = second_type {
-            let second_type_pokemon_names = second_type.pokemon.iter().map(|type_pokemon| type_pokemon.pokemon.name.clone()).collect::<HashSet::<_>>();
-            type_pokemon_names.intersection(&second_type_pokemon_names).cloned().collect::<Vec<_>>()
+            let second_type_pokemon_names = second_type
+                .pokemon
+                .iter()
+                .map(|type_pokemon| type_pokemon.pokemon.name.clone())
+                .collect::<HashSet<_>>();
+
+            type_pokemon_names
+                .intersection(&second_type_pokemon_names)
+                .cloned()
+                .collect::<Vec<_>>()
         } else {
             type_pokemon_names.into_iter().collect::<Vec<_>>()
         };
