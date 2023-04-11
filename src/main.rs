@@ -107,6 +107,7 @@ fn parse_type_command() -> Command {
         .args([
             arg!(type_name: <TYPE_NAME>).required(true),
             arg!(-s --second_type_name <SECOND_TYPE_NAME>).required(false),
+            arg!(-p --pokemon "List pokemon that have the specified type/s").required(false),
         ])
 }
 
@@ -137,8 +138,9 @@ async fn run(client: &dyn ClientImplementation, matches: ArgMatches) -> Builder 
         Some(("type", sub_matches)) => {
             let type_name = get_required_string("type_name", sub_matches);
             let second_type_name = get_optional_string("second_type_name", sub_matches);
+            let list_pokemon = get_bool("pokemon", sub_matches);
 
-            TypeCommand::execute(client, type_name, second_type_name).await
+            TypeCommand::execute(client, type_name, second_type_name, list_pokemon).await
         }
 
         _ => Builder::empty(),
