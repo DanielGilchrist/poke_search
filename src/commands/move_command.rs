@@ -48,7 +48,7 @@ impl MoveCommand<'_> {
 
         let mut format_move = FormatMove::new(move_);
 
-        self.builder.append("Move\n");
+        self.builder.append(formatter::white("Move\n"));
         self.builder.append(format_move.format());
 
         if self.include_learned_by {
