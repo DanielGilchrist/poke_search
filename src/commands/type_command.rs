@@ -17,6 +17,7 @@ pub struct TypeCommand<'a> {
     client: &'a dyn ClientImplementation,
     type_name: String,
     second_type_name: Option<String>,
+    list_pokemon: bool,
 }
 
 impl TypeCommand<'_> {
@@ -24,6 +25,7 @@ impl TypeCommand<'_> {
         client: &dyn ClientImplementation,
         type_name: String,
         second_type_name: Option<String>,
+        list_pokemon: bool,
     ) -> Builder {
         let mut builder = Builder::default();
 
@@ -32,6 +34,7 @@ impl TypeCommand<'_> {
             client,
             type_name,
             second_type_name,
+            list_pokemon,
         }
         ._execute()
         .await;
@@ -47,19 +50,69 @@ impl TypeCommand<'_> {
         };
 
         let second_type_name_ref = &self.second_type_name;
-        let Some(second_type_name) = second_type_name_ref else {
-            self.build_single_damage_details(&type_);
-            return;
+        let second_type = match second_type_name_ref {
+            Some(second_type_name) => {
+                let Ok(second_type) = self.fetch_type(second_type_name).await else {
+                    self.handle_invalid_type(&second_type_name.clone());
+                    return;
+                };
+
+                Some(second_type)
+            }
+            None => None,
         };
 
-        match self.fetch_type(second_type_name).await {
-            Ok(second_type) => self.build_dual_damage_details(&type_, &second_type),
-            Err(_) => self.handle_invalid_type(&second_type_name.clone()),
+        match second_type {
+            Some(ref second_type) => self.append_dual_damage_details(&type_, second_type),
+            None => self.append_single_damage_details(&type_),
         };
+
+        if self.list_pokemon {
+            self.append_pokemon_list(&type_, second_type.as_ref());
+        }
     }
 
     async fn fetch_type(&self, type_name: &str) -> Result<Type, rustemon::error::Error> {
         self.client.fetch_type(type_name).await
+    }
+
+    fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {
+        let type_pokemon_names = type_
+            .pokemon
+            .iter()
+            .map(|type_pokemon| type_pokemon.pokemon.name.clone())
+            .collect::<HashSet<_>>();
+
+        let mut pokemon_names = if let Some(second_type) = second_type {
+            let second_type_pokemon_names = second_type
+                .pokemon
+                .iter()
+                .map(|type_pokemon| type_pokemon.pokemon.name.clone())
+                .collect::<HashSet<_>>();
+
+            type_pokemon_names
+                .intersection(&second_type_pokemon_names)
+                .cloned()
+                .collect::<Vec<_>>()
+        } else {
+            type_pokemon_names.into_iter().collect::<Vec<_>>()
+        };
+
+        pokemon_names.sort();
+
+        let formatted_pokemon = pokemon_names
+            .iter()
+            .map(|pokemon_name| format!("  {}", formatter::split_and_capitalise(pokemon_name)))
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        self.builder.append(formatter::white("\nPokemon\n"));
+        if formatted_pokemon.is_empty() {
+            self.builder
+                .append(formatter::red("No pokemon with this type combination."));
+        } else {
+            self.builder.append(formatted_pokemon);
+        }
     }
 
     fn handle_invalid_type(&mut self, type_name: &str) {
@@ -67,89 +120,92 @@ impl TypeCommand<'_> {
         self.builder.append(suggestion);
     }
 
-    fn build_type_header(&mut self, type_: &Type, second_type: Option<&Type>) {
+    fn build_type_header(&self, type_: &Type, second_type: Option<&Type>) -> String {
         let formatted_type = self.formatted_type(type_);
 
-        let result = if let Some(second_type) = second_type {
+        if let Some(second_type) = second_type {
             let second_formatted_type = self.formatted_type(second_type);
             format!("{formatted_type} | {second_formatted_type}")
         } else {
             formatted_type
-        };
-
-        self.builder.append(format!("{result}\n\n"));
+        }
     }
 
-    fn build_single_type_header(&mut self, type_: &Type) {
-        self.build_type_header(type_, None);
+    fn append_type_header(&mut self, type_: &Type, second_type: Option<&Type>) {
+        let header = self.build_type_header(type_, second_type);
+        self.builder.append(format!("{header}\n\n"));
+    }
+
+    fn append_single_type_header(&mut self, type_: &Type) {
+        self.append_type_header(type_, None);
     }
 
     fn formatted_type(&self, type_: &Type) -> String {
         type_colours::fetch(&type_.name)
     }
 
-    fn build_single_damage_details(&mut self, type_: &Type) {
-        self.build_single_type_header(type_);
+    fn append_single_damage_details(&mut self, type_: &Type) {
+        self.append_single_type_header(type_);
 
         self.builder.append(formatter::white("Offense\n"));
 
-        self.build_offense_output(type_);
+        self.append_offense_output(type_);
         self.builder.append_c('\n');
 
         self.builder.append(formatter::white("Defense\n"));
-        self.build_defense_output(type_);
+        self.append_defense_output(type_);
     }
 
-    fn build_dual_damage_details(&mut self, type_: &Type, second_type: &Type) {
-        self.build_type_header(type_, Some(second_type));
+    fn append_dual_damage_details(&mut self, type_: &Type, second_type: &Type) {
+        self.append_type_header(type_, Some(second_type));
 
         self.builder.append(formatter::white("Offense\n"));
 
-        self.build_single_type_header(type_);
-        self.build_offense_output(type_);
+        self.append_single_type_header(type_);
+        self.append_offense_output(type_);
         self.builder.append_c('\n');
 
-        self.build_single_type_header(second_type);
-        self.build_offense_output(second_type);
+        self.append_single_type_header(second_type);
+        self.append_offense_output(second_type);
         self.builder.append_c('\n');
 
         self.builder.append(formatter::white("Defense\n"));
-        self.build_dual_defense_output(type_, second_type);
+        self.append_dual_defense_output(type_, second_type);
     }
 
-    fn build_offense_output(&mut self, type_: &Type) {
+    fn append_offense_output(&mut self, type_: &Type) {
         let type_relations = &type_.damage_relations;
-        self.build_types_output(
+        self.append_types_output(
             &formatter::red(TYPE_HEADERS.0),
             &self.to_type_names(&type_relations.no_damage_to),
         );
-        self.build_types_output(
+        self.append_types_output(
             &formatter::bright_red(TYPE_HEADERS.2),
             &self.to_type_names(&type_relations.half_damage_to),
         );
-        self.build_types_output(
+        self.append_types_output(
             &formatter::green(TYPE_HEADERS.3),
             &self.to_type_names(&type_relations.double_damage_to),
         );
     }
 
-    fn build_defense_output(&mut self, type_: &Type) {
+    fn append_defense_output(&mut self, type_: &Type) {
         let type_relations = &type_.damage_relations;
-        self.build_types_output(
+        self.append_types_output(
             &formatter::green(TYPE_HEADERS.0),
             &self.to_type_names(&type_relations.no_damage_from),
         );
-        self.build_types_output(
+        self.append_types_output(
             &formatter::bright_green(TYPE_HEADERS.2),
             &self.to_type_names(&type_relations.half_damage_from),
         );
-        self.build_types_output(
+        self.append_types_output(
             &formatter::red(TYPE_HEADERS.3),
             &self.to_type_names(&type_relations.double_damage_from),
         );
     }
 
-    fn build_dual_defense_output(&mut self, type_: &Type, second_type: &Type) {
+    fn append_dual_defense_output(&mut self, type_: &Type, second_type: &Type) {
         let (damage_relations, second_damage_relations) =
             (&type_.damage_relations, &second_type.damage_relations);
 
@@ -158,7 +214,7 @@ impl TypeCommand<'_> {
         let no_damage_from_types =
             self.build_combined_hash_set(first_no_damage_from, second_no_damage_from);
 
-        self.build_types_output(&formatter::green(TYPE_HEADERS.0), &no_damage_from_types);
+        self.append_types_output(&formatter::green(TYPE_HEADERS.0), &no_damage_from_types);
 
         let first_half_damage_from = self.to_type_names(&damage_relations.half_damage_from);
         let second_half_damage_from = self.to_type_names(&second_damage_relations.half_damage_from);
@@ -206,10 +262,10 @@ impl TypeCommand<'_> {
                 }
             });
 
-        self.build_types_output(&formatter::green(TYPE_HEADERS.1), &quarter_damage_types);
-        self.build_types_output(&formatter::bright_green(TYPE_HEADERS.2), &half_damage_types);
-        self.build_types_output(&formatter::bright_red(TYPE_HEADERS.3), &double_damage_types);
-        self.build_types_output(&formatter::red(TYPE_HEADERS.4), &quad_damage_types);
+        self.append_types_output(&formatter::green(TYPE_HEADERS.1), &quarter_damage_types);
+        self.append_types_output(&formatter::bright_green(TYPE_HEADERS.2), &half_damage_types);
+        self.append_types_output(&formatter::bright_red(TYPE_HEADERS.3), &double_damage_types);
+        self.append_types_output(&formatter::red(TYPE_HEADERS.4), &quad_damage_types);
     }
 
     fn build_type_counter(&self, a: Vec<String>, b: Vec<String>) -> HashMap<String, i8> {
@@ -249,7 +305,7 @@ impl TypeCommand<'_> {
             .collect::<Vec<_>>()
     }
 
-    fn build_types_output<I>(&mut self, header: &str, type_names: &I)
+    fn append_types_output<I>(&mut self, header: &str, type_names: &I)
     where
         for<'a> &'a I: IntoIterator<Item = &'a String>,
     {

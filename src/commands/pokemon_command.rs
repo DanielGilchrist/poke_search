@@ -74,7 +74,7 @@ impl PokemonCommand<'_> {
             let (type1, type2) = (types[0].to_string(), types.get(1).map(|t| t.to_string()));
 
             // TODO: We should extract the logic we need from this as it restricts what we can actually do with `TypeCommand`
-            let type_builder = TypeCommand::execute(self.client, type1, type2).await;
+            let type_builder = TypeCommand::execute(self.client, type1, type2, false).await;
 
             self.builder.append("Type information\n\n");
             self.builder.append_builder(type_builder);
