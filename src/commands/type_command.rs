@@ -8,7 +8,7 @@ use crate::{
 
 use std::collections::{HashMap, HashSet};
 
-use rustemon::model::{pokemon::{Type, self}, resource::NamedApiResource};
+use rustemon::model::{pokemon::{Type}, resource::NamedApiResource};
 
 const TYPE_HEADERS: (&str, &str, &str, &str, &str) = ("0x\n", "0.25x\n", "0.5x\n", "2x\n", "4x\n");
 
@@ -77,51 +77,22 @@ impl TypeCommand<'_> {
     }
 
     fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {
-        let mut type_lookup = HashMap::new();
-        let mut pokemon_names = HashSet::new();
+        let type_pokemon_names = type_.pokemon.iter().map(|type_pokemon| type_pokemon.pokemon.name.clone()).collect::<HashSet::<_>>();
 
-        type_.pokemon.iter().for_each(|type_pokemon| {
-            let pokemon_name_ref = &type_pokemon.pokemon.name;
-            let value = type_lookup.entry(pokemon_name_ref).or_insert(vec![]);
-            value.push(type_);
-
-            pokemon_names.insert(pokemon_name_ref.clone());
-        });
-
-        if let Some(second_type) = second_type {
-            second_type.pokemon.iter().for_each(|type_pokemon| {
-                let pokemon_name_ref = &type_pokemon.pokemon.name;
-                let value = type_lookup.entry(&pokemon_name_ref).or_insert(vec![]);
-                value.push(second_type);
-
-                pokemon_names.insert(pokemon_name_ref.clone());
-            });
-        }
-
-        let mut pokemon_names = pokemon_names.into_iter().collect::<Vec<_>>();
-        pokemon_names.sort();
-
-        self.builder.append(formatter::white("\nPokemon\n"));
-
-        // TODO: This is a bit of a hack, but it works for now
-        let max_type_header = self.build_type_header(type_, second_type);
-        println!("max_type_header: {}", max_type_header);
-        // let spacer = " ".repeat(max_type_header.len());
+        let pokemon_names = if let Some(second_type) = second_type {
+            let second_type_pokemon_names = second_type.pokemon.iter().map(|type_pokemon| type_pokemon.pokemon.name.clone()).collect::<HashSet::<_>>();
+            type_pokemon_names.intersection(&second_type_pokemon_names).cloned().collect::<Vec<_>>()
+        } else {
+            type_pokemon_names.into_iter().collect::<Vec<_>>()
+        };
 
         let formatted_pokemon = pokemon_names
             .iter()
-            .map(|pokemon_name| {
-              let types = &type_lookup[pokemon_name];
-              let first_type = types[0];
-              let second_type = types.get(1).map(|t| *t);
-
-              let formatted_type = self.build_type_header(first_type, second_type);
-              let spacer = " ".repeat(max_type_header.len() - formatted_type.len());
-              format!("  {formatted_type}{spacer}{}", formatter::split_and_capitalise(pokemon_name))
-            })
+            .map(|pokemon_name| format!("  {}", formatter::split_and_capitalise(pokemon_name)))
             .collect::<Vec<_>>()
             .join("\n");
 
+        self.builder.append(formatter::white("\nPokemon\n"));
         self.builder.append(formatted_pokemon);
     }
 
