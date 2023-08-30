@@ -50,11 +50,11 @@ impl PokemonCommand<'_> {
 
     async fn _execute(&mut self) {
         let Ok(pokemon) = self.fetch_pokemon().await else {
-          let suggestion =
-                    matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
+            let suggestion =
+                matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
 
-          self.builder.append(suggestion);
-          return
+            self.builder.append(suggestion);
+            return;
         };
 
         let format_pokemon = FormatPokemon::new(pokemon.clone());
