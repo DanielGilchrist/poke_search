@@ -9,10 +9,6 @@ impl Builder {
         Self(String::with_capacity(capacity))
     }
 
-    pub fn empty() -> Self {
-        Self::new(0)
-    }
-
     pub fn append<T: Appendable>(&mut self, str: T) {
         self.0.push_str(str.to_appendable());
     }
