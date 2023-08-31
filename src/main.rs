@@ -18,7 +18,7 @@ use commands::{
 };
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(about = "Search for pokemon information from the command line")]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -26,38 +26,42 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    #[command(about = "See moves for a pokemon")]
     Moves {
-        #[arg(short, long)]
+        #[arg(short, long, help = "The name of the pokemon you want to see moves for")]
         pokemon: String,
 
-        #[arg(short, long)]
+        #[arg(short, long, help = "The type of moves you want to see")]
         type_name: Option<String>,
 
-        #[arg(short, long)]
+        #[arg(short, long, help = "Only show moves for a specific category")]
         category: Option<String>,
     },
 
+    #[command(about = "See information about a move")]
     Move {
         move_name: String,
 
-        #[arg(short, long, default_value_t = false)]
+        #[arg(short, long, default_value_t = false, help = "Include a list of pokemon that learn the move")]
         learned_by: bool,
     },
 
+    #[command(about = "See information about a pokemon")]
     Pokemon {
         pokemon: String,
 
-        #[arg(short, long, default_value_t = false)]
+        #[arg(short, long, default_value_t = false, help = "Show detailed type information")]
         types: bool,
     },
 
+    #[command(about = "See information about a specific type")]
     Type {
         type_name: String,
 
-        #[arg(short, long)]
+        #[arg(short, long, help = "Specify a second type for dual type information")]
         second_type_name: Option<String>,
 
-        #[arg(short, long, default_value_t = false)]
+        #[arg(short, long, default_value_t = false, help = "List pokemon that have the specified type/s")]
         pokemon: bool,
     },
 }
