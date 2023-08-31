@@ -9,7 +9,7 @@ use crate::{
     client::{Client, ClientImplementation},
 };
 
-use clap::{arg, ArgMatches, Command};
+use clap::{Parser, Subcommand};
 
 mod commands;
 use commands::{
@@ -17,130 +17,90 @@ use commands::{
     type_command::TypeCommand,
 };
 
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+  #[command(subcommand)]
+  command: Option<Commands>
+}
+
+#[derive(Subcommand)]
+enum Commands {
+  Moves {
+    #[arg(short, long)]
+    pokemon: String,
+
+    #[arg(short, long)]
+    type_name: Option<String>,
+
+    #[arg(short, long)]
+    category: Option<String>
+  },
+
+  Move {
+    move_name: String,
+
+    #[arg(short, long)]
+    learned_by: bool
+  },
+
+  Pokemon {
+    pokemon: String,
+
+    #[arg(short, long)]
+    types: bool
+  },
+
+  Type {
+    type_name: String,
+
+    #[arg(short, long)]
+    second_type_name: Option<String>,
+
+    #[arg(short, long)]
+    pokemon: bool
+  }
+}
+
+
 #[tokio::main]
 async fn main() {
     let client = Client::default();
-    let matches = parse_commands().get_matches();
+    let cli = Cli::parse();
 
-    run(&client, matches).await.print();
+    run(&client, cli).await.print();
 }
 
 fn parse_name(name: &str) -> String {
     name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
 }
 
-fn parse_optional_name(name: Option<&String>) -> Option<String> {
-    name.map(|s| parse_name(s))
+fn parse_string_list(string_list: String) -> Vec<String> {
+  string_list.split(',').map(parse_name).collect::<Vec<_>>()
 }
 
-fn get_optional_string(command: &str, sub_matches: &ArgMatches) -> Option<String> {
-    parse_optional_name(sub_matches.get_one::<String>(command))
-}
+async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
+    match cli.command {
+        Some(Commands::Moves { pokemon, type_name, category }) => {
+            let parsed_pokemon_name = parse_name(&pokemon);
+            let type_names = type_name.map(parse_string_list);
+            let categories = category.map(parse_string_list);
 
-fn get_optional_strings(command: &str, sub_matches: &ArgMatches) -> Option<Vec<String>> {
-    sub_matches
-        .get_one::<String>(command)
-        .map(|category| category.split(',').map(parse_name).collect::<Vec<_>>())
-}
-
-fn get_required_string(command: &str, sub_matches: &ArgMatches) -> String {
-    get_optional_string(command, sub_matches).unwrap_or_else(|| {
-        panic!("{}", format!("{command} is required!"));
-    })
-}
-
-fn get_bool(command: &str, sub_matches: &ArgMatches) -> bool {
-    sub_matches
-        .get_one::<bool>(command)
-        .unwrap_or(&false)
-        .to_owned()
-}
-
-fn parse_commands() -> Command {
-    Command::new("poke_search_cli")
-        .about("Search for pokemon information from the command line")
-        .subcommand_required(true)
-        .arg_required_else_help(true)
-        .subcommands([
-            parse_moves_command(),
-            parse_move_command(),
-            parse_pokemon_command(),
-            parse_type_command(),
-        ])
-}
-
-fn parse_moves_command() -> Command {
-    Command::new("moves")
-        .about("See moves for a pokemon")
-        .args([
-            arg!(-p --pokemon <POKEMON_NAME> "The name of the pokemon you want to see moves for")
-                .required(true),
-            arg!(-t --type_name <TYPE_NAME> "The type of moves you want to see").required(false),
-            arg!(-c --category <CATEGORY> "Only show moves for a specific category")
-                .required(false),
-        ])
-        .arg_required_else_help(true)
-}
-
-fn parse_move_command() -> Command {
-    Command::new("move")
-        .about("See information about a move")
-        .args([
-            arg!(move: <MOVE_NAME>).required(true),
-            arg!(-l --learned_by "Include a list of pokemon that learn the move").required(false),
-        ])
-        .arg_required_else_help(true)
-}
-
-fn parse_pokemon_command() -> Command {
-    Command::new("pokemon")
-        .about("See information about a pokemon")
-        .args([
-            arg!(pokemon: <POKEMON_NAME>).required(true),
-            arg!(-t --types "Show detailed type information").required(false),
-        ])
-}
-
-fn parse_type_command() -> Command {
-    Command::new("type")
-        .about("See information about a specific type")
-        .args([
-            arg!(type_name: <TYPE_NAME>).required(true),
-            arg!(-s --second_type_name <SECOND_TYPE_NAME>).required(false),
-            arg!(-p --pokemon "List pokemon that have the specified type/s").required(false),
-        ])
-}
-
-async fn run(client: &dyn ClientImplementation, matches: ArgMatches) -> Builder {
-    match matches.subcommand() {
-        Some(("moves", sub_matches)) => {
-            let pokemon_name = get_required_string("pokemon", sub_matches);
-            let type_names = get_optional_strings("type_name", sub_matches);
-            let categories = get_optional_strings("category", sub_matches);
-
-            MovesCommand::execute(client, pokemon_name, type_names, categories).await
+            MovesCommand::execute(client, parsed_pokemon_name, type_names, categories).await
         }
 
-        Some(("move", sub_matches)) => {
-            let move_name = get_required_string("move", sub_matches);
-            let include_learned_by = get_bool("learned_by", sub_matches);
-
-            MoveCommand::execute(client, move_name, include_learned_by).await
+        Some(Commands::Move { move_name, learned_by }) => {
+            let parsed_move_name = parse_name(&move_name);
+            MoveCommand::execute(client, parsed_move_name, learned_by).await
         }
 
-        Some(("pokemon", sub_matches)) => {
-            let pokemon_name = get_required_string("pokemon", sub_matches);
-            let show_types = get_bool("types", sub_matches);
-
-            PokemonCommand::execute(client, pokemon_name, show_types).await
+        Some(Commands::Pokemon { pokemon, types }) => {
+            let parsed_pokemon_name = parse_name(&pokemon);
+            PokemonCommand::execute(client, parsed_pokemon_name, types).await
         }
 
-        Some(("type", sub_matches)) => {
-            let type_name = get_required_string("type_name", sub_matches);
-            let second_type_name = get_optional_string("second_type_name", sub_matches);
-            let list_pokemon = get_bool("pokemon", sub_matches);
-
-            TypeCommand::execute(client, type_name, second_type_name, list_pokemon).await
+        Some(Commands::Type { type_name, second_type_name, pokemon }) => {
+            TypeCommand::execute(client, type_name, second_type_name, pokemon).await
         }
 
         _ => Builder::empty(),
@@ -165,11 +125,9 @@ mod tests {
             .once()
             .returning(|_args| Err(Error::FollowEmptyURL));
 
-        let command = parse_commands().no_binary_name(true);
-        let matches = command.get_matches_from(vec!["move", incorrect_name]);
-
+        let cli = Cli::parse_from(vec!["move", incorrect_name]);
         let expected = build_suggestion("move", incorrect_name, "flamethrower");
-        let actual = run(&mock_client, matches).await.to_string();
+        let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
 
@@ -187,11 +145,9 @@ mod tests {
             .once()
             .returning(|_args| Err(Error::FollowEmptyURL));
 
-        let command = parse_commands().no_binary_name(true);
-        let matches = command.get_matches_from(vec!["pokemon", incorrect_name]);
-
+        let cli = Cli::parse_from(vec!["pokemon", incorrect_name]);
         let expected = build_suggestion("pokemon", incorrect_name, "pikachu");
-        let actual = run(&mock_client, matches).await.to_string();
+        let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
 
@@ -209,11 +165,9 @@ mod tests {
             .once()
             .returning(|_args| Err(Error::FollowEmptyURL));
 
-        let command = parse_commands().no_binary_name(true);
-        let matches = command.get_matches_from(vec!["type", incorrect_name]);
-
+        let cli = Cli::parse_from(vec!["type", incorrect_name]);
         let expected = build_suggestion("type", incorrect_name, "dragon");
-        let actual = run(&mock_client, matches).await.to_string();
+        let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
 
@@ -239,11 +193,9 @@ mod tests {
             .once()
             .returning(|_args| Err(Error::FollowEmptyURL));
 
-        let command = parse_commands().no_binary_name(true);
-        let matches = command.get_matches_from(vec!["type", correct_name, "-s", incorrect_name]);
-
+        let cli = Cli::parse_from(vec!["type", correct_name, "-s", incorrect_name]);
         let expected = build_suggestion("type", incorrect_name, "psychic");
-        let actual = run(&mock_client, matches).await.to_string();
+        let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
 
