@@ -28,7 +28,6 @@ struct Cli {
 enum Commands {
     #[command(about = "See moves for a pokemon")]
     Moves {
-        #[arg(short, long)]
         #[arg(help = "The name of the pokemon you want to see moves for")]
         pokemon: String,
 
