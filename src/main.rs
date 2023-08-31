@@ -20,48 +20,47 @@ use commands::{
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-  #[command(subcommand)]
-  command: Option<Commands>
+    #[command(subcommand)]
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-  Moves {
-    #[arg(short, long)]
-    pokemon: String,
+    Moves {
+        #[arg(short, long)]
+        pokemon: String,
 
-    #[arg(short, long)]
-    type_name: Option<String>,
+        #[arg(short, long)]
+        type_name: Option<String>,
 
-    #[arg(short, long)]
-    category: Option<String>
-  },
+        #[arg(short, long)]
+        category: Option<String>,
+    },
 
-  Move {
-    move_name: String,
+    Move {
+        move_name: String,
 
-    #[arg(short, long, default_value_t = false)]
-    learned_by: bool
-  },
+        #[arg(short, long, default_value_t = false)]
+        learned_by: bool,
+    },
 
-  Pokemon {
-    pokemon: String,
+    Pokemon {
+        pokemon: String,
 
-    #[arg(short, long, default_value_t = false)]
-    types: bool
-  },
+        #[arg(short, long, default_value_t = false)]
+        types: bool,
+    },
 
-  Type {
-    type_name: String,
+    Type {
+        type_name: String,
 
-    #[arg(short, long)]
-    second_type_name: Option<String>,
+        #[arg(short, long)]
+        second_type_name: Option<String>,
 
-    #[arg(short, long, default_value_t = false)]
-    pokemon: bool
-  }
+        #[arg(short, long, default_value_t = false)]
+        pokemon: bool,
+    },
 }
-
 
 #[tokio::main]
 async fn main() {
@@ -76,12 +75,16 @@ fn parse_name(name: &str) -> String {
 }
 
 fn parse_string_list(string_list: String) -> Vec<String> {
-  string_list.split(',').map(parse_name).collect::<Vec<_>>()
+    string_list.split(',').map(parse_name).collect::<Vec<_>>()
 }
 
 async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
     match cli.command {
-        Some(Commands::Moves { pokemon, type_name, category }) => {
+        Some(Commands::Moves {
+            pokemon,
+            type_name,
+            category,
+        }) => {
             let parsed_pokemon_name = parse_name(&pokemon);
             let type_names = type_name.map(parse_string_list);
             let categories = category.map(parse_string_list);
@@ -89,7 +92,10 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             MovesCommand::execute(client, parsed_pokemon_name, type_names, categories).await
         }
 
-        Some(Commands::Move { move_name, learned_by }) => {
+        Some(Commands::Move {
+            move_name,
+            learned_by,
+        }) => {
             let parsed_move_name = parse_name(&move_name);
             MoveCommand::execute(client, parsed_move_name, learned_by).await
         }
@@ -99,9 +105,11 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             PokemonCommand::execute(client, parsed_pokemon_name, types).await
         }
 
-        Some(Commands::Type { type_name, second_type_name, pokemon }) => {
-            TypeCommand::execute(client, type_name, second_type_name, pokemon).await
-        }
+        Some(Commands::Type {
+            type_name,
+            second_type_name,
+            pokemon,
+        }) => TypeCommand::execute(client, type_name, second_type_name, pokemon).await,
 
         _ => Builder::empty(),
     }
@@ -205,11 +213,11 @@ mod tests {
     }
 
     fn parse_args(args: Vec<&str>) -> Cli {
-      let mut full_args = vec![PACKAGE_NAME];
-      full_args.extend(args);
+        let mut full_args = vec![PACKAGE_NAME];
+        full_args.extend(args);
 
-      Cli::parse_from(full_args)
-  }
+        Cli::parse_from(full_args)
+    }
 
     fn build_suggestion(keyword: &str, name: &str, correct_name: &str) -> String {
         format!("Unknown {keyword} \"{name}\"\nDid you mean \"{correct_name}\"?")
