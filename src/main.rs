@@ -40,14 +40,14 @@ enum Commands {
   Move {
     move_name: String,
 
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = false)]
     learned_by: bool
   },
 
   Pokemon {
     pokemon: String,
 
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = false)]
     types: bool
   },
 
@@ -57,7 +57,7 @@ enum Commands {
     #[arg(short, long)]
     second_type_name: Option<String>,
 
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = false)]
     pokemon: bool
   }
 }
@@ -114,6 +114,8 @@ mod tests {
 
     use rustemon::{error::Error, model::pokemon::Type};
 
+    const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
+
     #[tokio::test]
     async fn pokemon_move_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
         let incorrect_name = "flamhrower";
@@ -125,8 +127,8 @@ mod tests {
             .once()
             .returning(|_args| Err(Error::FollowEmptyURL));
 
-        let cli = Cli::parse_from(vec!["move", incorrect_name]);
-        let expected = build_suggestion("move", incorrect_name, "flamethrower");
+        let expected = build_suggestion("move", &incorrect_name, "flamethrower");
+        let cli = parse_args(vec!["move", incorrect_name]);
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -145,7 +147,7 @@ mod tests {
             .once()
             .returning(|_args| Err(Error::FollowEmptyURL));
 
-        let cli = Cli::parse_from(vec!["pokemon", incorrect_name]);
+        let cli = parse_args(vec!["pokemon", incorrect_name]);
         let expected = build_suggestion("pokemon", incorrect_name, "pikachu");
         let actual = run(&mock_client, cli).await.to_string();
 
@@ -165,7 +167,7 @@ mod tests {
             .once()
             .returning(|_args| Err(Error::FollowEmptyURL));
 
-        let cli = Cli::parse_from(vec!["type", incorrect_name]);
+        let cli = parse_args(vec!["type", incorrect_name]);
         let expected = build_suggestion("type", incorrect_name, "dragon");
         let actual = run(&mock_client, cli).await.to_string();
 
@@ -193,7 +195,7 @@ mod tests {
             .once()
             .returning(|_args| Err(Error::FollowEmptyURL));
 
-        let cli = Cli::parse_from(vec!["type", correct_name, "-s", incorrect_name]);
+        let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
         let expected = build_suggestion("type", incorrect_name, "psychic");
         let actual = run(&mock_client, cli).await.to_string();
 
@@ -201,6 +203,13 @@ mod tests {
 
         Ok(())
     }
+
+    fn parse_args(args: Vec<&str>) -> Cli {
+      let mut full_args = vec![PACKAGE_NAME];
+      full_args.extend(args);
+
+      Cli::parse_from(full_args)
+  }
 
     fn build_suggestion(keyword: &str, name: &str, correct_name: &str) -> String {
         format!("Unknown {keyword} \"{name}\"\nDid you mean \"{correct_name}\"?")
