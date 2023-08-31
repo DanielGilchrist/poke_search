@@ -28,7 +28,8 @@ struct Cli {
 enum Commands {
     #[command(about = "See moves for a pokemon")]
     Moves {
-        #[arg(short, long, help = "The name of the pokemon you want to see moves for")]
+        #[arg(short, long)]
+        #[arg(help = "The name of the pokemon you want to see moves for")]
         pokemon: String,
 
         #[arg(short, long, help = "The type of moves you want to see")]
@@ -42,7 +43,8 @@ enum Commands {
     Move {
         move_name: String,
 
-        #[arg(short, long, default_value_t = false, help = "Include a list of pokemon that learn the move")]
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Include a list of pokemon that learn the move")]
         learned_by: bool,
     },
 
@@ -50,7 +52,8 @@ enum Commands {
     Pokemon {
         pokemon: String,
 
-        #[arg(short, long, default_value_t = false, help = "Show detailed type information")]
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Show detailed type information")]
         types: bool,
     },
 
@@ -58,10 +61,12 @@ enum Commands {
     Type {
         type_name: String,
 
-        #[arg(short, long, help = "Specify a second type for dual type information")]
+        #[arg(short, long)]
+        #[arg(help = "Specify a second type for dual type information")]
         second_type_name: Option<String>,
 
-        #[arg(short, long, default_value_t = false, help = "List pokemon that have the specified type/s")]
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "List pokemon that have the specified type/s")]
         pokemon: bool,
     },
 }
