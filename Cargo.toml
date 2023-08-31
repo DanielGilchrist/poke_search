@@ -13,7 +13,7 @@ panic = "abort"   # Don't include backtrace when panics occur
 
 [dependencies]
 async-trait = "0" # https://github.com/dtolnay/async-trait
-clap = "4" # https://github.com/clap-rs/clap
+clap = { version = "4", features = ["derive"] } # https://github.com/clap-rs/clap
 colored = "2" # https://github.com/mackwic/colored
 futures = "0" # https://github.com/rust-lang/futures-rs
 itertools = "0" # https://github.com/rust-itertools/itertools
