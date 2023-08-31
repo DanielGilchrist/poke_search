@@ -32,11 +32,13 @@ enum Commands {
         #[arg(help = "The name of the pokemon you want to see moves for")]
         pokemon: String,
 
-        #[arg(short, long, help = "The type of moves you want to see")]
-        type_name: Option<String>,
+        #[arg(short, long, num_args(0..))]
+        #[arg(help = "The types of moves you want to see")]
+        type_names: Option<Vec<String>>,
 
-        #[arg(short, long, help = "Only show moves for a specific category")]
-        category: Option<String>,
+        #[arg(short, long, num_args(0..))]
+        #[arg(help = "Only show moves for specific categories (physical, special, status)")]
+        categories: Option<Vec<String>>,
     },
 
     #[command(about = "See information about a move")]
@@ -83,21 +85,14 @@ fn parse_name(name: &str) -> String {
     name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
 }
 
-fn parse_string_list(string_list: String) -> Vec<String> {
-    string_list.split(',').map(parse_name).collect::<Vec<_>>()
-}
-
 async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
     match cli.command {
         Some(Commands::Moves {
             pokemon,
-            type_name,
-            category,
+            type_names,
+            categories,
         }) => {
             let parsed_pokemon_name = parse_name(&pokemon);
-            let type_names = type_name.map(parse_string_list);
-            let categories = category.map(parse_string_list);
-
             MovesCommand::execute(client, parsed_pokemon_name, type_names, categories).await
         }
 
