@@ -43,6 +43,7 @@ enum Commands {
 
     #[command(about = "See information about a move")]
     Move {
+        #[arg(help = "The name of the move you want to see information for")]
         move_name: String,
 
         #[arg(short, long, default_value_t = false)]
@@ -52,6 +53,7 @@ enum Commands {
 
     #[command(about = "See information about a pokemon")]
     Pokemon {
+        #[arg(help = "The name of the pokemon you want to see information for")]
         pokemon: String,
 
         #[arg(short, long, default_value_t = false)]
@@ -61,6 +63,7 @@ enum Commands {
 
     #[command(about = "See information about a specific type")]
     Type {
+        #[arg(help = "The name of the type you want to see information for")]
         type_name: String,
 
         #[arg(short, long)]
