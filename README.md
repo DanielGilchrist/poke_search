@@ -1,4 +1,4 @@
-# poke_search_cli
+# poke_search
 <img width="596" alt="image" src="https://user-images.githubusercontent.com/13454550/231265090-c50cb26f-6ef9-432d-ac11-ec213d79f695.png">
 
 # Installation
@@ -18,20 +18,20 @@ Then
 1. Clone the repository
 2. Run `cargo build --release`
 
-You now have a release build! This can be run with `./target/release/poke_search_cli` assuming you're in the root directory of this repository
+You now have a release build! This can be run with `./target/release/poke_search` assuming you're in the root directory of this repository
 
 This project doesn't currently distrbute or release any binaries. For now I'd recommend using an alias if you intend on using this outside of the repo directly
 ```sh
-alias poke_search_cli="/link/to/poke_search_cli/target/release/poke_search_cli"
+alias poke_search="/link/to/poke_search/target/release/poke_search"
 ```
 
 # Usage
 See the `help` command for a list of commands that can be run
 ```sh
-❯ poke_search_cli help
+❯ poke_search help
 Search for pokemon information from the command line
 
-Usage: poke_search_cli <COMMAND>
+Usage: poke_search <COMMAND>
 
 Commands:
   moves    See moves for a pokemon
