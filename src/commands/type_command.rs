@@ -8,6 +8,7 @@ use crate::{
 
 use std::collections::{HashMap, HashSet};
 
+use itertools::Itertools;
 use rustemon::model::{pokemon::Type, resource::NamedApiResource};
 
 const TYPE_HEADERS: (&str, &str, &str, &str, &str) = ("0x\n", "0.25x\n", "0.5x\n", "2x\n", "4x\n");
@@ -77,25 +78,12 @@ impl TypeCommand<'_> {
     }
 
     fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {
-        let type_pokemon_names = type_
-            .pokemon
-            .iter()
-            .map(|type_pokemon| type_pokemon.pokemon.name.clone())
-            .collect::<HashSet<_>>();
+        let mut pokemon_names = self.pokemon_names_from_type(type_);
 
-        let mut pokemon_names = if let Some(second_type) = second_type {
-            let second_type_pokemon_names = second_type
-                .pokemon
-                .iter()
-                .map(|type_pokemon| type_pokemon.pokemon.name.clone())
-                .collect::<HashSet<_>>();
-
-            type_pokemon_names
-                .intersection(&second_type_pokemon_names)
-                .cloned()
-                .collect::<Vec<_>>()
-        } else {
-            type_pokemon_names.into_iter().collect::<Vec<_>>()
+        if let Some(second_type) = second_type {
+            let second_type_pokemon_names = self.pokemon_names_from_type(second_type);
+            pokemon_names.extend(second_type_pokemon_names);
+            pokemon_names = pokemon_names.into_iter().unique().collect();
         };
 
         pokemon_names.sort();
@@ -116,6 +104,14 @@ impl TypeCommand<'_> {
             self.builder
                 .append(formatter::red("No pokemon with this type combination."));
         }
+    }
+
+    fn pokemon_names_from_type(&self, type_: &Type) -> Vec<String> {
+        type_
+            .pokemon
+            .iter()
+            .map(|type_pokemon| type_pokemon.pokemon.name.clone())
+            .collect::<Vec<_>>()
     }
 
     fn handle_invalid_type(&mut self, type_name: &str) {
