@@ -185,16 +185,11 @@ impl TypeCommand<'_> {
         let no_damage_to_names = self.to_type_names(&type_relations.no_damage_to);
         let half_damage_to_names = self.to_type_names(&type_relations.half_damage_to);
         let double_damage_to_names = self.to_type_names(&type_relations.double_damage_to);
-        let single_damage_to_names = type_names::TYPE_NAMES
-            .iter()
-            .filter(|type_name| {
-                !no_damage_to_names.contains(type_name)
-                    && !half_damage_to_names.contains(type_name)
-                    && !double_damage_to_names.contains(type_name)
-                    && !EXCLUDED_TYPES.contains(&type_name.as_str())
-            })
-            .map(|type_name| type_name.to_owned())
-            .collect::<Vec<_>>();
+        let single_damage_to_names = self.single_damage_names_from(
+            &no_damage_to_names,
+            &half_damage_to_names,
+            &double_damage_to_names,
+        );
 
         self.append_types_output(&formatter::red(TYPE_HEADERS.0), &no_damage_to_names);
         self.append_types_output(
@@ -210,16 +205,11 @@ impl TypeCommand<'_> {
         let no_damage_from_names = self.to_type_names(&type_relations.no_damage_from);
         let half_damage_from_names = self.to_type_names(&type_relations.half_damage_from);
         let double_damage_from_names = self.to_type_names(&type_relations.double_damage_from);
-        let single_damage_from_names = type_names::TYPE_NAMES
-            .iter()
-            .filter(|type_name| {
-                !no_damage_from_names.contains(type_name)
-                    && !half_damage_from_names.contains(type_name)
-                    && !double_damage_from_names.contains(type_name)
-                    && !EXCLUDED_TYPES.contains(&type_name.as_str())
-            })
-            .map(|type_name| type_name.to_owned())
-            .collect::<Vec<_>>();
+        let single_damage_from_names = self.single_damage_names_from(
+            &no_damage_from_names,
+            &half_damage_from_names,
+            &double_damage_from_names,
+        );
 
         self.append_types_output(&formatter::green(TYPE_HEADERS.0), &no_damage_from_names);
         self.append_types_output(
@@ -231,6 +221,24 @@ impl TypeCommand<'_> {
             &single_damage_from_names,
         );
         self.append_types_output(&formatter::red(TYPE_HEADERS.4), &double_damage_from_names);
+    }
+
+    fn single_damage_names_from(
+        &self,
+        no_damage_names: &[String],
+        half_damage_names: &[String],
+        double_damage_names: &[String],
+    ) -> Vec<String> {
+        type_names::TYPE_NAMES
+            .iter()
+            .filter(|type_name| {
+                !no_damage_names.contains(type_name)
+                    && !half_damage_names.contains(type_name)
+                    && !double_damage_names.contains(type_name)
+                    && !EXCLUDED_TYPES.contains(&type_name.as_str())
+            })
+            .map(|type_name| type_name.to_owned())
+            .collect::<Vec<_>>()
     }
 
     fn append_dual_defence_output(&mut self, type_: &Type, second_type: &Type) {
