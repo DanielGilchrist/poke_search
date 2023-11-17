@@ -10,10 +10,49 @@ use std::collections::{HashMap, HashSet};
 
 use rustemon::model::{pokemon::Type, resource::NamedApiResource};
 
-const TYPE_HEADERS: (&str, &str, &str, &str, &str, &str) =
-    ("0x\n", "0.25x\n", "0.5x\n", "1x\n", "2x\n", "4x\n");
-
 const EXCLUDED_TYPES: &[&str] = &["unknown", "shadow"];
+
+enum OffenceDamageType {
+    None,
+    Half,
+    Normal,
+    Double,
+}
+
+enum DefenceDamageType {
+    None,
+    Quarter,
+    Half,
+    Normal,
+    Double,
+    Quadruple,
+}
+
+enum DamageContext {
+    Offence(OffenceDamageType),
+    Defence(DefenceDamageType),
+}
+
+impl DamageContext {
+    fn coloured_header(&self) -> String {
+        match self {
+            DamageContext::Offence(damage_type) => match damage_type {
+                OffenceDamageType::None => formatter::red("0x\n"),
+                OffenceDamageType::Half => formatter::bright_red("0.5x\n"),
+                OffenceDamageType::Normal => formatter::yellow("1x\n"),
+                OffenceDamageType::Double => formatter::green("2x\n"),
+            },
+            DamageContext::Defence(damage_type) => match damage_type {
+                DefenceDamageType::None => formatter::green("0x\n"),
+                DefenceDamageType::Quarter => formatter::green("0.25x"),
+                DefenceDamageType::Half => formatter::bright_green("0.5x\n"),
+                DefenceDamageType::Normal => formatter::yellow("1x\n"),
+                DefenceDamageType::Double => formatter::red("2x\n"),
+                DefenceDamageType::Quadruple => formatter::bright_red("4x\n"),
+            },
+        }
+    }
+}
 
 pub struct TypeCommand<'a> {
     builder: &'a mut Builder,
@@ -67,7 +106,7 @@ impl TypeCommand<'_> {
 
         match second_type {
             Some(ref second_type) => self.append_dual_damage_details(&type_, second_type),
-            None => self.append_single_damage_details(&type_),
+            None => self.append_normal_damage_details(&type_),
         };
 
         if self.list_pokemon {
@@ -151,7 +190,7 @@ impl TypeCommand<'_> {
         type_colours::fetch(&type_.name)
     }
 
-    fn append_single_damage_details(&mut self, type_: &Type) {
+    fn append_normal_damage_details(&mut self, type_: &Type) {
         self.append_single_type_header(type_);
 
         self.builder.append(formatter::white("Offence\n"));
@@ -185,19 +224,17 @@ impl TypeCommand<'_> {
         let no_damage_to_names = self.to_type_names(&type_relations.no_damage_to);
         let half_damage_to_names = self.to_type_names(&type_relations.half_damage_to);
         let double_damage_to_names = self.to_type_names(&type_relations.double_damage_to);
-        let single_damage_to_names = self.single_damage_names_from(
+        let normal_damage_to_names = self.normal_damage_names_from(
             &no_damage_to_names,
             &half_damage_to_names,
             &double_damage_to_names,
         );
 
-        self.append_types_output(&formatter::red(TYPE_HEADERS.0), &no_damage_to_names);
-        self.append_types_output(
-            &formatter::bright_red(TYPE_HEADERS.2),
-            &half_damage_to_names,
-        );
-        self.append_types_output(&formatter::yellow(TYPE_HEADERS.3), &single_damage_to_names);
-        self.append_types_output(&formatter::green(TYPE_HEADERS.4), &double_damage_to_names);
+        let context = DamageContext::Offence;
+        self.append_types_output(context(OffenceDamageType::None), &no_damage_to_names);
+        self.append_types_output(context(OffenceDamageType::Half), &half_damage_to_names);
+        self.append_types_output(context(OffenceDamageType::Normal), &normal_damage_to_names);
+        self.append_types_output(context(OffenceDamageType::Double), &double_damage_to_names);
     }
 
     fn append_defence_output(&mut self, type_: &Type) {
@@ -205,25 +242,26 @@ impl TypeCommand<'_> {
         let no_damage_from_names = self.to_type_names(&type_relations.no_damage_from);
         let half_damage_from_names = self.to_type_names(&type_relations.half_damage_from);
         let double_damage_from_names = self.to_type_names(&type_relations.double_damage_from);
-        let single_damage_from_names = self.single_damage_names_from(
+        let normal_damage_from_names = self.normal_damage_names_from(
             &no_damage_from_names,
             &half_damage_from_names,
             &double_damage_from_names,
         );
 
-        self.append_types_output(&formatter::green(TYPE_HEADERS.0), &no_damage_from_names);
+        let context = DamageContext::Defence;
+        self.append_types_output(context(DefenceDamageType::None), &no_damage_from_names);
+        self.append_types_output(context(DefenceDamageType::Half), &half_damage_from_names);
         self.append_types_output(
-            &formatter::bright_green(TYPE_HEADERS.2),
-            &half_damage_from_names,
+            context(DefenceDamageType::Normal),
+            &normal_damage_from_names,
         );
         self.append_types_output(
-            &formatter::yellow(TYPE_HEADERS.3),
-            &single_damage_from_names,
+            context(DefenceDamageType::Double),
+            &double_damage_from_names,
         );
-        self.append_types_output(&formatter::red(TYPE_HEADERS.4), &double_damage_from_names);
     }
 
-    fn single_damage_names_from(
+    fn normal_damage_names_from(
         &self,
         no_damage_names: &[String],
         half_damage_names: &[String],
@@ -299,12 +337,13 @@ impl TypeCommand<'_> {
                 }
             });
 
-        self.append_types_output(&formatter::green(TYPE_HEADERS.0), &no_damage_from_types);
-        self.append_types_output(&formatter::green(TYPE_HEADERS.1), &quarter_damage_types);
-        self.append_types_output(&formatter::bright_green(TYPE_HEADERS.2), &half_damage_types);
-        self.append_types_output(&formatter::yellow(TYPE_HEADERS.3), &normal_damage_types);
-        self.append_types_output(&formatter::bright_red(TYPE_HEADERS.4), &double_damage_types);
-        self.append_types_output(&formatter::red(TYPE_HEADERS.5), &quad_damage_types);
+        let context = DamageContext::Defence;
+        self.append_types_output(context(DefenceDamageType::None), &no_damage_from_types);
+        self.append_types_output(context(DefenceDamageType::Quarter), &quarter_damage_types);
+        self.append_types_output(context(DefenceDamageType::Half), &half_damage_types);
+        self.append_types_output(context(DefenceDamageType::Normal), &normal_damage_types);
+        self.append_types_output(context(DefenceDamageType::Double), &double_damage_types);
+        self.append_types_output(context(DefenceDamageType::Quadruple), &quad_damage_types);
     }
 
     fn build_type_counter(&self, a: Vec<String>, b: Vec<String>) -> HashMap<String, i8> {
@@ -344,7 +383,7 @@ impl TypeCommand<'_> {
             .collect::<Vec<_>>()
     }
 
-    fn append_types_output<I>(&mut self, header: &str, type_names: &I)
+    fn append_types_output<I>(&mut self, damage_context: DamageContext, type_names: &I)
     where
         for<'a> &'a I: IntoIterator<Item = &'a String>,
     {
@@ -354,6 +393,7 @@ impl TypeCommand<'_> {
             return;
         }
 
+        let header = damage_context.coloured_header();
         self.builder.append(header);
 
         let mut new_type_names = iter.collect::<Vec<_>>();
