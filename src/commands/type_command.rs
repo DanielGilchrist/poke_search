@@ -29,12 +29,12 @@ enum DamageContext {
 impl DamageContext {
     fn coloured_header(&self, damage_type: DamageType) -> String {
         let multiplier = match damage_type {
-          DamageType::None => "0x\n",
-          DamageType::Quarter => "0.25x\n",
-          DamageType::Half => "0.5x\n",
-          DamageType::Normal => "1x\n",
-          DamageType::Double => "2x\n",
-          DamageType::Quadruple => "4x\n",
+            DamageType::None => "0x\n",
+            DamageType::Quarter => "0.25x\n",
+            DamageType::Half => "0.5x\n",
+            DamageType::Normal => "1x\n",
+            DamageType::Double => "2x\n",
+            DamageType::Quadruple => "4x\n",
         };
 
         let formatter = match self {
@@ -228,37 +228,32 @@ impl TypeCommand<'_> {
     }
 
     fn append_single_damage_output(&mut self, type_: &Type, context: DamageContext) {
-      let type_relations = &type_.damage_relations;
+        let type_relations = &type_.damage_relations;
 
-      let (
-        no_damage_names,
-        half_damage_names,
-        double_damage_names,
-      ) = match context {
-        DamageContext::Offence => (
-          self.to_type_names(&type_relations.no_damage_to),
-          self.to_type_names(&type_relations.half_damage_to),
-          self.to_type_names(&type_relations.double_damage_to),
-        ),
-        DamageContext::Defence => (
-          self.to_type_names(&type_relations.no_damage_from),
-          self.to_type_names(&type_relations.half_damage_from),
-          self.to_type_names(&type_relations.double_damage_from),
-        ),
-      };
+        let (no_damage_names, half_damage_names, double_damage_names) = match context {
+            DamageContext::Offence => (
+                self.to_type_names(&type_relations.no_damage_to),
+                self.to_type_names(&type_relations.half_damage_to),
+                self.to_type_names(&type_relations.double_damage_to),
+            ),
+            DamageContext::Defence => (
+                self.to_type_names(&type_relations.no_damage_from),
+                self.to_type_names(&type_relations.half_damage_from),
+                self.to_type_names(&type_relations.double_damage_from),
+            ),
+        };
 
-      let normal_damage_names = self.normal_damage_names_from(
-        &no_damage_names,
-        &half_damage_names,
-        &double_damage_names,
-      );
+        let normal_damage_names = self.normal_damage_names_from(
+            &no_damage_names,
+            &half_damage_names,
+            &double_damage_names,
+        );
 
-      self.append_types_output(&context, DamageType::None, &no_damage_names);
-      self.append_types_output(&context, DamageType::Half, &half_damage_names);
-      self.append_types_output(&context, DamageType::Normal, &normal_damage_names);
-      self.append_types_output(&context, DamageType::Double, &double_damage_names);
+        self.append_types_output(&context, DamageType::None, &no_damage_names);
+        self.append_types_output(&context, DamageType::Half, &half_damage_names);
+        self.append_types_output(&context, DamageType::Normal, &normal_damage_names);
+        self.append_types_output(&context, DamageType::Double, &double_damage_names);
     }
-
 
     fn normal_damage_names_from(
         &self,
@@ -382,8 +377,12 @@ impl TypeCommand<'_> {
             .collect::<Vec<_>>()
     }
 
-    fn append_types_output<I>(&mut self, damage_context: &DamageContext, damage_type: DamageType, type_names: &I)
-    where
+    fn append_types_output<I>(
+        &mut self,
+        damage_context: &DamageContext,
+        damage_type: DamageType,
+        type_names: &I,
+    ) where
         for<'a> &'a I: IntoIterator<Item = &'a String>,
     {
         let mut iter = type_names.into_iter().peekable();
