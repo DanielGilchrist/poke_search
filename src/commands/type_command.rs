@@ -154,65 +154,86 @@ impl TypeCommand<'_> {
     fn append_single_damage_details(&mut self, type_: &Type) {
         self.append_single_type_header(type_);
 
-        self.builder.append(formatter::white("Offense\n"));
+        self.builder.append(formatter::white("Offence\n"));
 
-        self.append_offense_output(type_);
+        self.append_offence_output(type_);
         self.builder.append_c('\n');
 
-        self.builder.append(formatter::white("Defense\n"));
-        self.append_defense_output(type_);
+        self.builder.append(formatter::white("Defence\n"));
+        self.append_defence_output(type_);
     }
 
     fn append_dual_damage_details(&mut self, type_: &Type, second_type: &Type) {
         self.append_type_header(type_, Some(second_type));
 
-        self.builder.append(formatter::white("Offense\n"));
+        self.builder.append(formatter::white("Offence\n"));
 
         self.append_single_type_header(type_);
-        self.append_offense_output(type_);
+        self.append_offence_output(type_);
         self.builder.append_c('\n');
 
         self.append_single_type_header(second_type);
-        self.append_offense_output(second_type);
+        self.append_offence_output(second_type);
         self.builder.append_c('\n');
 
-        self.builder.append(formatter::white("Defense\n"));
-        self.append_dual_defense_output(type_, second_type);
+        self.builder.append(formatter::white("Defence\n"));
+        self.append_dual_defence_output(type_, second_type);
     }
 
-    fn append_offense_output(&mut self, type_: &Type) {
+    fn append_offence_output(&mut self, type_: &Type) {
         let type_relations = &type_.damage_relations;
-        self.append_types_output(
-            &formatter::red(TYPE_HEADERS.0),
-            &self.to_type_names(&type_relations.no_damage_to),
-        );
+        let no_damage_to_names = self.to_type_names(&type_relations.no_damage_to);
+        let half_damage_to_names = self.to_type_names(&type_relations.half_damage_to);
+        let double_damage_to_names = self.to_type_names(&type_relations.double_damage_to);
+        let single_damage_to_names = type_names::TYPE_NAMES
+            .iter()
+            .filter(|type_name| {
+                !no_damage_to_names.contains(type_name)
+                    && !half_damage_to_names.contains(type_name)
+                    && !double_damage_to_names.contains(type_name)
+                    && !EXCLUDED_TYPES.contains(&type_name.as_str())
+            })
+            .map(|type_name| type_name.to_owned())
+            .collect::<Vec<_>>();
+
+        self.append_types_output(&formatter::red(TYPE_HEADERS.0), &no_damage_to_names);
         self.append_types_output(
             &formatter::bright_red(TYPE_HEADERS.2),
-            &self.to_type_names(&type_relations.half_damage_to),
+            &half_damage_to_names,
         );
-        self.append_types_output(
-            &formatter::green(TYPE_HEADERS.4),
-            &self.to_type_names(&type_relations.double_damage_to),
-        );
+        self.append_types_output(&formatter::yellow(TYPE_HEADERS.3), &single_damage_to_names);
+        self.append_types_output(&formatter::green(TYPE_HEADERS.4), &double_damage_to_names);
     }
 
-    fn append_defense_output(&mut self, type_: &Type) {
+    fn append_defence_output(&mut self, type_: &Type) {
         let type_relations = &type_.damage_relations;
-        self.append_types_output(
-            &formatter::green(TYPE_HEADERS.0),
-            &self.to_type_names(&type_relations.no_damage_from),
-        );
+        let no_damage_from_names = self.to_type_names(&type_relations.no_damage_from);
+        let half_damage_from_names = self.to_type_names(&type_relations.half_damage_from);
+        let double_damage_from_names = self.to_type_names(&type_relations.double_damage_from);
+        let single_damage_from_names = type_names::TYPE_NAMES
+            .iter()
+            .filter(|type_name| {
+                !no_damage_from_names.contains(type_name)
+                    && !half_damage_from_names.contains(type_name)
+                    && !double_damage_from_names.contains(type_name)
+                    && !EXCLUDED_TYPES.contains(&type_name.as_str())
+            })
+            .map(|type_name| type_name.to_owned())
+            .collect::<Vec<_>>();
+
+        self.append_types_output(&formatter::green(TYPE_HEADERS.0), &no_damage_from_names);
         self.append_types_output(
             &formatter::bright_green(TYPE_HEADERS.2),
-            &self.to_type_names(&type_relations.half_damage_from),
+            &half_damage_from_names,
         );
         self.append_types_output(
-            &formatter::red(TYPE_HEADERS.4),
-            &self.to_type_names(&type_relations.double_damage_from),
+            &formatter::yellow(TYPE_HEADERS.3),
+            &single_damage_from_names,
         );
+        self.append_types_output(&formatter::red(TYPE_HEADERS.4), &double_damage_from_names);
     }
 
-    fn append_dual_defense_output(&mut self, type_: &Type, second_type: &Type) {
+    fn append_dual_defence_output(&mut self, type_: &Type, second_type: &Type) {
         let (damage_relations, second_damage_relations) =
             (&type_.damage_relations, &second_type.damage_relations);
 
