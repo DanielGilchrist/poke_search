@@ -10,7 +10,10 @@ use std::collections::{HashMap, HashSet};
 
 use rustemon::model::{pokemon::Type, resource::NamedApiResource};
 
-const TYPE_HEADERS: (&str, &str, &str, &str, &str) = ("0x\n", "0.25x\n", "0.5x\n", "2x\n", "4x\n");
+const TYPE_HEADERS: (&str, &str, &str, &str, &str, &str) =
+    ("0x\n", "0.25x\n", "0.5x\n", "1x\n", "2x\n", "4x\n");
+
+const EXCLUDED_TYPES: &[&str] = &["unknown", "shadow"];
 
 pub struct TypeCommand<'a> {
     builder: &'a mut Builder,
@@ -188,7 +191,7 @@ impl TypeCommand<'_> {
             &self.to_type_names(&type_relations.half_damage_to),
         );
         self.append_types_output(
-            &formatter::green(TYPE_HEADERS.3),
+            &formatter::green(TYPE_HEADERS.4),
             &self.to_type_names(&type_relations.double_damage_to),
         );
     }
@@ -204,7 +207,7 @@ impl TypeCommand<'_> {
             &self.to_type_names(&type_relations.half_damage_from),
         );
         self.append_types_output(
-            &formatter::red(TYPE_HEADERS.3),
+            &formatter::red(TYPE_HEADERS.4),
             &self.to_type_names(&type_relations.double_damage_from),
         );
     }
@@ -217,8 +220,6 @@ impl TypeCommand<'_> {
         let second_no_damage_from = self.to_type_names(&second_damage_relations.no_damage_from);
         let no_damage_from_types =
             self.build_combined_hash_set(first_no_damage_from, second_no_damage_from);
-
-        self.append_types_output(&formatter::green(TYPE_HEADERS.0), &no_damage_from_types);
 
         let first_half_damage_from = self.to_type_names(&damage_relations.half_damage_from);
         let second_half_damage_from = self.to_type_names(&second_damage_relations.half_damage_from);
@@ -235,6 +236,7 @@ impl TypeCommand<'_> {
         let mut half_damage_types: HashSet<String> = HashSet::new();
         let mut double_damage_types: HashSet<String> = HashSet::new();
         let mut quad_damage_types: HashSet<String> = HashSet::new();
+        let mut normal_damage_types: HashSet<String> = HashSet::new();
 
         type_names::TYPE_NAMES
             .iter()
@@ -261,15 +263,19 @@ impl TypeCommand<'_> {
                     }
 
                     _ => {
-                        // no-op
+                        if !EXCLUDED_TYPES.contains(&type_name.as_str()) {
+                            normal_damage_types.insert(type_name.to_owned());
+                        }
                     }
                 }
             });
 
+        self.append_types_output(&formatter::green(TYPE_HEADERS.0), &no_damage_from_types);
         self.append_types_output(&formatter::green(TYPE_HEADERS.1), &quarter_damage_types);
         self.append_types_output(&formatter::bright_green(TYPE_HEADERS.2), &half_damage_types);
-        self.append_types_output(&formatter::bright_red(TYPE_HEADERS.3), &double_damage_types);
-        self.append_types_output(&formatter::red(TYPE_HEADERS.4), &quad_damage_types);
+        self.append_types_output(&formatter::yellow(TYPE_HEADERS.3), &normal_damage_types);
+        self.append_types_output(&formatter::bright_red(TYPE_HEADERS.4), &double_damage_types);
+        self.append_types_output(&formatter::red(TYPE_HEADERS.5), &quad_damage_types);
     }
 
     fn build_type_counter(&self, a: Vec<String>, b: Vec<String>) -> HashMap<String, i8> {
