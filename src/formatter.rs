@@ -302,6 +302,10 @@ pub fn green(str: &str) -> String {
     format_colour(str.green())
 }
 
+pub fn yellow(str: &str) -> String {
+    format_colour(str.yellow())
+}
+
 pub fn red(str: &str) -> String {
     format_colour(str.red())
 }
