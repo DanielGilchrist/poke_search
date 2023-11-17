@@ -198,6 +198,35 @@ impl TypeCommand<'_> {
         type_colours::fetch(&type_.name)
     }
 
+    fn append_single_type_damage_details(&mut self, type_: &Type) {
+        self.append_single_type_header(type_);
+
+        self.builder.append(formatter::white("Offence\n"));
+
+        self.append_single_damage_output(type_, DamageContext::Offence);
+        self.builder.append_c('\n');
+
+        self.builder.append(formatter::white("Defence\n"));
+        self.append_single_damage_output(type_, DamageContext::Defence);
+    }
+
+    fn append_dual_type_damage_details(&mut self, type_: &Type, second_type: &Type) {
+        self.append_type_header(type_, Some(second_type));
+
+        self.builder.append(formatter::white("Offence\n"));
+
+        self.append_single_type_header(type_);
+        self.append_single_damage_output(type_, DamageContext::Offence);
+        self.builder.append_c('\n');
+
+        self.append_single_type_header(second_type);
+        self.append_single_damage_output(second_type, DamageContext::Offence);
+        self.builder.append_c('\n');
+
+        self.builder.append(formatter::white("Defence\n"));
+        self.append_dual_defence_output(type_, second_type);
+    }
+
     fn append_single_damage_output(&mut self, type_: &Type, context: DamageContext) {
       let type_relations = &type_.damage_relations;
 
@@ -230,35 +259,6 @@ impl TypeCommand<'_> {
       self.append_types_output(&context, DamageType::Double, &double_damage_names);
     }
 
-
-    fn append_single_type_damage_details(&mut self, type_: &Type) {
-        self.append_single_type_header(type_);
-
-        self.builder.append(formatter::white("Offence\n"));
-
-        self.append_single_damage_output(type_, DamageContext::Offence);
-        self.builder.append_c('\n');
-
-        self.builder.append(formatter::white("Defence\n"));
-        self.append_single_damage_output(type_, DamageContext::Defence);
-    }
-
-    fn append_dual_type_damage_details(&mut self, type_: &Type, second_type: &Type) {
-        self.append_type_header(type_, Some(second_type));
-
-        self.builder.append(formatter::white("Offence\n"));
-
-        self.append_single_type_header(type_);
-        self.append_single_damage_output(type_, DamageContext::Offence);
-        self.builder.append_c('\n');
-
-        self.append_single_type_header(second_type);
-        self.append_single_damage_output(second_type, DamageContext::Offence);
-        self.builder.append_c('\n');
-
-        self.builder.append(formatter::white("Defence\n"));
-        self.append_dual_defence_output(type_, second_type);
-    }
 
     fn normal_damage_names_from(
         &self,
