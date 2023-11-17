@@ -1,5 +1,5 @@
 # poke_search
-<img width="596" alt="image" src="https://user-images.githubusercontent.com/13454550/231265090-c50cb26f-6ef9-432d-ac11-ec213d79f695.png">
+<img width="800" alt="image" src="https://github.com/DanielGilchrist/poke_search/assets/13454550/0fdce2bd-ed49-4dc6-8550-54b2f1345ac6">
 
 # Installation
 You will need Rust 1.74.0 installed. I recommend using [`rustup`](https://rustup.rs/)
