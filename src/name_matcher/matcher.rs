@@ -127,20 +127,6 @@ pub fn build_unknown_name(name: &str, keyword: &str) -> String {
     format!("{} \"{}\" doesn't exist", capitalise(keyword), name)
 }
 
-pub fn try_suggest_name(name: &str, matcher_type: MatcherType) -> String {
-    let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
-
-    match name_matcher.find_match(name) {
-        Some(suggestion) => {
-            let similar_name = suggestion.name;
-
-            format!("Unknown {keyword} \"{name}\"\nDid you mean \"{similar_name}\"?")
-        }
-
-        None => format!("{} \"{}\" doesn't exist", capitalise(&keyword), name),
-    }
-}
-
 fn name_is_already_valid(names: &[String], item: &String) -> bool {
   names.binary_search(item).is_ok()
 }
