@@ -6,7 +6,7 @@ use crate::{
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
 
-static MIN_SIMILARITY: f32 = 0.5;
+static MIN_CERTAIN_SIMILARITY: f32 = 0.8;
 
 pub enum MatcherType {
     Pokemon,
@@ -24,7 +24,7 @@ impl SuccessfulMatch {
     pub fn new(original_name: String, keyword: String, suggestion: Suggestion) -> Self {
         Self {
             original_name,
-            suggested_name: suggestion.0,
+            suggested_name: suggestion.name,
             keyword,
         }
     }
@@ -38,11 +38,23 @@ impl NoMatch {
     }
 }
 
-pub struct Suggestion(String);
+enum Certainty {
+    Certain,
+    Uncertain,
+}
+
+pub struct Suggestion {
+    name: String,
+    certainty: Certainty,
+}
 
 impl Suggestion {
-    pub fn new(name: String) -> Self {
-        Self(name)
+    fn new(name: String, certainty: Certainty) -> Self {
+        Self { name, certainty }
+    }
+
+    fn certain(name: String) -> Self {
+        Self::new(name, Certainty::Certain)
     }
 }
 
@@ -60,11 +72,13 @@ impl NameMatcher {
         let search_results = corpus.search(name, 0.25);
         let search_result = search_results.first().map(|r| r.to_owned())?;
 
-        if search_result.similarity > MIN_SIMILARITY {
-            Some(Suggestion::new(search_result.text))
+        let certainty = if search_result.similarity > MIN_CERTAIN_SIMILARITY {
+            Certainty::Certain
         } else {
-            None
-        }
+            Certainty::Uncertain
+        };
+
+        Some(Suggestion::new(search_result.text, certainty))
     }
 
     fn build_corpus(&self) -> Corpus {
@@ -80,23 +94,35 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
     let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
 
     if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
-        let suggestion = Suggestion::new(name.to_owned());
+        let suggestion = Suggestion::certain(name.to_owned());
         let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
 
         return Ok(successful_match);
     }
 
     match name_matcher.find_match(name) {
-        Some(suggestion) => {
-            let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
-            Ok(successful_match)
-        }
+        Some(suggestion) => match suggestion.certainty {
+            Certainty::Certain => {
+                let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
 
-        None => Err(NoMatch::new(build_unknown_name(name, &keyword))),
+                Ok(successful_match)
+            }
+            Certainty::Uncertain => Err(NoMatch::new(build_suggested_name(
+                &keyword,
+                name,
+                &suggestion.name,
+            ))),
+        },
+
+        None => Err(NoMatch::new(build_unknown_name(&keyword, name))),
     }
 }
 
-pub fn build_unknown_name(name: &str, keyword: &str) -> String {
+pub fn build_suggested_name(keyword: &str, name: &str, suggestion: &str) -> String {
+    format!("Unknown {keyword} \"{name}\"\nDid you mean \"{suggestion}\"?")
+}
+
+pub fn build_unknown_name(keyword: &str, name: &str) -> String {
     format!("{} \"{}\" doesn't exist", capitalise(keyword), name)
 }
 
