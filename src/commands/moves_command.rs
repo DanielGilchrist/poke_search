@@ -43,12 +43,12 @@ impl MovesCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let Ok(pokemon) = self.fetch_pokemon().await else {
-            let suggestion =
-                matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
-
-            self.builder.append(suggestion);
-            return;
+        let pokemon = match self.fetch_pokemon().await {
+            Ok(pokemon) => pokemon,
+            Err(error_message) => {
+                self.builder.append(error_message);
+                return;
+            }
         };
 
         let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
@@ -82,8 +82,27 @@ impl MovesCommand<'_> {
         self.builder.append(move_output);
     }
 
-    async fn fetch_pokemon(&self) -> Result<Pokemon, rustemon::error::Error> {
-        self.client.fetch_pokemon(&self.pokemon_name).await
+    async fn fetch_pokemon(&self) -> Result<Pokemon, String> {
+        let successful_match =
+            match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
+                Ok(successful_match) => Ok(successful_match),
+                Err(no_match) => Err(no_match.0),
+            }?;
+
+        match self
+            .client
+            .fetch_pokemon(&successful_match.suggested_name)
+            .await
+        {
+            Ok(pokemon) => Ok(pokemon),
+            Err(_) => {
+                let output = matcher::build_unknown_name(
+                    &successful_match.suggested_name,
+                    &successful_match.keyword,
+                );
+                Err(output)
+            }
+        }
     }
 
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {
@@ -118,18 +137,30 @@ impl MovesCommand<'_> {
         let mut processed_moves = moves;
 
         processed_moves = match &self.type_names {
-            Some(type_names) => processed_moves
-                .into_iter()
-                .filter_map(|format_move| {
-                    let move_ = &format_move.move_;
+            Some(type_names) => {
+                let corrected_type_names = type_names
+                    .iter()
+                    .map(|type_name| {
+                        match matcher::match_name(type_name, matcher::MatcherType::Type) {
+                            Ok(successful_match) => successful_match.suggested_name,
+                            Err(_) => type_name.to_owned(),
+                        }
+                    })
+                    .collect::<Vec<_>>();
 
-                    if type_names.contains(&move_.type_.name) {
-                        Some(format_move)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>(),
+                processed_moves
+                    .into_iter()
+                    .filter_map(|format_move| {
+                        let move_ = &format_move.move_;
+
+                        if corrected_type_names.contains(&move_.type_.name) {
+                            Some(format_move)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            }
             None => processed_moves,
         };
 

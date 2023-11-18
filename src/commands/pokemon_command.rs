@@ -49,12 +49,12 @@ impl PokemonCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let Ok(pokemon) = self.fetch_pokemon().await else {
-            let suggestion =
-                matcher::try_suggest_name(&self.pokemon_name, matcher::MatcherType::Pokemon);
-
-            self.builder.append(suggestion);
-            return;
+        let pokemon = match self.fetch_pokemon().await {
+            Ok(pokemon) => pokemon,
+            Err(error_message) => {
+                self.builder.append(error_message);
+                return;
+            }
         };
 
         let format_pokemon = FormatPokemon::new(pokemon.clone());
@@ -81,8 +81,27 @@ impl PokemonCommand<'_> {
         }
     }
 
-    async fn fetch_pokemon(&self) -> Result<Pokemon, rustemon::error::Error> {
-        self.client.fetch_pokemon(&self.pokemon_name).await
+    async fn fetch_pokemon(&self) -> Result<Pokemon, String> {
+        let successful_match =
+            match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
+                Ok(successful_match) => Ok(successful_match),
+                Err(no_match) => Err(no_match.0),
+            }?;
+
+        match self
+            .client
+            .fetch_pokemon(&successful_match.suggested_name)
+            .await
+        {
+            Ok(pokemon) => Ok(pokemon),
+            Err(_) => {
+                let output = matcher::build_unknown_name(
+                    &successful_match.suggested_name,
+                    &successful_match.keyword,
+                );
+                Err(output)
+            }
+        }
     }
 
     fn build_summary(&mut self, pokemon: &FormatPokemon) {

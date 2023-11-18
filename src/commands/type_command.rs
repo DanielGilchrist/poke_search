@@ -109,22 +109,22 @@ impl TypeCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let type_name_ref = &self.type_name;
-        let Ok(type_) = self.fetch_type(type_name_ref).await else {
-            self.handle_invalid_type(&type_name_ref.clone());
-            return;
+        let type_ = match self.fetch_type(&self.type_name).await {
+            Ok(type_) => type_,
+            Err(error_message) => {
+                self.builder.append(error_message);
+                return;
+            }
         };
 
-        let second_type_name_ref = &self.second_type_name;
-        let second_type = match second_type_name_ref {
-            Some(second_type_name) => {
-                let Ok(second_type) = self.fetch_type(second_type_name).await else {
-                    self.handle_invalid_type(&second_type_name.clone());
+        let second_type = match &self.second_type_name {
+            Some(second_type_name) => match self.fetch_type(second_type_name).await {
+                Ok(type_) => Some(type_),
+                Err(error_message) => {
+                    self.builder.append(error_message);
                     return;
-                };
-
-                Some(second_type)
-            }
+                }
+            },
             None => None,
         };
 
@@ -138,8 +138,29 @@ impl TypeCommand<'_> {
         }
     }
 
-    async fn fetch_type(&self, type_name: &str) -> Result<Type, rustemon::error::Error> {
-        self.client.fetch_type(type_name).await
+    async fn fetch_type(&self, name: &str) -> Result<Type, String> {
+        let successful_match = match matcher::match_name(name, matcher::MatcherType::Type) {
+            Ok(successful_match) => successful_match,
+            Err(no_match) => {
+                return Err(no_match.0);
+            }
+        };
+
+        let result = self
+            .client
+            .fetch_type(&successful_match.suggested_name)
+            .await;
+
+        match result {
+            Ok(type_) => Ok(type_),
+            Err(_) => {
+                let output = matcher::build_unknown_name(
+                    &successful_match.suggested_name,
+                    &successful_match.keyword,
+                );
+                Err(output)
+            }
+        }
     }
 
     fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {
@@ -183,11 +204,6 @@ impl TypeCommand<'_> {
             .iter()
             .map(|type_pokemon| type_pokemon.pokemon.name.clone())
             .collect::<HashSet<_>>()
-    }
-
-    fn handle_invalid_type(&mut self, type_name: &str) {
-        let suggestion = matcher::try_suggest_name(type_name, matcher::MatcherType::Type);
-        self.builder.append(suggestion);
     }
 
     fn build_type_header(&self, type_: &Type, second_type: Option<&Type>) -> String {
