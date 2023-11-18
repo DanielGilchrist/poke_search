@@ -146,12 +146,21 @@ impl TypeCommand<'_> {
             }
         };
 
-        let Ok(type_) = self.client.fetch_type(&successful_match.suggested_name).await else {
-            let output = matcher::build_unknown_name(&successful_match.suggested_name, &successful_match.keyword);
-            return Err(output);
-        };
+        let result = self
+            .client
+            .fetch_type(&successful_match.suggested_name)
+            .await;
 
-        Ok(type_)
+        match result {
+            Ok(type_) => Ok(type_),
+            Err(_) => {
+                let output = matcher::build_unknown_name(
+                    &successful_match.suggested_name,
+                    &successful_match.keyword,
+                );
+                Err(output)
+            }
+        }
     }
 
     fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {

@@ -43,19 +43,12 @@ impl MovesCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let successful_match =
-            match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
-                Ok(successful_match) => successful_match,
-                Err(no_match) => {
-                    self.builder.append(no_match.0);
-                    return;
-                }
-            };
-
-        let Ok(pokemon) = self.fetch_pokemon(&successful_match.suggested_name).await else {
-          let output = matcher::build_unknown_name(&successful_match.suggested_name, &successful_match.keyword);
-          self.builder.append(output);
-          return
+        let pokemon = match self.fetch_pokemon().await {
+            Ok(pokemon) => pokemon,
+            Err(error_message) => {
+                self.builder.append(error_message);
+                return;
+            }
         };
 
         let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
@@ -89,8 +82,27 @@ impl MovesCommand<'_> {
         self.builder.append(move_output);
     }
 
-    async fn fetch_pokemon(&self, pokemon_name: &str) -> Result<Pokemon, rustemon::error::Error> {
-        self.client.fetch_pokemon(pokemon_name).await
+    async fn fetch_pokemon(&self) -> Result<Pokemon, String> {
+        let successful_match =
+            match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
+                Ok(successful_match) => Ok(successful_match),
+                Err(no_match) => Err(no_match.0),
+            }?;
+
+        match self
+            .client
+            .fetch_pokemon(&successful_match.suggested_name)
+            .await
+        {
+            Ok(pokemon) => Ok(pokemon),
+            Err(_) => {
+                let output = matcher::build_unknown_name(
+                    &successful_match.suggested_name,
+                    &successful_match.keyword,
+                );
+                Err(output)
+            }
+        }
     }
 
     async fn fetch_moves(&self, pokemon_moves: Vec<PokemonMove>) -> Vec<FormatMove> {

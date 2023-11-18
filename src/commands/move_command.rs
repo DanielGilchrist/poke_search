@@ -39,19 +39,12 @@ impl MoveCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let successful_match =
-            match matcher::match_name(&self.move_name, matcher::MatcherType::Move) {
-                Ok(successful_match) => successful_match,
-                Err(no_match) => {
-                    self.builder.append(no_match.0);
-                    return;
-                }
-            };
-
-        let Ok(move_) = self.fetch_move(&successful_match.suggested_name).await else {
-          let output = matcher::build_unknown_name(&successful_match.suggested_name, &successful_match.keyword);
-          self.builder.append(output);
-          return
+        let move_ = match self.fetch_move().await {
+            Ok(move_) => move_,
+            Err(error_message) => {
+                self.builder.append(error_message);
+                return;
+            }
         };
 
         let mut format_move = FormatMove::new(move_);
@@ -64,8 +57,28 @@ impl MoveCommand<'_> {
         }
     }
 
-    async fn fetch_move(&self, move_name: &str) -> Result<Move, rustemon::error::Error> {
-        self.client.fetch_move(move_name).await
+    async fn fetch_move(&self) -> Result<Move, String> {
+        let successful_match =
+            match matcher::match_name(&self.move_name, matcher::MatcherType::Move) {
+                Ok(successful_match) => Ok(successful_match),
+                Err(no_match) => Err(no_match.0),
+            }?;
+
+        let result = self
+            .client
+            .fetch_move(&successful_match.suggested_name)
+            .await;
+
+        match result {
+            Ok(move_) => Ok(move_),
+            Err(_) => {
+                let output = matcher::build_unknown_name(
+                    &successful_match.suggested_name,
+                    &successful_match.keyword,
+                );
+                return Err(output);
+            }
+        }
     }
 
     fn build_learned_by(&mut self, format_move: &mut FormatMove) {

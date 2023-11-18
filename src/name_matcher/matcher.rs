@@ -77,23 +77,23 @@ impl NameMatcher {
 }
 
 pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, NoMatch> {
-  let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
+    let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
 
-  if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
-    let suggestion = Suggestion::new(name.to_owned());
-    let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
+    if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
+        let suggestion = Suggestion::new(name.to_owned());
+        let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
 
-    return Ok(successful_match)
-  }
-
-  match name_matcher.find_match(name) {
-    Some(suggestion) => {
-      let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
-      Ok(successful_match)
+        return Ok(successful_match);
     }
 
-    None => Err(NoMatch::new(build_unknown_name(name, &keyword))),
-  }
+    match name_matcher.find_match(name) {
+        Some(suggestion) => {
+            let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
+            Ok(successful_match)
+        }
+
+        None => Err(NoMatch::new(build_unknown_name(name, &keyword))),
+    }
 }
 
 pub fn build_unknown_name(name: &str, keyword: &str) -> String {
@@ -101,7 +101,7 @@ pub fn build_unknown_name(name: &str, keyword: &str) -> String {
 }
 
 fn name_is_already_valid(names: &[String], item: &String) -> bool {
-  names.binary_search(item).is_ok()
+    names.binary_search(item).is_ok()
 }
 
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
