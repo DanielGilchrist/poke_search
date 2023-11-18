@@ -155,8 +155,8 @@ impl TypeCommand<'_> {
             Ok(type_) => Ok(type_),
             Err(_) => {
                 let output = matcher::build_unknown_name(
-                    &successful_match.suggested_name,
                     &successful_match.keyword,
+                    &successful_match.suggested_name,
                 );
                 Err(output)
             }

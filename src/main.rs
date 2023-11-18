@@ -135,7 +135,7 @@ mod tests {
 
         let mock_client = MockClientImplementation::new();
         let cli = parse_args(vec!["move", incorrect_name]);
-        let expected = matcher::build_unknown_name(incorrect_name, "move");
+        let expected = matcher::build_unknown_name("move", incorrect_name);
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -150,7 +150,7 @@ mod tests {
 
         let mock_client = MockClientImplementation::new();
         let cli = parse_args(vec!["move", incorrect_name]);
-        let expected = build_suggestion("move", incorrect_name, correct_name);
+        let expected = matcher::build_suggestion("move", incorrect_name, correct_name);
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -164,7 +164,7 @@ mod tests {
 
         let mock_client = MockClientImplementation::new();
         let cli = parse_args(vec!["pokemon", incorrect_name]);
-        let expected = matcher::build_unknown_name(incorrect_name, "pokemon");
+        let expected = matcher::build_unknown_name("pokemon", incorrect_name);
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -179,7 +179,7 @@ mod tests {
 
         let mock_client = MockClientImplementation::new();
         let cli = parse_args(vec!["pokemon", incorrect_name]);
-        let expected = build_suggestion("pokemon", incorrect_name, correct_name);
+        let expected = matcher::build_suggestion("pokemon", incorrect_name, correct_name);
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -193,7 +193,7 @@ mod tests {
 
         let mock_client = MockClientImplementation::new();
         let cli = parse_args(vec!["type", incorrect_name]);
-        let expected = matcher::build_unknown_name(incorrect_name, "type");
+        let expected = matcher::build_unknown_name("type", incorrect_name);
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -208,7 +208,7 @@ mod tests {
 
         let mock_client = MockClientImplementation::new();
         let cli = parse_args(vec!["type", incorrect_name]);
-        let expected = build_suggestion("type", incorrect_name, correct_name);
+        let expected = matcher::build_suggestion("type", incorrect_name, correct_name);
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -230,7 +230,7 @@ mod tests {
             .returning(|_args| Ok(Type::default()));
 
         let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
-        let expected = matcher::build_unknown_name(incorrect_name, "type");
+        let expected = matcher::build_unknown_name("type", incorrect_name);
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -252,7 +252,7 @@ mod tests {
             .returning(|_args| Ok(Type::default()));
 
         let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
-        let expected = build_suggestion("type", incorrect_name, "psychic");
+        let expected = matcher::build_suggestion("type", incorrect_name, "psychic");
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -265,9 +265,5 @@ mod tests {
         full_args.extend(args);
 
         Cli::parse_from(full_args)
-    }
-
-    fn build_suggestion(keyword: &str, name: &str, correct_name: &str) -> String {
-        format!("Unknown {keyword} \"{name}\"\nDid you mean \"{correct_name}\"?")
     }
 }

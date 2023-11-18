@@ -108,21 +108,21 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
                 Ok(successful_match)
             }
             Certainty::Uncertain => Err(NoMatch::new(build_suggestion(
-                name,
                 &keyword,
+                name,
                 &suggestion.name,
             ))),
         },
 
-        None => Err(NoMatch::new(build_unknown_name(name, &keyword))),
+        None => Err(NoMatch::new(build_unknown_name(&keyword, name))),
     }
 }
 
-fn build_suggestion(name: &str, keyword: &str, suggestion: &str) -> String {
+pub fn build_suggestion(keyword: &str, name: &str, suggestion: &str) -> String {
     format!("Unknown {keyword} \"{name}\"\nDid you mean \"{suggestion}\"?")
 }
 
-pub fn build_unknown_name(name: &str, keyword: &str) -> String {
+pub fn build_unknown_name(keyword: &str, name: &str) -> String {
     format!("{} \"{}\" doesn't exist", capitalise(keyword), name)
 }
 

@@ -97,8 +97,8 @@ impl MovesCommand<'_> {
             Ok(pokemon) => Ok(pokemon),
             Err(_) => {
                 let output = matcher::build_unknown_name(
-                    &successful_match.suggested_name,
                     &successful_match.keyword,
+                    &successful_match.suggested_name,
                 );
                 Err(output)
             }
