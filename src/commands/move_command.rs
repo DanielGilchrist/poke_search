@@ -76,7 +76,7 @@ impl MoveCommand<'_> {
                     &successful_match.suggested_name,
                     &successful_match.keyword,
                 );
-                return Err(output);
+                Err(output)
             }
         }
     }
