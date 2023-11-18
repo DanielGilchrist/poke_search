@@ -47,7 +47,7 @@ impl MovesCommand<'_> {
             match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
                 Ok(successful_match) => successful_match,
                 Err(no_match) => {
-                    self.builder.append(no_match.message);
+                    self.builder.append(no_match.0);
                     return;
                 }
             };

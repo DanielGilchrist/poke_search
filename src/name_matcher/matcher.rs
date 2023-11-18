@@ -7,7 +7,6 @@ use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
 
 static MIN_SIMILARITY: f32 = 0.6;
-static CERTAIN_SIMILARITY: f32 = 0.9;
 
 pub enum MatcherType {
     Pokemon,
@@ -15,59 +14,35 @@ pub enum MatcherType {
     Type,
 }
 
-pub enum Certainty {
-    Positive,
-    Neutral,
-}
-
 pub struct SuccessfulMatch {
     pub original_name: String,
     pub suggested_name: String,
     pub keyword: String,
-    pub certainty: Certainty,
 }
 
 impl SuccessfulMatch {
     pub fn new(original_name: String, keyword: String, suggestion: Suggestion) -> Self {
-        let certainty = if suggestion.similarity >= CERTAIN_SIMILARITY {
-            Certainty::Positive
-        } else {
-            Certainty::Neutral
-        };
-
-        let suggested_name = suggestion.name;
-
         Self {
             original_name,
-            suggested_name,
+            suggested_name: suggestion.0,
             keyword,
-            certainty,
         }
     }
 }
 
-pub struct NoMatch {
-    pub message: String,
-}
+pub struct NoMatch(pub String);
 
 impl NoMatch {
     pub fn new(message: String) -> Self {
-        Self { message }
+        Self(message)
     }
 }
 
-pub struct Suggestion {
-    name: String,
-    similarity: f32,
-}
+pub struct Suggestion(String);
 
 impl Suggestion {
-    pub fn new(name: String, similarity: f32) -> Self {
-        Self { name, similarity }
-    }
-
-    pub fn certain(name: String) -> Self {
-        Self { name, similarity: 1.0 }
+    pub fn new(name: String) -> Self {
+        Self(name)
     }
 }
 
@@ -86,9 +61,7 @@ impl NameMatcher {
         let search_result = search_results.first().map(|r| r.to_owned())?;
 
         if search_result.similarity > MIN_SIMILARITY {
-            let suggested_name = Suggestion::new(search_result.text, search_result.similarity);
-
-            Some(suggested_name)
+            Some(Suggestion::new(search_result.text))
         } else {
             None
         }
@@ -107,7 +80,7 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
   let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
 
   if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
-    let suggestion = Suggestion::certain(name.to_owned());
+    let suggestion = Suggestion::new(name.to_owned());
     let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
 
     return Ok(successful_match)

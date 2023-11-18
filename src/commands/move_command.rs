@@ -43,7 +43,7 @@ impl MoveCommand<'_> {
             match matcher::match_name(&self.move_name, matcher::MatcherType::Move) {
                 Ok(successful_match) => successful_match,
                 Err(no_match) => {
-                    self.builder.append(no_match.message);
+                    self.builder.append(no_match.0);
                     return;
                 }
             };

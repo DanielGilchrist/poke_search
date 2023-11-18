@@ -142,7 +142,7 @@ impl TypeCommand<'_> {
         let successful_match = match matcher::match_name(name, matcher::MatcherType::Type) {
             Ok(successful_match) => successful_match,
             Err(no_match) => {
-                return Err(no_match.message);
+                return Err(no_match.0);
             }
         };
 
