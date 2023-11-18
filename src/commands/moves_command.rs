@@ -137,18 +137,30 @@ impl MovesCommand<'_> {
         let mut processed_moves = moves;
 
         processed_moves = match &self.type_names {
-            Some(type_names) => processed_moves
-                .into_iter()
-                .filter_map(|format_move| {
-                    let move_ = &format_move.move_;
+            Some(type_names) => {
+                let corrected_type_names = type_names
+                    .iter()
+                    .map(|type_name| {
+                        match matcher::match_name(type_name, matcher::MatcherType::Type) {
+                            Ok(successful_match) => successful_match.suggested_name,
+                            Err(_) => type_name.to_owned(),
+                        }
+                    })
+                    .collect::<Vec<_>>();
 
-                    if type_names.contains(&move_.type_.name) {
-                        Some(format_move)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>(),
+                processed_moves
+                    .into_iter()
+                    .filter_map(|format_move| {
+                        let move_ = &format_move.move_;
+
+                        if corrected_type_names.contains(&move_.type_.name) {
+                            Some(format_move)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            }
             None => processed_moves,
         };
 
