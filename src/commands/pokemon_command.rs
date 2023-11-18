@@ -91,9 +91,9 @@ impl PokemonCommand<'_> {
             let (type1, type2) = (types[0].to_string(), types.get(1).map(|t| t.to_string()));
 
             // TODO: We should extract the logic we need from this as it restricts what we can actually do with `TypeCommand`
-            let type_builder = TypeCommand::execute(self.client, type1, type2).await;
+            let type_builder = TypeCommand::execute(self.client, type1, type2, false).await;
 
-            self.builder.append("Type information\n\n");
+            self.builder.append(formatter::white("Type information\n"));
             self.builder.append_builder(type_builder);
         }
     }
@@ -103,29 +103,31 @@ impl PokemonCommand<'_> {
     }
 
     fn build_summary(&mut self, pokemon: &FormatPokemon) {
-        self.builder.append("Summary\n");
+        self.builder.append(formatter::white("Summary\n"));
         self.builder.append(pokemon.format());
     }
 
     fn build_stat_output(&mut self, pokemon: &Rc<Pokemon>) {
-        self.builder.append("\nStats\n");
+        self.builder.append(formatter::white("\nStats\n"));
         let mut stat_total = 0;
         pokemon.stats.iter().enumerate().for_each(|(index, stat)| {
             // This assumes the stats returned from the API are always in the same order.
             // Because "PokemonStat" doesn't include the stats name, this is much simplier
             // than requesting for the Stat resource just for the corresponding name
-            let stat_name = STAT_NAMES[index];
+            let stat_name = &formatter::white(STAT_NAMES[index]);
             let stat_amount = stat.base_stat;
             stat_total += stat_amount;
             self.builder
                 .append(formatter::formatln(stat_name, &stat_amount.to_string()));
         });
-        self.builder
-            .append(formatter::formatln("Total", &stat_total.to_string()));
+        self.builder.append(formatter::formatln(
+            &formatter::white("Total"),
+            &stat_total.to_string(),
+        ));
     }
 
     async fn build_ability_output(&mut self, pokemon: &Rc<Pokemon>) {
-        self.builder.append("\nAbilities\n");
+        self.builder.append(formatter::white("\nAbilities\n"));
 
         let unique_pokemon_abilities = pokemon
             .abilities

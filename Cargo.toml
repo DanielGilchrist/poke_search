@@ -1,8 +1,8 @@
 [package]
-name = "poke_search_cli"
+name = "poke_search"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.68.2"
+rust-version = "1.74.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,7 +13,7 @@ panic = "abort"   # Don't include backtrace when panics occur
 
 [dependencies]
 async-trait = "0" # https://github.com/dtolnay/async-trait
-clap = "4" # https://github.com/clap-rs/clap
+clap = { version = "4", features = ["derive"] } # https://github.com/clap-rs/clap
 colored = "2" # https://github.com/mackwic/colored
 futures = "0" # https://github.com/rust-lang/futures-rs
 itertools = "0" # https://github.com/rust-itertools/itertools

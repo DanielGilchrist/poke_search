@@ -80,7 +80,8 @@ static TYPE_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
 });
 
 pub fn fetch(type_name: &str) -> String {
-    let owned_type = type_name.to_owned();
-
-    TYPE_MAP.get(&owned_type).unwrap_or(&owned_type).to_owned()
+    TYPE_MAP
+        .get(type_name)
+        .cloned()
+        .unwrap_or_else(|| type_name.to_owned())
 }

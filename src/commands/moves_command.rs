@@ -69,13 +69,13 @@ impl MovesCommand<'_> {
         };
 
         let moves = self.process_moves(self.fetch_moves(pokemon.moves).await);
-        let move_output = self.build_output(moves);
+        let move_output = self.build_output(&moves);
         let pokemon_name = formatter::capitalise(&pokemon.name);
 
         if let Some(type_names) = &self.type_names {
             // move_output can be empty only if a type_name filter is passed and there are no moves of that type
             if move_output.is_empty() {
-                println!(
+                let empty_output = format!(
                     "{} has no {} type moves",
                     pokemon_name,
                     type_names
@@ -85,13 +85,17 @@ impl MovesCommand<'_> {
                         .join(" or ")
                 );
 
+                self.builder.append(empty_output);
+
                 return;
             }
         };
 
-        println!("Pokemon: {pokemon_name}");
+        self.builder
+            .append(format!("{} {pokemon_name}\n", formatter::white("Pokemon:")));
 
-        self.builder.append("Moves:\n");
+        self.builder
+            .append(formatter::white(&format!("Moves: ({})\n", moves.len())));
         self.builder.append(move_output);
     }
 
@@ -168,14 +172,12 @@ impl MovesCommand<'_> {
         processed_moves
     }
 
-    fn build_output(&self, moves: Vec<FormatMove>) -> String {
-        moves
-            .into_iter()
-            .fold(String::new(), |mut output, format_move| {
-                output.push_str(&format_move.format());
-                output.push_str("\n\n");
+    fn build_output(&self, moves: &[FormatMove]) -> String {
+        moves.iter().fold(String::new(), |mut output, format_move| {
+            output.push_str(&format_move.format());
+            output.push('\n');
 
-                output
-            })
+            output
+        })
     }
 }

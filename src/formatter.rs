@@ -54,24 +54,33 @@ impl FormatMove {
     fn build_summary(&self, output: &mut String) {
         let formatted_name = split_and_capitalise(&self.move_.name);
 
-        output.push_str(&formatln("Name", &formatted_name));
+        output.push_str(&formatln(&white("Name"), &formatted_name));
         output.push_str(&formatln(
-            "Type",
+            &white("Type"),
             &type_colours::fetch(&self.move_.type_.name),
         ));
-        output.push_str(&formatln("Damage Type", &self.move_.damage_class.name));
+        output.push_str(&formatln(
+            &white("Damage Type"),
+            &self.move_.damage_class.name,
+        ));
     }
 
     fn build_details(&self, output: &mut String) {
         let power = parse_maybe_i64(self.move_.power);
 
-        output.push_str(&formatln("Power", &power));
-        output.push_str(&formatln("Accuracy", &parse_maybe_i64(self.move_.accuracy)));
-        output.push_str(&formatln("PP", &parse_maybe_i64(self.move_.pp)));
-        output.push_str(&formatln("Priority", &self.move_.priority.to_string()));
+        output.push_str(&formatln(&white("Power"), &power));
+        output.push_str(&formatln(
+            &white("Accuracy"),
+            &parse_maybe_i64(self.move_.accuracy),
+        ));
+        output.push_str(&formatln(&white("PP"), &parse_maybe_i64(self.move_.pp)));
+        output.push_str(&formatln(
+            &white("Priority"),
+            &self.move_.priority.to_string(),
+        ));
 
         if let Some(flavour_text) = self.flavour_text() {
-            output.push_str(&formatln("Description", &flavour_text));
+            output.push_str(&formatln(&white("Description"), &flavour_text));
         }
 
         self.build_effects(power, output);
@@ -100,7 +109,7 @@ impl FormatMove {
                     .replace("$effect_chance%", &effect_chance)
             };
 
-            output.push_str(&formatln("Effect", &description));
+            output.push_str(&formatln(&white("Effect"), &description));
         });
     }
 
@@ -109,12 +118,15 @@ impl FormatMove {
             if let Some(description) =
                 self.find_move_learn_description(&move_details.move_learn_method)
             {
-                output.push_str(&formatln("Learn Method", &description));
+                output.push_str(&formatln(&white("Learn Method"), &description));
             }
 
             let level_learned_at = move_details.level_learned_at;
             if level_learned_at > 0 {
-                output.push_str(&formatln("Learn Level", &level_learned_at.to_string()));
+                output.push_str(&formatln(
+                    &white("Learn Level"),
+                    &level_learned_at.to_string(),
+                ));
             }
         }
     }
@@ -150,7 +162,7 @@ impl FormatPokemon {
 
     fn build_summary(&self, output: &mut String) {
         let formatted_name = split_and_capitalise(&self.0.name);
-        output.push_str(&formatln("Name", &formatted_name));
+        output.push_str(&formatln(&white("Name"), &formatted_name));
 
         self.build_joined_types(output);
         self.build_joined_abilities(output);
@@ -165,7 +177,7 @@ impl FormatPokemon {
             .collect::<Vec<_>>()
             .join(" | ");
 
-        output.push_str(&formatln("Type", &joined_types));
+        output.push_str(&formatln(&white("Type"), &joined_types));
     }
 
     fn build_joined_abilities(&self, output: &mut String) {
@@ -182,7 +194,7 @@ impl FormatPokemon {
             .collect::<Vec<_>>()
             .join(" | ");
 
-        output.push_str(&formatln("Abilities", &joined_abilities));
+        output.push_str(&formatln(&white("Abilities"), &joined_abilities));
     }
 }
 
@@ -208,11 +220,11 @@ impl FormatAbility {
 
     fn build_description(&self, output: &mut String) {
         if let Some(hidden_value) = self.hidden_value() {
-            output.push_str(&formatln("Hidden", &hidden_value));
+            output.push_str(&formatln(&white("Hidden"), &hidden_value));
         }
 
         if let Some(ability_effect) = self.ability_effect() {
-            output.push_str(&formatln("Description", &ability_effect));
+            output.push_str(&formatln(&white("Description"), &ability_effect));
         }
     }
 
@@ -250,7 +262,7 @@ impl FormatModel for FormatAbility {
         let mut output = String::new();
 
         let ability_name = split_and_capitalise(&self.ability.name);
-        output.push_str(&formatln("Name", &ability_name));
+        output.push_str(&formatln(&white("Name"), &ability_name));
 
         self.build_description(&mut output);
 
@@ -288,6 +300,10 @@ pub fn white(str: &str) -> String {
 
 pub fn green(str: &str) -> String {
     format_colour(str.green())
+}
+
+pub fn yellow(str: &str) -> String {
+    format_colour(str.yellow())
 }
 
 pub fn red(str: &str) -> String {
