@@ -21,23 +21,41 @@ enum DamageType {
     Quadruple,
 }
 
+impl DamageType {
+    const NONE_MULTIPLIER: &'static str = "0x\n";
+    const QUARTER_MULTIPLIER: &'static str = "0.25x\n";
+    const HALF_MULTIPLIER: &'static str = "0.5x\n";
+    const NORMAL_MULTIPLIER: &'static str = "1x\n";
+    const DOUBLE_MULTIPLIER: &'static str = "2x\n";
+    const QUADRUPLE_MULTIPLIER: &'static str = "4x\n";
+
+    fn multiplier(&self) -> &'static str {
+        match self {
+            DamageType::None => Self::NONE_MULTIPLIER,
+            DamageType::Quarter => Self::QUARTER_MULTIPLIER,
+            DamageType::Half => Self::HALF_MULTIPLIER,
+            DamageType::Normal => Self::NORMAL_MULTIPLIER,
+            DamageType::Double => Self::DOUBLE_MULTIPLIER,
+            DamageType::Quadruple => Self::QUADRUPLE_MULTIPLIER,
+        }
+    }
+}
+
 enum DamageContext {
     Offence,
     Defence,
 }
 
 impl DamageContext {
-    fn coloured_header(&self, damage_type: DamageType) -> String {
-        let multiplier = match damage_type {
-            DamageType::None => "0x\n",
-            DamageType::Quarter => "0.25x\n",
-            DamageType::Half => "0.5x\n",
-            DamageType::Normal => "1x\n",
-            DamageType::Double => "2x\n",
-            DamageType::Quadruple => "4x\n",
-        };
+    fn multiplier_header(&self, damage_type: DamageType) -> String {
+        let formatter = self.formatter(&damage_type);
+        let multiplier = damage_type.multiplier();
 
-        let formatter = match self {
+        formatter(multiplier)
+    }
+
+    fn formatter(&self, damage_type: &DamageType) -> fn(&str) -> String {
+        match self {
             DamageContext::Offence => match damage_type {
                 DamageType::None => formatter::red,
                 DamageType::Half => formatter::bright_red,
@@ -56,9 +74,7 @@ impl DamageContext {
                 DamageType::Double => formatter::red,
                 DamageType::Quadruple => formatter::bright_red,
             },
-        };
-
-        formatter(multiplier)
+        }
     }
 }
 
@@ -391,7 +407,7 @@ impl TypeCommand<'_> {
             return;
         }
 
-        let header = damage_context.coloured_header(damage_type);
+        let header = damage_context.multiplier_header(damage_type);
         self.builder.append(header);
 
         let mut new_type_names = iter.collect::<Vec<_>>();
