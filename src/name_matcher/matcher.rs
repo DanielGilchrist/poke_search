@@ -6,8 +6,8 @@ use crate::{
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
 
-static MIN_SIMILARITY: f32 = 0.4;
-static CERTAIN_SIMILARITY: f32 = 0.7;
+static MIN_SIMILARITY: f32 = 0.6;
+static CERTAIN_SIMILARITY: f32 = 0.9;
 
 pub enum MatcherType {
     Pokemon,
@@ -47,12 +47,12 @@ impl SuccessfulMatch {
 }
 
 pub struct NoMatch {
-    pub keyword: String,
+    pub message: String,
 }
 
 impl NoMatch {
-    pub fn new(keyword: String) -> Self {
-        Self { keyword }
+    pub fn new(message: String) -> Self {
+        Self { message }
     }
 }
 
@@ -64,6 +64,10 @@ pub struct Suggestion {
 impl Suggestion {
     pub fn new(name: String, similarity: f32) -> Self {
         Self { name, similarity }
+    }
+
+    pub fn certain(name: String) -> Self {
+        Self { name, similarity: 1.0 }
     }
 }
 
@@ -100,25 +104,23 @@ impl NameMatcher {
 }
 
 pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, NoMatch> {
-    let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
+  let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
 
-    match name_matcher.find_match(name) {
-        Some(suggestion) => {
-            let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
+  if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
+    let suggestion = Suggestion::certain(name.to_owned());
+    let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
 
-            Ok(successful_match)
-        }
+    return Ok(successful_match)
+  }
 
-        None => Err(NoMatch::new(keyword)),
+  match name_matcher.find_match(name) {
+    Some(suggestion) => {
+      let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
+      Ok(successful_match)
     }
-}
 
-pub fn build_suggested_name(successful_match: &SuccessfulMatch) -> String {
-    let keyword = &successful_match.keyword;
-    let original_name = &successful_match.original_name;
-    let similar_name = &successful_match.suggested_name;
-
-    format!("Unknown {keyword} \"{original_name}\"\nDid you mean \"{similar_name}\"?")
+    None => Err(NoMatch::new(build_unknown_name(name, &keyword))),
+  }
 }
 
 pub fn build_unknown_name(name: &str, keyword: &str) -> String {
@@ -137,6 +139,10 @@ pub fn try_suggest_name(name: &str, matcher_type: MatcherType) -> String {
 
         None => format!("{} \"{}\" doesn't exist", capitalise(&keyword), name),
     }
+}
+
+fn name_is_already_valid(names: &[String], item: &String) -> bool {
+  names.binary_search(item).is_ok()
 }
 
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
