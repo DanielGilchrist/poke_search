@@ -107,7 +107,7 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
 
                 Ok(successful_match)
             }
-            Certainty::Uncertain => Err(NoMatch::new(build_suggestion(
+            Certainty::Uncertain => Err(NoMatch::new(build_suggested_name(
                 &keyword,
                 name,
                 &suggestion.name,
@@ -118,7 +118,7 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
     }
 }
 
-pub fn build_suggestion(keyword: &str, name: &str, suggestion: &str) -> String {
+pub fn build_suggested_name(keyword: &str, name: &str, suggestion: &str) -> String {
     format!("Unknown {keyword} \"{name}\"\nDid you mean \"{suggestion}\"?")
 }
 
