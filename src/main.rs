@@ -118,3 +118,156 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
         } => TypeCommand::execute(client, type_name, second_type_name, pokemon).await,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::client::MockClientImplementation;
+    use crate::name_matcher::matcher;
+
+    use rustemon::model::pokemon::Type;
+
+    const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
+
+    #[tokio::test]
+    async fn pokemon_move_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
+        let incorrect_name = "kfdslskfls";
+
+        let mock_client = MockClientImplementation::new();
+        let cli = parse_args(vec!["move", incorrect_name]);
+        let expected = matcher::build_unknown_name(incorrect_name, "move");
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pokemon_move_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
+        let correct_name = "flamethrower";
+        let incorrect_name = "flaymthowaer";
+
+        let mock_client = MockClientImplementation::new();
+        let cli = parse_args(vec!["move", incorrect_name]);
+        let expected = build_suggestion("move", incorrect_name, correct_name);
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pokemon_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
+        let incorrect_name = "lkfdjslsdkjfkls";
+
+        let mock_client = MockClientImplementation::new();
+        let cli = parse_args(vec!["pokemon", incorrect_name]);
+        let expected = matcher::build_unknown_name(incorrect_name, "pokemon");
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pokemon_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
+        let correct_name = "pikachu";
+        let incorrect_name = "peekachu";
+
+        let mock_client = MockClientImplementation::new();
+        let cli = parse_args(vec!["pokemon", incorrect_name]);
+        let expected = build_suggestion("pokemon", incorrect_name, correct_name);
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pokemon_single_type_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
+        let incorrect_name = "lkjfsldfjsdkll";
+
+        let mock_client = MockClientImplementation::new();
+        let cli = parse_args(vec!["type", incorrect_name]);
+        let expected = matcher::build_unknown_name(incorrect_name, "type");
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pokemon_single_type_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
+        let correct_name = "dragon";
+        let incorrect_name = "drahgna";
+
+        let mock_client = MockClientImplementation::new();
+        let cli = parse_args(vec!["type", incorrect_name]);
+        let expected = build_suggestion("type", incorrect_name, correct_name);
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pokemon_dual_type_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
+        let correct_name = "water";
+        let incorrect_name = "ljflkdsfjslkj";
+
+        let mut mock_client = MockClientImplementation::new();
+
+        mock_client
+            .expect_fetch_type()
+            .with(mockall::predicate::eq(correct_name))
+            .once()
+            .returning(|_args| Ok(Type::default()));
+
+        let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
+        let expected = matcher::build_unknown_name(incorrect_name, "type");
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pokemon_dual_type_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
+        let correct_name = "water";
+        let incorrect_name = "sychick";
+
+        let mut mock_client = MockClientImplementation::new();
+
+        mock_client
+            .expect_fetch_type()
+            .with(mockall::predicate::eq(correct_name))
+            .once()
+            .returning(|_args| Ok(Type::default()));
+
+        let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
+        let expected = build_suggestion("type", incorrect_name, "psychic");
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    fn parse_args(args: Vec<&str>) -> Cli {
+        let mut full_args = vec![PACKAGE_NAME];
+        full_args.extend(args);
+
+        Cli::parse_from(full_args)
+    }
+
+    fn build_suggestion(keyword: &str, name: &str, correct_name: &str) -> String {
+        format!("Unknown {keyword} \"{name}\"\nDid you mean \"{correct_name}\"?")
+    }
+}
