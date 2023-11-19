@@ -175,7 +175,7 @@ mod tests {
     #[tokio::test]
     async fn pokemon_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
         let correct_name = "pikachu";
-        let incorrect_name = "peekachu";
+        let incorrect_name = "peacachu";
 
         let mock_client = MockClientImplementation::new();
         let cli = parse_args(vec!["pokemon", incorrect_name]);
