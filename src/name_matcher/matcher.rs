@@ -1,6 +1,9 @@
 use crate::{
     formatter::capitalise,
-    name_matcher::{move_names::MOVE_NAMES, move_damage_class_names::MOVE_DAMAGE_CLASS_NAMES, pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES},
+    name_matcher::{
+        move_damage_class_names::MOVE_DAMAGE_CLASS_NAMES, move_names::MOVE_NAMES,
+        pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES,
+    },
 };
 
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
@@ -136,7 +139,7 @@ fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
         MatcherType::Move => (&MOVE_NAMES, "move"),
         MatcherType::Pokemon => (&POKEMON_NAMES, "pokemon"),
         MatcherType::Type => (&TYPE_NAMES, "type"),
-        MatcherType::MoveDamageCategory => (&MOVE_DAMAGE_CLASS_NAMES, "move damage category")
+        MatcherType::MoveDamageCategory => (&MOVE_DAMAGE_CLASS_NAMES, "move damage category"),
     };
 
     (
