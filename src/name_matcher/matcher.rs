@@ -21,7 +21,7 @@ pub struct SuccessfulMatch {
 }
 
 impl SuccessfulMatch {
-    pub fn new(original_name: String, keyword: String, suggestion: Suggestion) -> Self {
+    fn new(original_name: String, keyword: String, suggestion: Suggestion) -> Self {
         Self {
             original_name,
             suggested_name: suggestion.name,
@@ -33,7 +33,7 @@ impl SuccessfulMatch {
 pub struct NoMatch(pub String);
 
 impl NoMatch {
-    pub fn new(message: String) -> Self {
+    fn new(message: String) -> Self {
         Self(message)
     }
 }
@@ -43,7 +43,7 @@ enum Certainty {
     Uncertain,
 }
 
-pub struct Suggestion {
+struct Suggestion {
     name: String,
     certainty: Certainty,
 }
@@ -63,11 +63,11 @@ struct NameMatcher {
 }
 
 impl NameMatcher {
-    pub fn new(names: Vec<String>) -> Self {
+    fn new(names: Vec<String>) -> Self {
         NameMatcher { names }
     }
 
-    pub fn find_match(&self, name: &str) -> Option<Suggestion> {
+    fn find_match(&self, name: &str) -> Option<Suggestion> {
         let corpus = self.build_corpus();
         let search_results = corpus.search(name, 0.25);
         let search_result = search_results.first().map(|r| r.to_owned())?;
