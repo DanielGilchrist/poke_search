@@ -24,6 +24,10 @@ const SOURCES: &'static [(&'static str, &'static str)] = &[
   (
     "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/types.csv",
     "type_names"
+  ),
+  (
+    "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_damage_classes.csv",
+    "move_damage_class_names"
   )
 ];
 
@@ -44,6 +48,7 @@ fn fetch_and_replace(url: &str, file_name: &str) -> Result<(), Box<dyn std::erro
   let mut reader = csv::Reader::from_reader(csv.as_bytes());
   let mut names = reader.records().map(|record| record.unwrap()[1].to_string()).collect::<Vec<_>>();
 
+  // This is important as we rely on binary search if we need to find a name in the vector in name_matcher::matcher.
   names.sort();
 
   let joined_names = names
