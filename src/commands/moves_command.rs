@@ -165,18 +165,33 @@ impl MovesCommand<'_> {
         };
 
         processed_moves = match &self.categories {
-            Some(categories) => processed_moves
-                .into_iter()
-                .filter_map(|format_move| {
-                    let move_ = &format_move.move_;
+            Some(categories) => {
+                let corrected_categories = categories
+                    .iter()
+                    .map(|category| {
+                        match matcher::match_name(
+                            category,
+                            matcher::MatcherType::MoveDamageCategory,
+                        ) {
+                            Ok(successful_match) => successful_match.suggested_name,
+                            Err(_) => category.to_owned(),
+                        }
+                    })
+                    .collect::<Vec<_>>();
 
-                    if categories.contains(&move_.damage_class.name) {
-                        Some(format_move)
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>(),
+                processed_moves
+                    .into_iter()
+                    .filter_map(|format_move| {
+                        let move_ = &format_move.move_;
+
+                        if corrected_categories.contains(&move_.damage_class.name) {
+                            Some(format_move)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            }
             None => processed_moves,
         };
 
