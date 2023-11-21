@@ -165,17 +165,17 @@ impl TypeCommand<'_> {
 
     fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {
         let mut pokemon_names = if let Some(second_type) = second_type {
-            let type_pokemon_names = self.pokemon_names_from_type(type_);
-            let second_type_pokemon_names = self.pokemon_names_from_type(second_type);
+            let type_pokemon_names = self.pokemon_names_from_type(type_).collect::<HashSet<_>>();
+            let second_type_pokemon_names = self
+                .pokemon_names_from_type(second_type)
+                .collect::<HashSet<_>>();
 
             type_pokemon_names
                 .intersection(&second_type_pokemon_names)
                 .cloned()
                 .collect::<Vec<_>>()
         } else {
-            self.pokemon_names_from_type(type_)
-                .into_iter()
-                .collect::<Vec<_>>()
+            self.pokemon_names_from_type(type_).collect::<Vec<_>>()
         };
 
         pokemon_names.sort();
@@ -198,12 +198,11 @@ impl TypeCommand<'_> {
         }
     }
 
-    fn pokemon_names_from_type(&self, type_: &Type) -> HashSet<String> {
+    fn pokemon_names_from_type<'a>(&self, type_: &'a Type) -> impl Iterator<Item = String> + 'a {
         type_
             .pokemon
             .iter()
             .map(|type_pokemon| type_pokemon.pokemon.name.clone())
-            .collect::<HashSet<_>>()
     }
 
     fn build_type_header(&self, type_: &Type, second_type: Option<&Type>) -> String {
