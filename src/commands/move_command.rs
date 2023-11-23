@@ -83,7 +83,7 @@ impl MoveCommand<'_> {
 
     fn build_learned_by(&mut self, format_move: &mut FormatMove) {
         let learned_by_pokemon = &mut format_move.move_.learned_by_pokemon;
-        learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.to_owned());
+        learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.clone());
 
         let formatted_pokemon = learned_by_pokemon
             .iter_mut()

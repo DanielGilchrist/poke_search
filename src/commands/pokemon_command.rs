@@ -71,7 +71,7 @@ impl PokemonCommand<'_> {
                 .map(|t| t.type_.name)
                 .collect::<Vec<_>>();
 
-            let (type1, type2) = (types[0].to_string(), types.get(1).map(|t| t.to_string()));
+            let (type1, type2) = (types[0].to_string(), types.get(1).map(ToString::to_string));
 
             // TODO: We should extract the logic we need from this as it restricts what we can actually do with `TypeCommand`
             let type_builder = TypeCommand::execute(self.client, type1, type2, false).await;
@@ -88,11 +88,12 @@ impl PokemonCommand<'_> {
                 Err(no_match) => Err(no_match.0),
             }?;
 
-        match self
+        let result = self
             .client
             .fetch_pokemon(&successful_match.suggested_name)
-            .await
-        {
+            .await;
+
+        match result {
             Ok(pokemon) => Ok(pokemon),
             Err(_) => {
                 let output = matcher::build_unknown_name(

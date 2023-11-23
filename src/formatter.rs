@@ -2,7 +2,7 @@ use crate::type_colours::{self};
 
 use std::rc::Rc;
 
-use colored::*;
+use colored::{ColoredString, Colorize};
 use itertools::Itertools;
 use rustemon::model::{
     moves::{Move, MoveLearnMethod},
@@ -137,7 +137,7 @@ impl FormatMove {
             .iter()
             .find(|description| description.language.name == "en")?;
 
-        Some(english_description.description.to_owned())
+        Some(english_description.description.clone())
     }
 }
 
