@@ -1,4 +1,4 @@
-use colored::*;
+use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 

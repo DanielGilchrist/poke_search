@@ -74,7 +74,7 @@ impl NameMatcher {
     fn find_match(&self, name: &str) -> Option<Suggestion> {
         let corpus = self.build_corpus();
         let search_results = corpus.search(name, 0.25);
-        let search_result = search_results.first().map(|r| r.to_owned())?;
+        let search_result = search_results.first().map(ToOwned::to_owned)?;
 
         let certainty = if search_result.similarity > MIN_CERTAIN_SIMILARITY {
             Certainty::Certain

@@ -89,11 +89,12 @@ impl MovesCommand<'_> {
                 Err(no_match) => Err(no_match.0),
             }?;
 
-        match self
+        let result = self
             .client
             .fetch_pokemon(&successful_match.suggested_name)
-            .await
-        {
+            .await;
+
+        match result {
             Ok(pokemon) => Ok(pokemon),
             Err(_) => {
                 let output = matcher::build_unknown_name(

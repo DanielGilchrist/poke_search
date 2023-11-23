@@ -67,8 +67,7 @@ impl DamageContext {
                 DamageType::Quadruple => panic!("Quadruple damage is not possible for offence"),
             },
             DamageContext::Defence => match damage_type {
-                DamageType::None => formatter::green,
-                DamageType::Quarter => formatter::green,
+                DamageType::Quarter | DamageType::None => formatter::green,
                 DamageType::Half => formatter::bright_green,
                 DamageType::Normal => formatter::yellow,
                 DamageType::Double => formatter::red,
@@ -300,7 +299,7 @@ impl TypeCommand<'_> {
                     && !double_damage_names.contains(type_name)
                     && !EXCLUDED_TYPES.contains(&type_name.as_str())
             })
-            .map(|type_name| type_name.to_owned())
+            .map(ToOwned::to_owned)
             .collect::<Vec<_>>()
     }
 
@@ -381,22 +380,22 @@ impl TypeCommand<'_> {
     }
 
     fn increment_counts(&self, counts: &mut HashMap<String, i8>, vec: &[String]) {
-        vec.iter().for_each(|t| {
+        for t in vec {
             let value = counts.entry(t.to_owned()).or_insert(0);
             *value += 1;
-        });
+        }
     }
 
     fn build_combined_hash_set(&self, a: Vec<String>, b: Vec<String>) -> HashSet<String> {
         let mut hash_set = HashSet::new();
 
-        a.into_iter().for_each(|e| {
+        for e in a {
             hash_set.insert(e);
-        });
+        }
 
-        b.into_iter().for_each(|e| {
+        for e in b {
             hash_set.insert(e);
-        });
+        }
 
         hash_set
     }
@@ -404,7 +403,7 @@ impl TypeCommand<'_> {
     fn to_type_names(&self, resources: &[NamedApiResource<Type>]) -> Vec<String> {
         resources
             .iter()
-            .map(|type_resource| type_resource.name.to_owned())
+            .map(|type_resource| type_resource.name.clone())
             .collect::<Vec<_>>()
     }
 

@@ -32,14 +32,12 @@ const SOURCES: &'static [(&'static str, &'static str)] = &[
 ];
 
 fn main() {
-  SOURCES
-    .into_iter()
-    .for_each(|(url, file_name)| {
-      match fetch_and_replace(url, file_name) {
-        Ok(_) => (),
-        Err(error) => eprintln!("{:?}", error)
-      };
-    })
+  for (url, file_name) in SOURCES.into_iter() {
+    match fetch_and_replace(url, file_name) {
+      Ok(_) => (),
+      Err(error) => eprintln!("{:?}", error)
+    };
+  }
 }
 
 fn fetch_and_replace(url: &str, file_name: &str) -> Result<(), Box<dyn std::error::Error>> {
