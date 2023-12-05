@@ -74,6 +74,10 @@ impl NameMatcher {
     fn find_match(&self, name: &str) -> Option<Suggestion> {
         let corpus = self.build_corpus();
         let search_results = corpus.search(name, 0.25);
+
+        #[cfg(debug_assertions)]
+        println!("\n[DEBUG] Similar Results: {:?}\n", search_results);
+
         let search_result = search_results.first().map(ToOwned::to_owned)?;
 
         let certainty = if search_result.similarity > MIN_CERTAIN_SIMILARITY {
@@ -88,7 +92,9 @@ impl NameMatcher {
     fn build_corpus(&self) -> Corpus {
         let mut corpus = CorpusBuilder::new().arity(2).pad_full(Pad::Auto).finish();
 
-        self.names.iter().for_each(|name| corpus.add_text(name));
+        for name in &self.names {
+            corpus.add_text(name);
+        }
 
         corpus
     }
