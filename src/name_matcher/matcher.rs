@@ -9,7 +9,7 @@ use crate::{
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
 use once_cell::sync::Lazy;
 
-static MIN_CERTAIN_SIMILARITY: f32 = 0.78;
+static MIN_CERTAIN_SIMILARITY: f32 = 0.74;
 
 pub enum MatcherType {
     Pokemon,
