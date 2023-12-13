@@ -1,8 +1,8 @@
 #!/usr/bin/env rust-script
 //! ```cargo
 //! [dependencies]
-//! csv = "1.1"
-//! relative-path = "1.7.3"
+//! csv = "1.3"
+//! relative-path = "1.9"
 //! reqwest = { version = "0.11", features = ["blocking"] }
 //! ```
 
