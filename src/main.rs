@@ -58,6 +58,10 @@ enum Commands {
         #[arg(short, long, default_value_t = false)]
         #[arg(help = "Show detailed type information")]
         types: bool,
+
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Show evolution information")]
+        evolution: bool,
     },
 
     #[command(about = "See information about a specific type")]
@@ -106,9 +110,9 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             MoveCommand::execute(client, parsed_move_name, learned_by).await
         }
 
-        Commands::Pokemon { pokemon, types } => {
+        Commands::Pokemon { pokemon, types, evolution } => {
             let parsed_pokemon_name = parse_name(&pokemon);
-            PokemonCommand::execute(client, parsed_pokemon_name, types).await
+            PokemonCommand::execute(client, parsed_pokemon_name, types, evolution).await
         }
 
         Commands::Type {

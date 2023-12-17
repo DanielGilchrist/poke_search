@@ -10,7 +10,7 @@ use futures::{stream, StreamExt};
 use std::rc::Rc;
 
 use itertools::Itertools;
-use rustemon::model::pokemon::Pokemon;
+use rustemon::{model::pokemon::Pokemon, Follow};
 
 static STAT_NAMES: &[&str] = &[
     "HP",
@@ -26,6 +26,7 @@ pub struct PokemonCommand<'a> {
     client: &'a dyn ClientImplementation,
     pokemon_name: String,
     show_types: bool,
+    show_evolution: bool
 }
 
 impl PokemonCommand<'_> {
@@ -33,6 +34,7 @@ impl PokemonCommand<'_> {
         client: &dyn ClientImplementation,
         pokemon_name: String,
         show_types: bool,
+        show_evolution: bool,
     ) -> Builder {
         let mut builder = Builder::default();
 
@@ -41,6 +43,7 @@ impl PokemonCommand<'_> {
             client,
             pokemon_name,
             show_types,
+            show_evolution,
         }
         ._execute()
         .await;
@@ -59,6 +62,21 @@ impl PokemonCommand<'_> {
 
         let format_pokemon = FormatPokemon::new(pokemon.clone());
         let pokemon_rc = Rc::new(pokemon.clone());
+
+        let species = self
+            .client
+            .fetch_pokemon_species(&pokemon.species.name)
+            .await
+            .ok();
+
+        if self.show_evolution {
+          if let Some(species) = species {
+            if let Some(evolution_chain) = species.evolution_chain {
+              let chain = evolution_chain.follow(self.client.client()).await.unwrap();
+              println!("{:?}", chain);
+            }
+          }
+        }
 
         self.build_summary(&format_pokemon);
         self.build_stat_output(&pokemon_rc);

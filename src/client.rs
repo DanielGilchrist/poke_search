@@ -5,7 +5,7 @@ use rustemon::{
     error::Error,
     model::{
         moves::{Move, MoveLearnMethod},
-        pokemon::{Ability, Pokemon, Type},
+        pokemon::{Ability, Pokemon, Type, PokemonSpecies},
     },
 };
 
@@ -19,14 +19,19 @@ pub trait ClientImplementation {
         move_learn_method_name: &str,
     ) -> Result<MoveLearnMethod, Error>;
     async fn fetch_pokemon(&self, pokemon_name: &str) -> Result<Pokemon, Error>;
+    async fn fetch_pokemon_species(&self, species_name: &str) -> Result<PokemonSpecies, Error>;
     async fn fetch_type(&self, type_name: &str) -> Result<Type, Error>;
-}
+    fn client(&self) -> &RustemonClient;
+  }
 
 #[derive(Default)]
 pub struct Client(RustemonClient);
 
 #[async_trait]
 impl ClientImplementation for Client {
+  fn client(&self) -> &RustemonClient {
+    &self.0
+  }
     async fn fetch_ability(&self, ability_name: &str) -> Result<Ability, Error> {
         rustemon::pokemon::ability::get_by_name(ability_name, &self.0).await
     }
@@ -44,6 +49,10 @@ impl ClientImplementation for Client {
 
     async fn fetch_pokemon(&self, pokemon_name: &str) -> Result<Pokemon, Error> {
         rustemon::pokemon::pokemon::get_by_name(pokemon_name, &self.0).await
+    }
+
+    async fn fetch_pokemon_species(&self, species_name: &str) -> Result<PokemonSpecies, Error> {
+        rustemon::pokemon::pokemon_species::get_by_name(species_name, &self.0).await
     }
 
     async fn fetch_type(&self, type_name: &str) -> Result<Type, Error> {
