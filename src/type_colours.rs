@@ -2,86 +2,34 @@ use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
-static TYPE_MAP: Lazy<HashMap<String, String>> = Lazy::new(|| {
+type RGB = (u8, u8, u8);
+
+static TYPE_NAME_TO_RGB: Lazy<HashMap<&'static str, RGB>> = Lazy::new(|| {
     HashMap::from([
-        (
-            String::from("bug"),
-            format!("{}", "bug".white().bold().on_truecolor(166, 185, 26)),
-        ),
-        (
-            String::from("dark"),
-            format!("{}", "dark".white().on_truecolor(112, 87, 70)),
-        ),
-        (
-            String::from("dragon"),
-            format!("{}", "dragon".white().on_truecolor(111, 53, 252)),
-        ),
-        (
-            String::from("electric"),
-            format!("{}", "electric".white().on_truecolor(247, 208, 44)),
-        ),
-        (
-            String::from("fairy"),
-            format!("{}", "fairy".white().on_truecolor(214, 133, 173)),
-        ),
-        (
-            String::from("fighting"),
-            format!("{}", "fighting".white().on_truecolor(194, 46, 40)),
-        ),
-        (
-            String::from("fire"),
-            format!("{}", "fire".white().on_truecolor(238, 129, 48)),
-        ),
-        (
-            String::from("flying"),
-            format!("{}", "flying".white().on_truecolor(169, 143, 243)),
-        ),
-        (
-            String::from("ghost"),
-            format!("{}", "ghost".white().on_truecolor(115, 87, 151)),
-        ),
-        (
-            String::from("grass"),
-            format!("{}", "grass".white().on_truecolor(122, 199, 76)),
-        ),
-        (
-            String::from("ground"),
-            format!("{}", "ground".white().on_truecolor(226, 191, 101)),
-        ),
-        (
-            String::from("ice"),
-            format!("{}", "ice".white().on_truecolor(150, 217, 214)),
-        ),
-        (
-            String::from("normal"),
-            format!("{}", "normal".white().on_truecolor(168, 167, 122)),
-        ),
-        (
-            String::from("poison"),
-            format!("{}", "poison".white().on_truecolor(163, 62, 161)),
-        ),
-        (
-            String::from("psychic"),
-            format!("{}", "psychic".white().on_truecolor(249, 85, 135)),
-        ),
-        (
-            String::from("rock"),
-            format!("{}", "rock".white().on_truecolor(182, 161, 54)),
-        ),
-        (
-            String::from("steel"),
-            format!("{}", "steel".white().on_truecolor(183, 183, 206)),
-        ),
-        (
-            String::from("water"),
-            format!("{}", "water".white().on_truecolor(99, 144, 240)),
-        ),
+        ("bug", (166, 185, 26)),
+        ("dark", (112, 87, 70)),
+        ("dragon", (111, 53, 252)),
+        ("electric", (247, 208, 44)),
+        ("fairy", (214, 133, 173)),
+        ("fighting", (194, 46, 40)),
+        ("fire", (238, 129, 48)),
+        ("flying", (169, 143, 243)),
+        ("ghost", (115, 87, 151)),
+        ("grass", (122, 199, 76)),
+        ("ground", (226, 191, 101)),
+        ("ice", (150, 217, 214)),
+        ("normal", (168, 167, 122)),
+        ("poison", (163, 62, 161)),
+        ("psychic", (249, 85, 135)),
+        ("rock", (182, 161, 54)),
+        ("steel", (183, 183, 206)),
+        ("water", (99, 144, 240)),
     ])
 });
 
 pub fn fetch(type_name: &str) -> String {
-    TYPE_MAP
-        .get(type_name)
-        .cloned()
-        .unwrap_or_else(|| type_name.to_owned())
+    match TYPE_NAME_TO_RGB.get(type_name) {
+        Some(&(r, g, b)) => format!("{}", type_name.white().bold().on_truecolor(r, g, b)),
+        None => type_name.to_owned(),
+    }
 }
