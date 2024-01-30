@@ -2,6 +2,7 @@ use colored::Colorize;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
+#[allow(clippy::upper_case_acronyms)]
 type RGB = (u8, u8, u8);
 
 static TYPE_NAME_TO_RGB: Lazy<HashMap<&'static str, RGB>> = Lazy::new(|| {
