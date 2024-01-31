@@ -2,7 +2,10 @@ use crate::{
     builder::Builder,
     client::ClientImplementation,
     formatter::{self, FormatAbility, FormatModel},
+    name_matcher::matcher,
 };
+
+use rustemon::model::pokemon::Ability;
 
 pub struct AbilityCommand<'a> {
     builder: &'a mut Builder,
@@ -32,10 +35,10 @@ impl AbilityCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let ability = match self.client.fetch_ability(&self.ability_name).await {
+        let ability = match self.fetch_ability().await {
             Ok(ability) => ability,
             Err(error_message) => {
-                self.builder.append(error_message.to_string());
+                self.builder.append(error_message);
                 return;
             }
         };
@@ -59,6 +62,30 @@ impl AbilityCommand<'_> {
                 ));
                 self.builder.append_c('\n');
             });
+        }
+    }
+
+    async fn fetch_ability(&self) -> Result<Ability, String> {
+        let successful_match =
+            match matcher::match_name(&self.ability_name, matcher::MatcherType::Ability) {
+                Ok(successful_match) => Ok(successful_match),
+                Err(no_match) => Err(no_match.0),
+            }?;
+
+        let result = self
+            .client
+            .fetch_ability(&successful_match.suggested_name)
+            .await;
+
+        match result {
+            Ok(ability) => Ok(ability),
+            Err(_) => {
+                let output = matcher::build_unknown_name(
+                    &successful_match.keyword,
+                    &successful_match.suggested_name,
+                );
+                Err(output)
+            }
         }
     }
 }
