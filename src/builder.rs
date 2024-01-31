@@ -39,15 +39,15 @@ pub trait Appendable {
 }
 
 impl Appendable for Builder {
-  fn to_appendable(&self) -> &str {
-    &self.0
-  }
+    fn to_appendable(&self) -> &str {
+        &self.0
+    }
 }
 
 impl Appendable for String {
-  fn to_appendable(&self) -> &str {
-    self
-  }
+    fn to_appendable(&self) -> &str {
+        self
+    }
 }
 
 impl Appendable for &str {
