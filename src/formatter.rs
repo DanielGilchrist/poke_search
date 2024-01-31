@@ -210,11 +210,11 @@ impl FormatModel for FormatPokemon {
 
 pub struct FormatAbility {
     ability: Ability,
-    pokemon: Rc<Pokemon>,
+    pokemon: Option<Rc<Pokemon>>,
 }
 
 impl FormatAbility {
-    pub fn new(ability: Ability, pokemon: Rc<Pokemon>) -> Self {
+    pub fn new(ability: Ability, pokemon: Option<Rc<Pokemon>>) -> Self {
         FormatAbility { ability, pokemon }
     }
 
@@ -229,8 +229,10 @@ impl FormatAbility {
     }
 
     fn hidden_value(&self) -> Option<String> {
+        let pokemon = self.pokemon.clone()?;
+
         let is_hidden = self.ability.pokemon.iter().find_map(|ability_pokemon| {
-            if ability_pokemon.pokemon.name == self.pokemon.name {
+            if ability_pokemon.pokemon.name == pokemon.name {
                 Some(ability_pokemon.is_hidden)
             } else {
                 None
