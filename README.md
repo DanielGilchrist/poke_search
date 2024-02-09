@@ -2,7 +2,7 @@
 <img width="800" alt="image" src="https://github.com/DanielGilchrist/poke_search/assets/13454550/0fdce2bd-ed49-4dc6-8550-54b2f1345ac6">
 
 # Installation
-You will need Rust 1.75.0 installed. I recommend using [`rustup`](https://rustup.rs/)
+You will need Rust 1.76.0 installed. I recommend using [`rustup`](https://rustup.rs/)
 ```sh
 # From the rustup.rs website
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -10,7 +10,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 And then run
 ```sh
-rustup default 1.75.0
+rustup default 1.76.0
 ```
 
 Then
