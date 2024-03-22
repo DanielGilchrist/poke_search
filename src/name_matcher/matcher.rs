@@ -1,8 +1,8 @@
 use crate::{
     formatter::capitalise,
     name_matcher::{
-        move_damage_class_names::MOVE_DAMAGE_CLASS_NAMES, move_names::MOVE_NAMES,
-        pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES,
+        ability_names::ABILITY_NAMES, move_damage_class_names::MOVE_DAMAGE_CLASS_NAMES,
+        move_names::MOVE_NAMES, pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES,
     },
 };
 
@@ -12,6 +12,7 @@ use once_cell::sync::Lazy;
 static MIN_CERTAIN_SIMILARITY: f32 = 0.74;
 
 pub enum MatcherType {
+    Ability,
     Pokemon,
     Move,
     MoveDamageCategory,
@@ -142,10 +143,11 @@ fn name_is_already_valid(names: &[String], item: &String) -> bool {
 
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
     let (names, keyword) = match matcher_type {
+        MatcherType::Ability => (&ABILITY_NAMES, "ability"),
         MatcherType::Move => (&MOVE_NAMES, "move"),
+        MatcherType::MoveDamageCategory => (&MOVE_DAMAGE_CLASS_NAMES, "move damage category"),
         MatcherType::Pokemon => (&POKEMON_NAMES, "pokemon"),
         MatcherType::Type => (&TYPE_NAMES, "type"),
-        MatcherType::MoveDamageCategory => (&MOVE_DAMAGE_CLASS_NAMES, "move damage category"),
     };
 
     (
