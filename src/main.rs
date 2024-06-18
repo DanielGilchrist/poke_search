@@ -93,10 +93,6 @@ async fn main() {
     run(&client, cli).await.print();
 }
 
-fn parse_name(name: &str) -> String {
-    name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
-}
-
 async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
     match cli.command {
         Commands::Ability { ability, pokemon } => {
@@ -132,6 +128,10 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             pokemon,
         } => TypeCommand::execute(client, type_name, second_type_name, pokemon).await,
     }
+}
+
+fn parse_name(name: &str) -> String {
+    name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
 }
 
 #[cfg(test)]
