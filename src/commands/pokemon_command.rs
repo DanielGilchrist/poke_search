@@ -10,7 +10,10 @@ use futures::{stream, StreamExt};
 use std::rc::Rc;
 
 use itertools::Itertools;
-use rustemon::{model::{evolution::{ChainLink, EvolutionChain, EvolutionDetail}, pokemon::Pokemon}};
+use rustemon::model::{
+    evolution::{ChainLink, EvolutionChain, EvolutionDetail},
+    pokemon::Pokemon,
+};
 
 static STAT_NAMES: &[&str] = &[
     "HP",
@@ -23,74 +26,93 @@ static STAT_NAMES: &[&str] = &[
 
 #[derive(Debug)]
 struct NormalisedEvolutionDetail {
-  item: Option<String>,
-  trigger: String,
-  gender: Option<String>,
-  held_item: Option<String>,
-  known_move: Option<String>,
-  known_move_type: Option<String>,
-  location: Option<String>,
-  min_level: Option<i64>,
-  min_happiness: Option<i64>,
-  min_beauty: Option<i64>,
-  min_affection: Option<i64>,
-  needs_overworld_rain: bool,
-  party_species: Option<String>,
-  party_type: Option<String>,
-  relative_physical_stats: String,
-  time_of_day: Option<String>,
-  trade_species: Option<String>,
-  turn_upside_down: bool,
+    item: Option<String>,
+    trigger: String,
+    gender: Option<String>,
+    held_item: Option<String>,
+    known_move: Option<String>,
+    known_move_type: Option<String>,
+    location: Option<String>,
+    min_level: Option<i64>,
+    min_happiness: Option<i64>,
+    min_beauty: Option<i64>,
+    min_affection: Option<i64>,
+    needs_overworld_rain: bool,
+    party_species: Option<String>,
+    party_type: Option<String>,
+    relative_physical_stats: String,
+    time_of_day: Option<String>,
+    trade_species: Option<String>,
+    turn_upside_down: bool,
 }
 
 impl NormalisedEvolutionDetail {
-  fn gender_id_to_string(gender_id: i64) -> String {
-    match gender_id {
-      1 => String::from("Female"),
-      2 => String::from("Male"),
-      _ => String::from("Genderless")
+    fn gender_id_to_string(gender_id: i64) -> String {
+        match gender_id {
+            1 => String::from("Female"),
+            2 => String::from("Male"),
+            _ => String::from("Genderless"),
+        }
     }
-  }
 }
 
 impl From<&EvolutionDetail> for NormalisedEvolutionDetail {
-  fn from(detail: &EvolutionDetail) -> Self {
-      Self {
-          item: detail.item.as_ref().map(|item| item.name.clone()),
-          trigger: detail.trigger.name.clone(),
-          gender: detail.gender.map(Self::gender_id_to_string),
-          held_item: detail.held_item.as_ref().map(|item| item.name.clone()),
-          known_move: detail.known_move.as_ref().map(|move_| move_.name.clone()),
-          known_move_type: detail.known_move_type.as_ref().map(|type_| type_.name.clone()),
-          location: detail.location.as_ref().map(|loc| loc.name.clone()),
-          min_level: detail.min_level.map(|lvl| lvl as i64),
-          min_happiness: detail.min_happiness.map(|happy| happy as i64),
-          min_beauty: detail.min_beauty.map(|beauty| beauty as i64),
-          min_affection: detail.min_affection.map(|affection| affection as i64),
-          needs_overworld_rain: detail.needs_overworld_rain,
-          party_species: detail.party_species.as_ref().map(|species| species.name.clone()),
-          party_type: detail.party_type.as_ref().map(|type_| type_.name.clone()),
-          relative_physical_stats: detail.relative_physical_stats.map_or_else(|| "None".to_string(), |stats| stats.to_string()),
-          time_of_day: if detail.time_of_day.is_empty() { None } else { Some(detail.time_of_day.clone()) },
-          trade_species: detail.trade_species.as_ref().map(|species| species.name.clone()),
-          turn_upside_down: detail.turn_upside_down,
-      }
-  }
+    fn from(detail: &EvolutionDetail) -> Self {
+        Self {
+            item: detail.item.as_ref().map(|item| item.name.clone()),
+            trigger: detail.trigger.name.clone(),
+            gender: detail.gender.map(Self::gender_id_to_string),
+            held_item: detail.held_item.as_ref().map(|item| item.name.clone()),
+            known_move: detail.known_move.as_ref().map(|move_| move_.name.clone()),
+            known_move_type: detail
+                .known_move_type
+                .as_ref()
+                .map(|type_| type_.name.clone()),
+            location: detail.location.as_ref().map(|loc| loc.name.clone()),
+            min_level: detail.min_level.map(|lvl| lvl as i64),
+            min_happiness: detail.min_happiness.map(|happy| happy as i64),
+            min_beauty: detail.min_beauty.map(|beauty| beauty as i64),
+            min_affection: detail.min_affection.map(|affection| affection as i64),
+            needs_overworld_rain: detail.needs_overworld_rain,
+            party_species: detail
+                .party_species
+                .as_ref()
+                .map(|species| species.name.clone()),
+            party_type: detail.party_type.as_ref().map(|type_| type_.name.clone()),
+            relative_physical_stats: detail
+                .relative_physical_stats
+                .map_or_else(|| "None".to_string(), |stats| stats.to_string()),
+            time_of_day: if detail.time_of_day.is_empty() {
+                None
+            } else {
+                Some(detail.time_of_day.clone())
+            },
+            trade_species: detail
+                .trade_species
+                .as_ref()
+                .map(|species| species.name.clone()),
+            turn_upside_down: detail.turn_upside_down,
+        }
+    }
 }
 
 #[derive(Debug)]
 struct NormalisedEvolutionPokemon {
-  name: String,
-  evolution_details: Vec<NormalisedEvolutionDetail>
+    name: String,
+    evolution_details: Vec<NormalisedEvolutionDetail>,
 }
 
 impl From<&ChainLink> for NormalisedEvolutionPokemon {
-  fn from(chain: &ChainLink) -> Self {
-      Self {
-          name: chain.species.name.clone(),
-          evolution_details: chain.evolution_details.iter().map(NormalisedEvolutionDetail::from).collect(),
-      }
-  }
+    fn from(chain: &ChainLink) -> Self {
+        Self {
+            name: chain.species.name.clone(),
+            evolution_details: chain
+                .evolution_details
+                .iter()
+                .map(NormalisedEvolutionDetail::from)
+                .collect(),
+        }
+    }
 }
 
 pub struct PokemonCommand<'a> {
@@ -98,7 +120,7 @@ pub struct PokemonCommand<'a> {
     client: &'a dyn ClientImplementation,
     pokemon_name: String,
     show_types: bool,
-    show_evolution: bool
+    show_evolution: bool,
 }
 
 impl PokemonCommand<'_> {
@@ -142,17 +164,24 @@ impl PokemonCommand<'_> {
             .ok();
 
         if self.show_evolution {
-          if let Some(species) = species {
-            if let Some(evolution_chain) = species.evolution_chain {
-              let chain_url = evolution_chain.url;
-              let fetched_evolution_chain = self.client.fetch_evolution_chain_from_url(&chain_url).await.unwrap();
+            if let Some(species) = species {
+                if let Some(evolution_chain) = species.evolution_chain {
+                    let chain_url = evolution_chain.url;
+                    let fetched_evolution_chain = self
+                        .client
+                        .fetch_evolution_chain_from_url(&chain_url)
+                        .await
+                        .unwrap();
 
-              let mut normalized_links = Vec::new();
-              self.extract_and_normalize_chain_links(&fetched_evolution_chain.chain, &mut normalized_links);
+                    let mut normalized_links = Vec::new();
+                    self.extract_and_normalize_chain_links(
+                        &fetched_evolution_chain.chain,
+                        &mut normalized_links,
+                    );
 
-              println!("{:?}", normalized_links);
+                    println!("{:?}", normalized_links);
+                }
             }
-          }
         }
 
         self.build_summary(&format_pokemon);
@@ -176,7 +205,11 @@ impl PokemonCommand<'_> {
         }
     }
 
-    fn extract_and_normalize_chain_links<'a>(&self, chain_link: &'a ChainLink, normalized_links: &mut Vec<NormalisedEvolutionPokemon>) {
+    fn extract_and_normalize_chain_links<'a>(
+        &self,
+        chain_link: &'a ChainLink,
+        normalized_links: &mut Vec<NormalisedEvolutionPokemon>,
+    ) {
         normalized_links.push(NormalisedEvolutionPokemon::from(chain_link));
         for sub_chain_link in &chain_link.evolves_to {
             self.extract_and_normalize_chain_links(sub_chain_link, normalized_links);

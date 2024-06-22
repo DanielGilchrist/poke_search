@@ -121,7 +121,11 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             MoveCommand::execute(client, parsed_move_name, learned_by).await
         }
 
-        Commands::Pokemon { pokemon, types, evolution } => {
+        Commands::Pokemon {
+            pokemon,
+            types,
+            evolution,
+        } => {
             let parsed_pokemon_name = parse_name(&pokemon);
             PokemonCommand::execute(client, parsed_pokemon_name, types, evolution).await
         }
