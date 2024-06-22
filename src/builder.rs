@@ -13,10 +13,6 @@ impl Builder {
         self.0.push_str(str.to_appendable());
     }
 
-    pub fn append_builder(&mut self, builder: Self) {
-        self.append(builder.to_string());
-    }
-
     pub fn append_c(&mut self, c: char) {
         self.0.push(c);
     }
@@ -42,9 +38,15 @@ pub trait Appendable {
     fn to_appendable(&self) -> &str;
 }
 
+impl Appendable for Builder {
+    fn to_appendable(&self) -> &str {
+        &self.0
+    }
+}
+
 impl Appendable for String {
     fn to_appendable(&self) -> &str {
-        self.as_str()
+        self
     }
 }
 

@@ -95,7 +95,7 @@ impl PokemonCommand<'_> {
             let type_builder = TypeCommand::execute(self.client, type1, type2, false).await;
 
             self.builder.append(formatter::white("Type information\n"));
-            self.builder.append_builder(type_builder);
+            self.builder.append(type_builder);
         }
     }
 
@@ -165,7 +165,7 @@ impl PokemonCommand<'_> {
                     // TODO: Gracefully filter out failed requests for an ability
                     let ability = client_ref.fetch_ability(&a.ability.name).await.unwrap();
 
-                    FormatAbility::new(ability, Rc::clone(pokemon_ref))
+                    FormatAbility::new(ability, Some(Rc::clone(pokemon_ref)))
                 }
             })
             .buffer_unordered(2)

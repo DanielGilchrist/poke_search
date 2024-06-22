@@ -13,8 +13,8 @@ use clap::{Parser, Subcommand};
 
 mod commands;
 use commands::{
-    move_command::MoveCommand, moves_command::MovesCommand, pokemon_command::PokemonCommand,
-    type_command::TypeCommand,
+    ability_command::AbilityCommand, move_command::MoveCommand, moves_command::MovesCommand,
+    pokemon_command::PokemonCommand, type_command::TypeCommand,
 };
 
 #[derive(Parser)]
@@ -26,6 +26,16 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    #[command(about = "See information about an ability")]
+    Ability {
+        #[arg(help = "The name of the ability you want to see information for")]
+        ability: String,
+
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Include a list of pokemon that have the ability")]
+        pokemon: bool,
+    },
+
     #[command(about = "See moves for a pokemon")]
     Moves {
         #[arg(help = "The name of the pokemon you want to see moves for")]
@@ -87,12 +97,13 @@ async fn main() {
     run(&client, cli).await.print();
 }
 
-fn parse_name(name: &str) -> String {
-    name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
-}
-
 async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
     match cli.command {
+        Commands::Ability { ability, pokemon } => {
+            let parsed_ability_name = parse_name(&ability);
+            AbilityCommand::execute(client, parsed_ability_name, pokemon).await
+        }
+
         Commands::Moves {
             pokemon,
             type_names,
@@ -121,6 +132,10 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             pokemon,
         } => TypeCommand::execute(client, type_name, second_type_name, pokemon).await,
     }
+}
+
+fn parse_name(name: &str) -> String {
+    name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
 }
 
 #[cfg(test)]
