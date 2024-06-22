@@ -4,8 +4,7 @@ use rustemon::{
     client::RustemonClient,
     error::Error,
     model::{
-        moves::{Move, MoveLearnMethod},
-        pokemon::{Ability, Pokemon, Type, PokemonSpecies},
+        evolution::EvolutionChain, moves::{Move, MoveLearnMethod}, pokemon::{Ability, Pokemon, PokemonSpecies, Type}
     },
 };
 
@@ -21,17 +20,29 @@ pub trait ClientImplementation {
     async fn fetch_pokemon(&self, pokemon_name: &str) -> Result<Pokemon, Error>;
     async fn fetch_pokemon_species(&self, species_name: &str) -> Result<PokemonSpecies, Error>;
     async fn fetch_type(&self, type_name: &str) -> Result<Type, Error>;
-    fn client(&self) -> &RustemonClient;
+
+    async fn fetch_evolution_chain_from_url(&self, evolution_chain: &str) -> Result<EvolutionChain, Error>;
   }
 
 #[derive(Default)]
 pub struct Client(RustemonClient);
 
+impl Client {
+  fn extract_id_from_url(url: &str) -> Option<i64> {
+    let split_url: Vec<&str> = url.trim_end_matches('/').split('/').collect();
+
+    if let Some(id_str) = split_url.last() {
+        if let Ok(id) = id_str.parse::<i64>() {
+          return Some(id);
+        }
+    }
+
+    None
+  }
+}
+
 #[async_trait]
 impl ClientImplementation for Client {
-  fn client(&self) -> &RustemonClient {
-    &self.0
-  }
     async fn fetch_ability(&self, ability_name: &str) -> Result<Ability, Error> {
         rustemon::pokemon::ability::get_by_name(ability_name, &self.0).await
     }
@@ -57,5 +68,13 @@ impl ClientImplementation for Client {
 
     async fn fetch_type(&self, type_name: &str) -> Result<Type, Error> {
         rustemon::pokemon::type_::get_by_name(type_name, &self.0).await
+    }
+
+    async fn fetch_evolution_chain_from_url(&self, evolution_chain_url: &str) -> Result<EvolutionChain, Error> {
+      if let Some(id) = Self::extract_id_from_url(evolution_chain_url) {
+        return rustemon::evolution::evolution_chain::get_by_id(id, &self.0).await;
+      }
+
+      Err(Error::UrlParse(evolution_chain_url.to_owned()))
     }
 }
