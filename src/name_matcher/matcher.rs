@@ -20,15 +20,13 @@ pub enum MatcherType {
 }
 
 pub struct SuccessfulMatch {
-    pub original_name: String,
     pub suggested_name: String,
     pub keyword: String,
 }
 
 impl SuccessfulMatch {
-    fn new(original_name: String, keyword: String, suggestion: Suggestion) -> Self {
+    fn new(keyword: String, suggestion: Suggestion) -> Self {
         Self {
-            original_name,
             suggested_name: suggestion.name,
             keyword,
         }
@@ -106,7 +104,7 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
 
     if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
         let suggestion = Suggestion::certain(name.to_owned());
-        let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
+        let successful_match = SuccessfulMatch::new(keyword, suggestion);
 
         return Ok(successful_match);
     }
@@ -114,7 +112,7 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
     match name_matcher.find_match(name) {
         Some(suggestion) => match suggestion.certainty {
             Certainty::Certain => {
-                let successful_match = SuccessfulMatch::new(name.to_owned(), keyword, suggestion);
+                let successful_match = SuccessfulMatch::new(keyword, suggestion);
 
                 Ok(successful_match)
             }
