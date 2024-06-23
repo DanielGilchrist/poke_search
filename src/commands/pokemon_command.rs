@@ -10,11 +10,9 @@ use futures::{stream, StreamExt};
 use std::{collections::BTreeMap, rc::Rc};
 
 use itertools::Itertools;
-use rustemon::{
-    model::{
-        evolution::{ChainLink, EvolutionChain, EvolutionDetail},
-        pokemon::Pokemon,
-    },
+use rustemon::model::{
+    evolution::{ChainLink, EvolutionChain, EvolutionDetail},
+    pokemon::Pokemon,
 };
 
 static STAT_NAMES: &[&str] = &[
@@ -433,10 +431,7 @@ impl PokemonCommand<'_> {
         let mut grouped: BTreeMap<K, Vec<T>> = BTreeMap::new();
 
         for item in items {
-            grouped
-                .entry(key_fn(&item))
-                .or_default()
-                .push(item);
+            grouped.entry(key_fn(&item)).or_default().push(item);
         }
 
         grouped
