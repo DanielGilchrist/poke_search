@@ -110,13 +110,15 @@ impl From<&EvolutionDetail> for NormalisedEvolutionDetail {
 #[derive(Debug)]
 struct NormalisedEvolutionPokemon {
     name: String,
+    stage: u8,
     evolution_details: Vec<NormalisedEvolutionDetail>,
 }
 
-impl From<&ChainLink> for NormalisedEvolutionPokemon {
-    fn from(chain: &ChainLink) -> Self {
+impl NormalisedEvolutionPokemon {
+    fn from(chain: &ChainLink, stage: u8) -> Self {
         Self {
             name: chain.species.name.clone(),
+            stage,
             evolution_details: chain
                 .evolution_details
                 .iter()
@@ -205,6 +207,7 @@ impl PokemonCommand<'_> {
         self.extract_and_normalize_chain_links(
             &evolution_chain.chain,
             &mut normalised_evolution_pokemon,
+            1,
         );
 
         normalised_evolution_pokemon
@@ -214,10 +217,12 @@ impl PokemonCommand<'_> {
         &self,
         chain_link: &'a ChainLink,
         normalized_links: &mut Vec<NormalisedEvolutionPokemon>,
+        stage: u8,
     ) {
-        normalized_links.push(NormalisedEvolutionPokemon::from(chain_link));
+        normalized_links.push(NormalisedEvolutionPokemon::from(chain_link, stage));
+        let next_stage = stage + 1;
         for sub_chain_link in &chain_link.evolves_to {
-            self.extract_and_normalize_chain_links(sub_chain_link, normalized_links);
+            self.extract_and_normalize_chain_links(sub_chain_link, normalized_links, next_stage);
         }
     }
 
