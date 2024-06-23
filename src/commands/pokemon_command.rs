@@ -10,9 +10,12 @@ use futures::{stream, StreamExt};
 use std::rc::Rc;
 
 use itertools::Itertools;
-use rustemon::model::{
-    evolution::{ChainLink, EvolutionChain, EvolutionDetail},
-    pokemon::Pokemon,
+use rustemon::{
+    evolution::evolution_chain,
+    model::{
+        evolution::{ChainLink, EvolutionChain, EvolutionDetail},
+        pokemon::Pokemon,
+    },
 };
 
 static STAT_NAMES: &[&str] = &[
@@ -40,7 +43,7 @@ struct NormalisedEvolutionDetail {
     needs_overworld_rain: bool,
     party_species: Option<String>,
     party_type: Option<String>,
-    relative_physical_stats: String,
+    relative_physical_stats: Option<String>,
     time_of_day: Option<String>,
     trade_species: Option<String>,
     turn_upside_down: bool,
@@ -53,6 +56,14 @@ impl NormalisedEvolutionDetail {
             2 => String::from("Male"),
             _ => String::from("Genderless"),
         }
+    }
+
+    fn physical_stat_number_to_string(num: i64) -> String {
+      match num {
+        1 => String::from("Attack > Defense"),
+        -1 => String::from("Attack < Defense"),
+        _ => String::from("Attack = Defense"),
+      }
     }
 }
 
@@ -79,9 +90,7 @@ impl From<&EvolutionDetail> for NormalisedEvolutionDetail {
                 .as_ref()
                 .map(|species| species.name.clone()),
             party_type: detail.party_type.as_ref().map(|type_| type_.name.clone()),
-            relative_physical_stats: detail
-                .relative_physical_stats
-                .map_or_else(|| "None".to_string(), |stats| stats.to_string()),
+            relative_physical_stats: detail.relative_physical_stats.map(Self::physical_stat_number_to_string),
             time_of_day: if detail.time_of_day.is_empty() {
                 None
             } else {
@@ -165,21 +174,23 @@ impl PokemonCommand<'_> {
 
         if self.show_evolution {
             if let Some(species) = species {
-                if let Some(evolution_chain) = species.evolution_chain {
-                    let chain_url = evolution_chain.url;
-                    let fetched_evolution_chain = self
+                if let Some(evolution_chain_resource) = species.evolution_chain {
+                    let chain_url = evolution_chain_resource.url;
+                    let evolution_chain = self
                         .client
                         .fetch_evolution_chain_from_url(&chain_url)
                         .await
-                        .unwrap();
+                        .ok();
 
-                    let mut normalized_links = Vec::new();
-                    self.extract_and_normalize_chain_links(
-                        &fetched_evolution_chain.chain,
-                        &mut normalized_links,
-                    );
+                    if let Some(evolution_chain) = evolution_chain {
+                        let mut normalised_evolution_pokemon = Vec::new();
+                        self.extract_and_normalize_chain_links(
+                            &evolution_chain.chain,
+                            &mut normalised_evolution_pokemon,
+                        );
 
-                    println!("{:?}", normalized_links);
+                        println!("{:?}", normalised_evolution_pokemon);
+                    }
                 }
             }
         }
