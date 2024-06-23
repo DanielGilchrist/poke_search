@@ -7,7 +7,7 @@ use crate::{
 };
 
 use futures::{stream, StreamExt};
-use std::rc::Rc;
+use std::{collections::BTreeMap, rc::Rc};
 
 use itertools::Itertools;
 use rustemon::{
@@ -170,17 +170,17 @@ impl PokemonCommand<'_> {
         let format_pokemon = FormatPokemon::new(pokemon.clone());
         let pokemon_rc = Rc::new(pokemon.clone());
 
+        self.build_summary(&format_pokemon);
+        self.build_stat_output(&pokemon_rc);
+        self.build_ability_output(&pokemon_rc).await;
+
         if self.show_evolution {
             let evolution_chain = self.fetch_evolution_chain(&pokemon.species.name).await;
             if let Some(evolution_chain) = evolution_chain {
                 let normalised_evolution_chains = self.normalised_evolution_chains(evolution_chain);
-                println!("{:?}", normalised_evolution_chains);
+                self.build_evolution_output(normalised_evolution_chains);
             };
         }
-
-        self.build_summary(&format_pokemon);
-        self.build_stat_output(&pokemon_rc);
-        self.build_ability_output(&pokemon_rc).await;
 
         if self.show_types {
             let types = pokemon
@@ -317,5 +317,109 @@ impl PokemonCommand<'_> {
             .for_each(|ability| {
                 self.builder.append(format!("{}\n", ability.format()));
             });
+    }
+
+    fn build_evolution_output(&mut self, evolution_chains: Vec<NormalisedEvolutionPokemon>) {
+        self.builder.append(formatter::white("Evolution Chain:\n"));
+
+        let evolution_chains_by_stage = self.group_evolution_chains_by_stage(evolution_chains);
+
+        for (stage, chains) in evolution_chains_by_stage {
+            self.builder
+                .append(formatter::white(&format!("  Stage {stage}:")));
+
+            let mut prefix = String::from(" ");
+
+            if chains.len() > 1 {
+                prefix.push_str("   ");
+                self.builder.append_c('\n');
+            }
+
+            for chain in chains {
+                let pokemon_name = formatter::capitalise(&chain.name);
+                self.builder.append(format!("{prefix}{pokemon_name}"));
+
+                let evolution_details = chain.evolution_details;
+
+                if pokemon_name == "Sylveon" {
+                  println!("{:?}\n\n", evolution_details);
+                }
+
+                let details = evolution_details.into_iter().filter_map(|detail| {
+                    let mut builder = Builder::default();
+
+                    if let Some(min_level) = detail.min_level {
+                        builder
+                            .append(formatter::white(&format!("Level {min_level}")));
+                    }
+
+                    if let Some(item) = detail.item {
+                        let item_name = formatter::split_and_capitalise(&item);
+                        builder
+                            .append(formatter::white(&format!("{item_name}")));
+                    }
+
+                    if let Some(gender) = detail.gender {
+                        builder
+                            .append(formatter::white(&format!("{gender}")));
+                    }
+
+                    if let Some(location) = detail.location {
+                        let location_name = formatter::split_and_capitalise(&location);
+                        builder
+                            .append(formatter::white(&format!("{location_name}")));
+                    }
+
+                    if let Some(held_item) = detail.held_item {
+                        let held_item_name = formatter::split_and_capitalise(&held_item);
+                        builder
+                            .append(formatter::white(&format!("{held_item_name}")));
+                    }
+
+                    if let Some(known_move) = detail.known_move {
+                        let known_move_name = formatter::split_and_capitalise(&known_move);
+                        builder
+                            .append(formatter::white(&format!("Move: {known_move_name}")));
+                    }
+
+                    if builder.is_empty() {
+                      None
+                    } else {
+                      Some(builder.to_string())
+                    }
+                }).collect::<Vec<_>>();
+
+                let joined_details = details.join(" | ");
+                let wrap_with_paranthesis = !joined_details.is_empty();
+
+                if wrap_with_paranthesis {
+                  self.builder.append(" (")
+                }
+
+                self.builder.append(details.join(" | "));
+
+                if wrap_with_paranthesis {
+                  self.builder.append(")")
+                }
+
+                self.builder.append_c('\n');
+            }
+        }
+    }
+
+    fn group_evolution_chains_by_stage(
+        &self,
+        evolution_chains: Vec<NormalisedEvolutionPokemon>,
+    ) -> BTreeMap<u8, Vec<NormalisedEvolutionPokemon>> {
+        let mut grouped: BTreeMap<u8, Vec<NormalisedEvolutionPokemon>> = BTreeMap::new();
+
+        for chain in evolution_chains {
+            grouped
+                .entry(chain.stage)
+                .or_insert_with(Vec::new)
+                .push(chain);
+        }
+
+        grouped
     }
 }

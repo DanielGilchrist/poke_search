@@ -20,6 +20,10 @@ impl Builder {
     pub fn print(&self) {
         println!("{self}");
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl Default for Builder {
