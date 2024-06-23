@@ -204,11 +204,14 @@ impl PokemonCommand<'_> {
         evolution_chain: EvolutionChain,
     ) -> Vec<NormalisedEvolutionPokemon> {
         let mut normalised_evolution_pokemon = Vec::new();
+
         self.extract_and_normalize_chain_links(
             &evolution_chain.chain,
             &mut normalised_evolution_pokemon,
             1,
         );
+
+        normalised_evolution_pokemon.sort_unstable_by_key(|ep| (ep.stage, ep.name.clone()));
 
         normalised_evolution_pokemon
     }
