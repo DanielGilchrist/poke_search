@@ -11,7 +11,6 @@ use std::{collections::BTreeMap, rc::Rc};
 
 use itertools::Itertools;
 use rustemon::{
-    evolution::evolution_chain,
     model::{
         evolution::{ChainLink, EvolutionChain, EvolutionDetail},
         pokemon::Pokemon,
@@ -80,10 +79,10 @@ impl From<&EvolutionDetail> for NormalisedEvolutionDetail {
                 .as_ref()
                 .map(|type_| type_.name.clone()),
             location: detail.location.as_ref().map(|loc| loc.name.clone()),
-            min_level: detail.min_level.map(|lvl| lvl as i64),
-            min_happiness: detail.min_happiness.map(|happy| happy as i64),
-            min_beauty: detail.min_beauty.map(|beauty| beauty as i64),
-            min_affection: detail.min_affection.map(|affection| affection as i64),
+            min_level: detail.min_level,
+            min_happiness: detail.min_happiness,
+            min_beauty: detail.min_beauty,
+            min_affection: detail.min_affection,
             needs_overworld_rain: detail.needs_overworld_rain,
             party_species: detail
                 .party_species
@@ -216,9 +215,9 @@ impl PokemonCommand<'_> {
         normalised_evolution_pokemon
     }
 
-    fn extract_and_normalize_chain_links<'a>(
+    fn extract_and_normalize_chain_links(
         &self,
-        chain_link: &'a ChainLink,
+        chain_link: &ChainLink,
         normalized_links: &mut Vec<NormalisedEvolutionPokemon>,
         stage: u8,
     ) {
@@ -394,35 +393,35 @@ impl PokemonCommand<'_> {
 
         if let Some(item) = &detail.item {
             let item_name = formatter::split_and_capitalise(item);
-            builder.append(formatter::white(&format!("{item_name}")));
+            builder.append(formatter::white(&item_name.to_string()));
         }
 
         if let Some(gender) = &detail.gender {
-            builder.append(formatter::white(&format!("{gender}")));
+            builder.append(formatter::white(&gender.to_string()));
         }
 
         if let Some(location) = &detail.location {
-            let location_name = formatter::split_and_capitalise(&location);
-            builder.append(formatter::white(&format!("{location_name}")));
+            let location_name = formatter::split_and_capitalise(location);
+            builder.append(formatter::white(&location_name.to_string()));
         }
 
         if let Some(held_item) = &detail.held_item {
-            let held_item_name = formatter::split_and_capitalise(&held_item);
-            builder.append(formatter::white(&format!("{held_item_name}")));
+            let held_item_name = formatter::split_and_capitalise(held_item);
+            builder.append(formatter::white(&held_item_name.to_string()));
         }
 
         if let Some(known_move) = &detail.known_move {
-            let known_move_name = formatter::split_and_capitalise(&known_move);
+            let known_move_name = formatter::split_and_capitalise(known_move);
             builder.append(formatter::white(&format!("Move: {known_move_name}")));
         }
 
         if let Some(known_move_type) = &detail.known_move_type {
-            let known_move_type_name = formatter::split_and_capitalise(&known_move_type);
-            builder.append(formatter::white(&format!("{known_move_type_name}")));
+            let known_move_type_name = formatter::split_and_capitalise(known_move_type);
+            builder.append(formatter::white(&known_move_type_name.to_string()));
         }
 
         if let Some(time_of_day) = &detail.time_of_day {
-            builder.append(formatter::white(&format!("{time_of_day}")));
+            builder.append(formatter::white(&time_of_day.to_string()));
         }
     }
 
@@ -436,7 +435,7 @@ impl PokemonCommand<'_> {
         for item in items {
             grouped
                 .entry(key_fn(&item))
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(item);
         }
 
