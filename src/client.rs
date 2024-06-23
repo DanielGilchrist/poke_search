@@ -33,7 +33,7 @@ pub trait ClientImplementation {
 pub struct Client(RustemonClient);
 
 impl Client {
-    fn extract_id_from_url(url: &str) -> Option<i64> {
+    fn extract_id_from_url(&self, url: &str) -> Option<i64> {
         let split_url: Vec<&str> = url.trim_end_matches('/').split('/').collect();
 
         if let Some(id_str) = split_url.last() {
@@ -79,7 +79,7 @@ impl ClientImplementation for Client {
         &self,
         evolution_chain_url: &str,
     ) -> Result<EvolutionChain, Error> {
-        if let Some(id) = Self::extract_id_from_url(evolution_chain_url) {
+        if let Some(id) = self.extract_id_from_url(evolution_chain_url) {
             return rustemon::evolution::evolution_chain::get_by_id(id, &self.0).await;
         }
 
