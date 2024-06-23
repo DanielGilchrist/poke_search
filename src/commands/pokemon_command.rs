@@ -59,11 +59,11 @@ impl NormalisedEvolutionDetail {
     }
 
     fn physical_stat_number_to_string(num: i64) -> String {
-      match num {
-        1 => String::from("Attack > Defense"),
-        -1 => String::from("Attack < Defense"),
-        _ => String::from("Attack = Defense"),
-      }
+        match num {
+            1 => String::from("Attack > Defense"),
+            -1 => String::from("Attack < Defense"),
+            _ => String::from("Attack = Defense"),
+        }
     }
 }
 
@@ -90,7 +90,9 @@ impl From<&EvolutionDetail> for NormalisedEvolutionDetail {
                 .as_ref()
                 .map(|species| species.name.clone()),
             party_type: detail.party_type.as_ref().map(|type_| type_.name.clone()),
-            relative_physical_stats: detail.relative_physical_stats.map(Self::physical_stat_number_to_string),
+            relative_physical_stats: detail
+                .relative_physical_stats
+                .map(Self::physical_stat_number_to_string),
             time_of_day: if detail.time_of_day.is_empty() {
                 None
             } else {
@@ -166,33 +168,12 @@ impl PokemonCommand<'_> {
         let format_pokemon = FormatPokemon::new(pokemon.clone());
         let pokemon_rc = Rc::new(pokemon.clone());
 
-        let species = self
-            .client
-            .fetch_pokemon_species(&pokemon.species.name)
-            .await
-            .ok();
-
         if self.show_evolution {
-            if let Some(species) = species {
-                if let Some(evolution_chain_resource) = species.evolution_chain {
-                    let chain_url = evolution_chain_resource.url;
-                    let evolution_chain = self
-                        .client
-                        .fetch_evolution_chain_from_url(&chain_url)
-                        .await
-                        .ok();
-
-                    if let Some(evolution_chain) = evolution_chain {
-                        let mut normalised_evolution_pokemon = Vec::new();
-                        self.extract_and_normalize_chain_links(
-                            &evolution_chain.chain,
-                            &mut normalised_evolution_pokemon,
-                        );
-
-                        println!("{:?}", normalised_evolution_pokemon);
-                    }
-                }
-            }
+            let evolution_chain = self.fetch_evolution_chain(&pokemon.species.name).await;
+            if let Some(evolution_chain) = evolution_chain {
+                let normalised_evolution_chains = self.normalised_evolution_chains(evolution_chain);
+                println!("{:?}", normalised_evolution_chains);
+            };
         }
 
         self.build_summary(&format_pokemon);
@@ -214,6 +195,19 @@ impl PokemonCommand<'_> {
             self.builder.append(formatter::white("Type information\n"));
             self.builder.append(type_builder);
         }
+    }
+
+    fn normalised_evolution_chains(
+        &self,
+        evolution_chain: EvolutionChain,
+    ) -> Vec<NormalisedEvolutionPokemon> {
+        let mut normalised_evolution_pokemon = Vec::new();
+        self.extract_and_normalize_chain_links(
+            &evolution_chain.chain,
+            &mut normalised_evolution_pokemon,
+        );
+
+        normalised_evolution_pokemon
     }
 
     fn extract_and_normalize_chain_links<'a>(
@@ -249,6 +243,18 @@ impl PokemonCommand<'_> {
                 Err(output)
             }
         }
+    }
+
+    async fn fetch_evolution_chain(&self, species_name: &str) -> Option<EvolutionChain> {
+        let species = self.client.fetch_pokemon_species(species_name).await.ok()?;
+
+        let evolution_chain_resource = species.evolution_chain?;
+
+        let chain_url = evolution_chain_resource.url;
+        self.client
+            .fetch_evolution_chain_from_url(&chain_url)
+            .await
+            .ok()
     }
 
     fn build_summary(&mut self, pokemon: &FormatPokemon) {
