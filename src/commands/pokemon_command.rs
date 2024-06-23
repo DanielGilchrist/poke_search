@@ -322,7 +322,7 @@ impl PokemonCommand<'_> {
     fn build_evolution_output(&mut self, evolution_chains: Vec<NormalisedEvolutionPokemon>) {
         self.builder.append(formatter::white("Evolution Chain:\n"));
 
-        let evolution_chains_by_stage = self.group_evolution_chains_by_stage(evolution_chains);
+        let evolution_chains_by_stage = self.group_by_key(evolution_chains, |chain| chain.stage);
 
         for (stage, chains) in evolution_chains_by_stage {
             self.builder
@@ -340,84 +340,104 @@ impl PokemonCommand<'_> {
                 self.builder.append(format!("{prefix}{pokemon_name}"));
 
                 let evolution_details = chain.evolution_details;
+                let evolution_details_by_trigger =
+                    self.group_by_key(evolution_details, |detail| detail.trigger.clone());
 
-                if pokemon_name == "Sylveon" {
-                  println!("{:?}\n\n", evolution_details);
-                }
+                let detail_strings = evolution_details_by_trigger
+                    .into_iter()
+                    .filter_map(|(trigger, details)| {
+                        let joined_details = details
+                            .iter()
+                            .filter_map(|detail| {
+                                let mut detail_builder = Builder::default();
 
-                let details = evolution_details.into_iter().filter_map(|detail| {
-                    let mut builder = Builder::default();
+                                self.build_detail(&mut detail_builder, detail);
 
-                    if let Some(min_level) = detail.min_level {
-                        builder
-                            .append(formatter::white(&format!("Level {min_level}")));
-                    }
+                                if detail_builder.is_empty() {
+                                    None
+                                } else {
+                                    Some(detail_builder.to_string())
+                                }
+                            })
+                            .collect::<Vec<_>>()
+                            .join(" | ");
 
-                    if let Some(item) = detail.item {
-                        let item_name = formatter::split_and_capitalise(&item);
-                        builder
-                            .append(formatter::white(&format!("{item_name}")));
-                    }
+                        if joined_details.is_empty() {
+                            None
+                        } else {
+                            let mut details_builder = Builder::default();
 
-                    if let Some(gender) = detail.gender {
-                        builder
-                            .append(formatter::white(&format!("{gender}")));
-                    }
+                            details_builder.append(" (");
+                            details_builder.append(format!(
+                                "{} - ",
+                                formatter::white(&formatter::split_and_capitalise(&trigger))
+                            ));
+                            details_builder.append(joined_details);
+                            details_builder.append(")");
 
-                    if let Some(location) = detail.location {
-                        let location_name = formatter::split_and_capitalise(&location);
-                        builder
-                            .append(formatter::white(&format!("{location_name}")));
-                    }
+                            Some(details_builder.to_string())
+                        }
+                    })
+                    .collect::<Vec<_>>();
 
-                    if let Some(held_item) = detail.held_item {
-                        let held_item_name = formatter::split_and_capitalise(&held_item);
-                        builder
-                            .append(formatter::white(&format!("{held_item_name}")));
-                    }
-
-                    if let Some(known_move) = detail.known_move {
-                        let known_move_name = formatter::split_and_capitalise(&known_move);
-                        builder
-                            .append(formatter::white(&format!("Move: {known_move_name}")));
-                    }
-
-                    if builder.is_empty() {
-                      None
-                    } else {
-                      Some(builder.to_string())
-                    }
-                }).collect::<Vec<_>>();
-
-                let joined_details = details.join(" | ");
-                let wrap_with_paranthesis = !joined_details.is_empty();
-
-                if wrap_with_paranthesis {
-                  self.builder.append(" (")
-                }
-
-                self.builder.append(details.join(" | "));
-
-                if wrap_with_paranthesis {
-                  self.builder.append(")")
-                }
-
+                let joined_details = detail_strings.join(" or");
+                self.builder.append(joined_details);
                 self.builder.append_c('\n');
             }
         }
     }
 
-    fn group_evolution_chains_by_stage(
-        &self,
-        evolution_chains: Vec<NormalisedEvolutionPokemon>,
-    ) -> BTreeMap<u8, Vec<NormalisedEvolutionPokemon>> {
-        let mut grouped: BTreeMap<u8, Vec<NormalisedEvolutionPokemon>> = BTreeMap::new();
+    fn build_detail(&self, builder: &mut Builder, detail: &NormalisedEvolutionDetail) {
+        if let Some(min_level) = detail.min_level {
+            builder.append(formatter::white(&format!("Level {min_level}")));
+        }
 
-        for chain in evolution_chains {
+        if let Some(item) = &detail.item {
+            let item_name = formatter::split_and_capitalise(item);
+            builder.append(formatter::white(&format!("{item_name}")));
+        }
+
+        if let Some(gender) = &detail.gender {
+            builder.append(formatter::white(&format!("{gender}")));
+        }
+
+        if let Some(location) = &detail.location {
+            let location_name = formatter::split_and_capitalise(&location);
+            builder.append(formatter::white(&format!("{location_name}")));
+        }
+
+        if let Some(held_item) = &detail.held_item {
+            let held_item_name = formatter::split_and_capitalise(&held_item);
+            builder.append(formatter::white(&format!("{held_item_name}")));
+        }
+
+        if let Some(known_move) = &detail.known_move {
+            let known_move_name = formatter::split_and_capitalise(&known_move);
+            builder.append(formatter::white(&format!("Move: {known_move_name}")));
+        }
+
+        if let Some(known_move_type) = &detail.known_move_type {
+            let known_move_type_name = formatter::split_and_capitalise(&known_move_type);
+            builder.append(formatter::white(&format!("{known_move_type_name}")));
+        }
+
+        if let Some(time_of_day) = &detail.time_of_day {
+            builder.append(formatter::white(&format!("{time_of_day}")));
+        }
+    }
+
+    fn group_by_key<T, K, F>(&self, items: Vec<T>, key_fn: F) -> BTreeMap<K, Vec<T>>
+    where
+        K: Ord,
+        F: Fn(&T) -> K,
+    {
+        let mut grouped: BTreeMap<K, Vec<T>> = BTreeMap::new();
+
+        for item in items {
             grouped
-                .entry(chain.stage)
+                .entry(key_fn(&item))
                 .or_insert_with(Vec::new)
-                .push(chain);
+                .push(item);
         }
 
         grouped
