@@ -453,13 +453,19 @@ impl PokemonCommand<'_> {
         self.maybe_transform_and_append_detail(
             &mut details,
             &detail.party_species,
-            |party_species_str| format!("{party_species_str} in party"),
+            |party_species_str| {
+                let party_species_name = formatter::split_and_capitalise(&party_species_str);
+                format!("{party_species_name} in party")
+            },
         );
 
         self.maybe_transform_and_append_detail(
             &mut details,
             &detail.party_type,
-            |party_type_str| format!("{party_type_str} pokemon in party"),
+            |party_type_str| {
+                let party_type_name = formatter::capitalise(&party_type_str);
+                format!("{party_type_name} type pokemon in party")
+            },
         );
 
         self.maybe_append_detail(&mut details, &detail.relative_physical_stats);
@@ -467,13 +473,19 @@ impl PokemonCommand<'_> {
         self.maybe_transform_and_append_detail(
             &mut details,
             &detail.time_of_day,
-            |time_of_day_str| formatter::capitalise(time_of_day_str),
+            |time_of_day_str| {
+                let time_of_day_name = formatter::capitalise(time_of_day_str);
+                format!("During the {time_of_day_name}")
+            },
         );
 
         self.maybe_transform_and_append_detail(
             &mut details,
             &detail.trade_species,
-            |trade_species_str| format!("Trade with {trade_species_str}"),
+            |trade_species_str| {
+                let trade_species_name = formatter::split_and_capitalise(&trade_species_str);
+                format!("Trade with {trade_species_name}")
+            },
         );
 
         self.maybe_transform_and_append_detail(
