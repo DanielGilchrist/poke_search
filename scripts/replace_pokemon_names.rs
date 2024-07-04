@@ -32,6 +32,10 @@ const SOURCES: &'static [(&'static str, &'static str)] = &[
   (
     "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/abilities.csv",
     "ability_names"
+  ),
+  (
+    "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/items.csv",
+    "item_names"
   )
 ];
 

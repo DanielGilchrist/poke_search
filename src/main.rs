@@ -13,8 +13,8 @@ use clap::{Parser, Subcommand};
 
 mod commands;
 use commands::{
-    ability_command::AbilityCommand, move_command::MoveCommand, moves_command::MovesCommand,
-    pokemon_command::PokemonCommand, type_command::TypeCommand,
+    ability_command::AbilityCommand, item_command::ItemCommand, move_command::MoveCommand,
+    moves_command::MovesCommand, pokemon_command::PokemonCommand, type_command::TypeCommand,
 };
 
 #[derive(Parser)]
@@ -34,6 +34,12 @@ enum Commands {
         #[arg(short, long, default_value_t = false)]
         #[arg(help = "Include a list of pokemon that have the ability")]
         pokemon: bool,
+    },
+
+    #[command(about = "See information about an item")]
+    Item {
+        #[arg(help = "The name of the item you want to see information for")]
+        item: String,
     },
 
     #[command(about = "See moves for a pokemon")]
@@ -102,6 +108,11 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
         Commands::Ability { ability, pokemon } => {
             let parsed_ability_name = parse_name(&ability);
             AbilityCommand::execute(client, parsed_ability_name, pokemon).await
+        }
+
+        Commands::Item { item } => {
+            let parsed_item_name = parse_name(&item);
+            ItemCommand::execute(client, parsed_item_name).await
         }
 
         Commands::Moves {
