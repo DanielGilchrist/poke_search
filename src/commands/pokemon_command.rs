@@ -213,6 +213,7 @@ impl PokemonCommand<'_> {
         normalised_evolution_pokemon
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn extract_and_normalize_chain_links(
         &self,
         chain_link: &ChainLink,
@@ -454,7 +455,7 @@ impl PokemonCommand<'_> {
             &mut details,
             &detail.party_species,
             |party_species_str| {
-                let party_species_name = formatter::split_and_capitalise(&party_species_str);
+                let party_species_name = formatter::split_and_capitalise(party_species_str);
                 format!("{party_species_name} in party")
             },
         );
@@ -463,7 +464,7 @@ impl PokemonCommand<'_> {
             &mut details,
             &detail.party_type,
             |party_type_str| {
-                let party_type_name = formatter::capitalise(&party_type_str);
+                let party_type_name = formatter::capitalise(party_type_str);
                 format!("{party_type_name} type pokemon in party")
             },
         );
@@ -483,7 +484,7 @@ impl PokemonCommand<'_> {
             &mut details,
             &detail.trade_species,
             |trade_species_str| {
-                let trade_species_name = formatter::split_and_capitalise(&trade_species_str);
+                let trade_species_name = formatter::split_and_capitalise(trade_species_str);
                 format!("Trade with {trade_species_name}")
             },
         );
