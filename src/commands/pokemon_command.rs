@@ -342,7 +342,7 @@ impl PokemonCommand<'_> {
 
                 let detail_strings = evolution_details_by_trigger
                     .into_iter()
-                    .filter_map(|(trigger, details)| {
+                    .map(|(trigger, details)| {
                         let joined_details = details
                             .iter()
                             .filter_map(|detail| {
@@ -359,21 +359,20 @@ impl PokemonCommand<'_> {
                             .collect::<Vec<_>>()
                             .join(" | ");
 
-                        if joined_details.is_empty() {
-                            None
-                        } else {
-                            let mut details_builder = Builder::default();
+                        let mut details_builder = Builder::default();
 
-                            details_builder.append(" (");
-                            details_builder.append(format!(
-                                "{} - ",
-                                formatter::white(&formatter::split_and_capitalise(&trigger))
-                            ));
-                            details_builder.append(joined_details);
-                            details_builder.append(")");
+                        details_builder.append(" (");
+                        details_builder
+                            .append(formatter::white(&formatter::split_and_capitalise(&trigger)));
 
-                            Some(details_builder.to_string())
+                        if !joined_details.is_empty() {
+                            details_builder.append(" - ");
                         }
+
+                        details_builder.append(joined_details);
+                        details_builder.append(")");
+
+                        details_builder.to_string()
                     })
                     .collect::<Vec<_>>();
 
@@ -387,49 +386,146 @@ impl PokemonCommand<'_> {
     fn build_detail(&self, builder: &mut Builder, detail: &NormalisedEvolutionDetail) {
         let mut details: Vec<String> = Vec::new();
 
-        if let Some(min_level) = detail.min_level {
-            details.push(formatter::white(&format!("Level {min_level}")));
-        }
+        self.maybe_transform_and_append_detail(&mut details, &detail.item, |item_str| {
+            formatter::split_and_capitalise(item_str)
+        });
 
-        if let Some(item) = &detail.item {
-            let item_name = formatter::split_and_capitalise(item);
-            details.push(formatter::white(&item_name.to_string()));
-        }
+        self.maybe_append_detail(&mut details, &detail.gender);
 
-        if let Some(gender) = &detail.gender {
-            details.push(formatter::white(&gender.to_string()));
-        }
+        self.maybe_transform_and_append_detail(&mut details, &detail.held_item, |held_item_str| {
+            formatter::split_and_capitalise(held_item_str)
+        });
 
-        if let Some(location) = &detail.location {
-            let location_name = formatter::split_and_capitalise(location);
-            details.push(formatter::white(&location_name.to_string()));
-        }
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &detail.known_move,
+            |known_move_str| {
+                let known_move_name = formatter::split_and_capitalise(known_move_str);
+                format!("Move {known_move_name}")
+            },
+        );
 
-        if let Some(held_item) = &detail.held_item {
-            let held_item_name = formatter::split_and_capitalise(held_item);
-            details.push(formatter::white(&held_item_name.to_string()));
-        }
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &detail.known_move_type,
+            |known_move_type_str| {
+                let known_move_type_name = formatter::split_and_capitalise(known_move_type_str);
+                format!("Move type {known_move_type_name}")
+            },
+        );
 
-        if let Some(known_move) = &detail.known_move {
-            let known_move_name = formatter::split_and_capitalise(known_move);
-            details.push(formatter::white(&format!("Move: {known_move_name}")));
-        }
+        self.maybe_transform_and_append_detail(&mut details, &detail.location, |location_str| {
+            formatter::split_and_capitalise(location_str)
+        });
 
-        if let Some(known_move_type) = &detail.known_move_type {
-            let known_move_type_name = formatter::split_and_capitalise(known_move_type);
-            details.push(formatter::white(&known_move_type_name.to_string()));
-        }
+        self.maybe_transform_and_append_detail(&mut details, &detail.min_level, |min_level| {
+            format!("Level {min_level}")
+        });
 
-        if let Some(time_of_day) = &detail.time_of_day {
-            let time_of_day_name = formatter::capitalise(time_of_day);
-            details.push(formatter::white(&time_of_day_name));
-        }
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &detail.min_happiness,
+            |min_happiness| format!("Happiness {min_happiness}"),
+        );
 
-        if let Some(relative_physical_stats) = &detail.relative_physical_stats {
-            details.push(formatter::white(&relative_physical_stats.to_string()));
-        }
+        self.maybe_transform_and_append_detail(&mut details, &detail.min_beauty, |min_beauty| {
+            format!("Beauty {min_beauty}")
+        });
+
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &detail.min_affection,
+            |min_affection| format!("Affection {min_affection}"),
+        );
+
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &Some(detail.needs_overworld_rain),
+            |needs_overworld_rain| {
+                if *needs_overworld_rain {
+                    String::from("In the rain")
+                } else {
+                    String::new()
+                }
+            },
+        );
+
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &detail.party_species,
+            |party_species_str| format!("{party_species_str} in party"),
+        );
+
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &detail.party_type,
+            |party_type_str| format!("{party_type_str} pokemon in party"),
+        );
+
+        self.maybe_append_detail(&mut details, &detail.relative_physical_stats);
+
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &detail.time_of_day,
+            |time_of_day_str| formatter::capitalise(time_of_day_str),
+        );
+
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &detail.trade_species,
+            |trade_species_str| format!("Trade with {trade_species_str}"),
+        );
+
+        self.maybe_transform_and_append_detail(
+            &mut details,
+            &Some(detail.turn_upside_down),
+            |turn_upside_down| {
+                if *turn_upside_down {
+                    String::from("Turn upside down")
+                } else {
+                    String::new()
+                }
+            },
+        );
 
         builder.append(details.join(" & "));
+    }
+
+    fn maybe_append_detail<T: ToString>(&self, details: &mut Vec<String>, value: &Option<T>) {
+        self.__maybe_transform_and_append_detail(details, value, None::<fn(&T) -> String>);
+    }
+
+    fn maybe_transform_and_append_detail<T, F>(
+        &self,
+        details: &mut Vec<String>,
+        value: &Option<T>,
+        transform: F,
+    ) where
+        T: ToString,
+        F: FnOnce(&T) -> String,
+    {
+        self.__maybe_transform_and_append_detail(details, value, Some(transform))
+    }
+
+    fn __maybe_transform_and_append_detail<T, F>(
+        &self,
+        details: &mut Vec<String>,
+        value: &Option<T>,
+        transform: Option<F>,
+    ) where
+        T: ToString,
+        F: FnOnce(&T) -> String,
+    {
+        if let Some(value) = value {
+            let detail = match transform {
+                Some(transform) => transform(value),
+                None => value.to_string(),
+            };
+
+            if !detail.is_empty() {
+                details.push(formatter::white(&detail));
+            }
+        }
     }
 
     fn group_by_key<T, K, F>(&self, items: Vec<T>, key_fn: F) -> BTreeMap<K, Vec<T>>
