@@ -385,42 +385,51 @@ impl PokemonCommand<'_> {
     }
 
     fn build_detail(&self, builder: &mut Builder, detail: &NormalisedEvolutionDetail) {
+        let mut details: Vec<String> = Vec::new();
+
         if let Some(min_level) = detail.min_level {
-            builder.append(formatter::white(&format!("Level {min_level}")));
+            details.push(formatter::white(&format!("Level {min_level}")));
         }
 
         if let Some(item) = &detail.item {
             let item_name = formatter::split_and_capitalise(item);
-            builder.append(formatter::white(&item_name.to_string()));
+            details.push(formatter::white(&item_name.to_string()));
         }
 
         if let Some(gender) = &detail.gender {
-            builder.append(formatter::white(&gender.to_string()));
+            details.push(formatter::white(&gender.to_string()));
         }
 
         if let Some(location) = &detail.location {
             let location_name = formatter::split_and_capitalise(location);
-            builder.append(formatter::white(&location_name.to_string()));
+            details.push(formatter::white(&location_name.to_string()));
         }
 
         if let Some(held_item) = &detail.held_item {
             let held_item_name = formatter::split_and_capitalise(held_item);
-            builder.append(formatter::white(&held_item_name.to_string()));
+            details.push(formatter::white(&held_item_name.to_string()));
         }
 
         if let Some(known_move) = &detail.known_move {
             let known_move_name = formatter::split_and_capitalise(known_move);
-            builder.append(formatter::white(&format!("Move: {known_move_name}")));
+            details.push(formatter::white(&format!("Move: {known_move_name}")));
         }
 
         if let Some(known_move_type) = &detail.known_move_type {
             let known_move_type_name = formatter::split_and_capitalise(known_move_type);
-            builder.append(formatter::white(&known_move_type_name.to_string()));
+            details.push(formatter::white(&known_move_type_name.to_string()));
         }
 
         if let Some(time_of_day) = &detail.time_of_day {
-            builder.append(formatter::white(&time_of_day.to_string()));
+            let time_of_day_name = formatter::capitalise(time_of_day);
+            details.push(formatter::white(&time_of_day_name));
         }
+
+        if let Some(relative_physical_stats) = &detail.relative_physical_stats {
+            details.push(formatter::white(&relative_physical_stats.to_string()));
+        }
+
+        builder.append(details.join(" & "));
     }
 
     fn group_by_key<T, K, F>(&self, items: Vec<T>, key_fn: F) -> BTreeMap<K, Vec<T>>
