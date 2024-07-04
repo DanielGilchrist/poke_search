@@ -5,8 +5,10 @@ use std::rc::Rc;
 use colored::{ColoredString, Colorize};
 use itertools::Itertools;
 use rustemon::model::{
+    items::Item,
     moves::{Move, MoveLearnMethod},
     pokemon::{Ability, Pokemon, PokemonMoveVersion},
+    resource::VerboseEffect,
 };
 
 pub trait FormatModel {
@@ -157,7 +159,7 @@ pub struct FormatPokemon(pub Pokemon);
 
 impl FormatPokemon {
     pub fn new(pokemon: Pokemon) -> Self {
-        FormatPokemon(pokemon)
+        Self(pokemon)
     }
 
     fn build_summary(&self, output: &mut String) {
@@ -243,19 +245,8 @@ impl FormatAbility {
     }
 
     fn ability_effect(&self) -> Option<String> {
-        let effect = self
-            .ability
-            .effect_entries
-            .iter()
-            .find_map(|verbose_effect| {
-                if verbose_effect.language.name == "en" {
-                    Some(&verbose_effect.effect)
-                } else {
-                    None
-                }
-            })?;
-
-        Some(effect.replace('\n', " "))
+        let effect_entries = &self.ability.effect_entries;
+        extract_effect(effect_entries)
     }
 }
 
@@ -267,6 +258,42 @@ impl FormatModel for FormatAbility {
         output.push_str(&formatln(&white("Name"), &ability_name));
 
         self.build_description(&mut output);
+
+        output
+    }
+}
+
+pub struct FormatItem(pub Item);
+
+impl FormatItem {
+    pub fn new(item: Item) -> Self {
+        Self(item)
+    }
+
+    fn build_category(&self, output: &mut String) {
+        let category_name = split_and_capitalise(&self.0.category.name);
+        output.push_str(&formatln(&white("Category"), &category_name));
+    }
+
+    fn build_effect(&self, output: &mut String) {
+        let effect_entries = &self.0.effect_entries;
+        let effect = extract_effect(effect_entries);
+
+        if let Some(effect) = effect {
+            output.push_str(&formatln(&white("Effect"), &effect));
+        }
+    }
+}
+
+impl FormatModel for FormatItem {
+    fn format(&self) -> String {
+        let mut output = String::new();
+
+        let item_name = split_and_capitalise(&self.0.name);
+        output.push_str(&formatln(&white("Name"), &item_name));
+
+        self.build_category(&mut output);
+        self.build_effect(&mut output);
 
         output
     }
@@ -286,6 +313,18 @@ pub fn split_and_capitalise(s: &str) -> String {
 
 pub fn formatln(title: &str, value: &str) -> String {
     format!("  {}{}{}\n", title, ": ", capitalise(value))
+}
+
+fn extract_effect(effect_entries: &[VerboseEffect]) -> Option<String> {
+    let effect = effect_entries.iter().find_map(|verbose_effect| {
+        if verbose_effect.language.name == "en" {
+            Some(&verbose_effect.effect)
+        } else {
+            None
+        }
+    })?;
+
+    Some(effect.replace('\n', " "))
 }
 
 fn parse_maybe_i64(value: Option<i64>) -> String {

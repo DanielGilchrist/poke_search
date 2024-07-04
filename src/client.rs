@@ -5,6 +5,7 @@ use rustemon::{
     error::Error,
     model::{
         evolution::EvolutionChain,
+        items::Item,
         moves::{Move, MoveLearnMethod},
         pokemon::{Ability, Pokemon, PokemonSpecies, Type},
     },
@@ -14,6 +15,7 @@ use rustemon::{
 #[async_trait]
 pub trait ClientImplementation {
     async fn fetch_ability(&self, ability_name: &str) -> Result<Ability, Error>;
+    async fn fetch_item(&self, item_name: &str) -> Result<Item, Error>;
     async fn fetch_move(&self, move_name: &str) -> Result<Move, Error>;
     async fn fetch_move_learn_method(
         &self,
@@ -50,6 +52,10 @@ impl Client {
 impl ClientImplementation for Client {
     async fn fetch_ability(&self, ability_name: &str) -> Result<Ability, Error> {
         rustemon::pokemon::ability::get_by_name(ability_name, &self.0).await
+    }
+
+    async fn fetch_item(&self, item_name: &str) -> Result<Item, Error> {
+        rustemon::items::item::get_by_name(item_name, &self.0).await
     }
 
     async fn fetch_move(&self, move_name: &str) -> Result<Move, Error> {
