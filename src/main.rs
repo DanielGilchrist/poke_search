@@ -13,8 +13,8 @@ use clap::{Parser, Subcommand};
 
 mod commands;
 use commands::{
-    ability_command::AbilityCommand, item_command::ItemCommand, move_command::MoveCommand, moves_command::MovesCommand,
-    pokemon_command::PokemonCommand, type_command::TypeCommand,
+    ability_command::AbilityCommand, item_command::ItemCommand, move_command::MoveCommand,
+    moves_command::MovesCommand, pokemon_command::PokemonCommand, type_command::TypeCommand,
 };
 
 #[derive(Parser)]

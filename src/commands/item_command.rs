@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     client::ClientImplementation,
-    formatter::{self},
+    formatter::{self, FormatItem, FormatModel},
     name_matcher::matcher,
 };
 
@@ -39,7 +39,7 @@ impl ItemCommand<'_> {
 
         self.builder.append(formatter::white("Item"));
         self.builder.append_c('\n');
-        println!("{:?}", item);
+        self.builder.append(FormatItem::new(item).format());
     }
 
     async fn fetch_item(&self) -> Result<Item, String> {

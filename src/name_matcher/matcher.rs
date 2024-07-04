@@ -1,8 +1,9 @@
 use crate::{
     formatter::capitalise,
     name_matcher::{
-        ability_names::ABILITY_NAMES, item_names::ITEM_NAMES, move_damage_class_names::MOVE_DAMAGE_CLASS_NAMES,
-        move_names::MOVE_NAMES, pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES,
+        ability_names::ABILITY_NAMES, item_names::ITEM_NAMES,
+        move_damage_class_names::MOVE_DAMAGE_CLASS_NAMES, move_names::MOVE_NAMES,
+        pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES,
     },
 };
 
