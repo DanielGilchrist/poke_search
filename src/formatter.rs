@@ -315,7 +315,7 @@ pub fn formatln(title: &str, value: &str) -> String {
     format!("  {}{}{}\n", title, ": ", capitalise(value))
 }
 
-fn extract_effect(effect_entries: &Vec<VerboseEffect>) -> Option<String> {
+fn extract_effect(effect_entries: &[VerboseEffect]) -> Option<String> {
     let effect = effect_entries.iter().find_map(|verbose_effect| {
         if verbose_effect.language.name == "en" {
             Some(&verbose_effect.effect)
