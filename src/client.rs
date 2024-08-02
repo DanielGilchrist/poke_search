@@ -78,10 +78,10 @@ impl ClientImplementation for Client {
         &self,
         evolution_chain_url: &str,
     ) -> Result<EvolutionChain, Error> {
-        if let Some(id) = self.extract_id_from_url(evolution_chain_url) {
-            return rustemon::evolution::evolution_chain::get_by_id(id, &self.0).await;
-        }
+        let id = self
+            .extract_id_from_url(evolution_chain_url)
+            .ok_or_else(|| Error::UrlParse(evolution_chain_url.to_owned()))?;
 
-        Err(Error::UrlParse(evolution_chain_url.to_owned()))
+        rustemon::evolution::evolution_chain::get_by_id(id, &self.0).await
     }
 }
