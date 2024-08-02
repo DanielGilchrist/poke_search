@@ -106,26 +106,20 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
 
     if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
         let suggestion = Suggestion::certain(name.to_owned());
-        let successful_match = SuccessfulMatch::new(keyword, suggestion);
-
-        return Ok(successful_match);
+        return Ok(SuccessfulMatch::new(keyword, suggestion));
     }
 
-    match name_matcher.find_match(name) {
-        Some(suggestion) => match suggestion.certainty {
-            Certainty::Certain => {
-                let successful_match = SuccessfulMatch::new(keyword, suggestion);
+    let suggestion = name_matcher
+        .find_match(name)
+        .ok_or_else(|| NoMatch::new(build_unknown_name(&keyword, name)))?;
 
-                Ok(successful_match)
-            }
-            Certainty::Uncertain => Err(NoMatch::new(build_suggested_name(
-                &keyword,
-                name,
-                &suggestion.name,
-            ))),
-        },
-
-        None => Err(NoMatch::new(build_unknown_name(&keyword, name))),
+    match suggestion.certainty {
+        Certainty::Certain => Ok(SuccessfulMatch::new(keyword, suggestion)),
+        Certainty::Uncertain => Err(NoMatch::new(build_suggested_name(
+            &keyword,
+            name,
+            &suggestion.name,
+        ))),
     }
 }
 
