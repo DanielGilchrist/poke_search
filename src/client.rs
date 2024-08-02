@@ -36,15 +36,8 @@ pub struct Client(RustemonClient);
 
 impl Client {
     fn extract_id_from_url(&self, url: &str) -> Option<i64> {
-        let split_url: Vec<&str> = url.trim_end_matches('/').split('/').collect();
-
-        if let Some(id_str) = split_url.last() {
-            if let Ok(id) = id_str.parse::<i64>() {
-                return Some(id);
-            }
-        }
-
-        None
+        let id_str = url.trim_end_matches('/').split('/').last()?;
+        id_str.parse::<i64>().ok()
     }
 }
 
