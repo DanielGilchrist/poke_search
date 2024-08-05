@@ -1,6 +1,6 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
-pub static MOVE_DAMAGE_CLASS_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
+pub static MOVE_DAMAGE_CLASS_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
         String::from("physical"),
         String::from("special"),

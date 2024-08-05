@@ -1,6 +1,6 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
-pub static ABILITY_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
+pub static ABILITY_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
         String::from("adaptability"),
         String::from("aerilate"),

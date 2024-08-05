@@ -1,11 +1,11 @@
 use colored::Colorize;
-use once_cell::sync::Lazy;
-use std::collections::HashMap;
+
+use std::{collections::HashMap, sync::LazyLock};
 
 #[allow(clippy::upper_case_acronyms)]
 type RGB = (u8, u8, u8);
 
-static TYPE_NAME_TO_RGB: Lazy<HashMap<&'static str, RGB>> = Lazy::new(|| {
+static TYPE_NAME_TO_RGB: LazyLock<HashMap<&'static str, RGB>> = LazyLock::new(|| {
     HashMap::from([
         ("bug", (166, 185, 26)),
         ("dark", (112, 87, 70)),

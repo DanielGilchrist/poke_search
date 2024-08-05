@@ -7,8 +7,9 @@ use crate::{
     },
 };
 
+use std::sync::LazyLock;
+
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
-use once_cell::sync::Lazy;
 
 static MIN_CERTAIN_SIMILARITY: f32 = 0.74;
 
@@ -146,7 +147,7 @@ fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
     };
 
     (
-        NameMatcher::new(Lazy::force(names).to_owned()),
+        NameMatcher::new(LazyLock::force(names).to_owned()),
         String::from(keyword),
     )
 }
