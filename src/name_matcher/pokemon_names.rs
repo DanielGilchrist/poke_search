@@ -1,6 +1,6 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
-pub static POKEMON_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
+pub static POKEMON_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
         String::from("abomasnow"),
         String::from("abomasnow-mega"),

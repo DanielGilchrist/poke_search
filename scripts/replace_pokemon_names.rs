@@ -64,9 +64,9 @@ fn fetch_and_replace(url: &str, file_name: &str) -> Result<(), Box<dyn std::erro
     .join("\n");
 
   let file_name_constant_string = file_name.to_string().to_uppercase();
-  let file_contents = format!("use once_cell::sync::Lazy;
+  let file_contents = format!("use std::sync::LazyLock;
 
-pub static {file_name_constant_string}: Lazy<Vec<String>> = Lazy::new(|| {{
+pub static {file_name_constant_string}: LazyLock<Vec<String>> = LazyLock::new(|| {{
     vec![
 {joined_names}
     ]
