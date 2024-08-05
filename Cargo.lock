@@ -1049,7 +1049,6 @@ dependencies = [
  "itertools",
  "mockall",
  "ngrammatic",
- "once_cell",
  "rustemon",
  "tokio",
 ]

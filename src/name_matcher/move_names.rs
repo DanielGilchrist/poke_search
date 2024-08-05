@@ -1,6 +1,6 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
-pub static MOVE_NAMES: Lazy<Vec<String>> = Lazy::new(|| {
+pub static MOVE_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
         String::from("10-000-000-volt-thunderbolt"),
         String::from("absorb"),
