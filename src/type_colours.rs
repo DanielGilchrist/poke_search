@@ -1,9 +1,6 @@
 use colored::Colorize;
 
-use std::{
-  collections::HashMap,
-  sync::LazyLock
-};
+use std::{collections::HashMap, sync::LazyLock};
 
 #[allow(clippy::upper_case_acronyms)]
 type RGB = (u8, u8, u8);
