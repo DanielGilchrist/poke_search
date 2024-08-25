@@ -90,7 +90,7 @@ impl MoveCommand<'_> {
     }
 
     async fn build_learned_by(&mut self, format_move: &mut FormatMove) {
-        let mut pokemon_names = format_move
+        let pokemon_names = format_move
             .move_
             .learned_by_pokemon
             .iter()
@@ -109,37 +109,42 @@ impl MoveCommand<'_> {
                 .collect::<Vec<_>>()
         });
 
+        let mut pokemon_list = stream::iter(&pokemon_names)
+            .map(|pokemon_name| {
+                let client_ref = &self.client;
+                async move { client_ref.fetch_pokemon(&pokemon_name).await.unwrap() }
+            })
+            .buffer_unordered(50)
+            .collect::<Vec<_>>()
+            .await;
+
         if let Some(corrected_types) = &corrected_types {
-            let pokemon_by_name = stream::iter(&pokemon_names)
-                .map(|pokemon_name| {
-                    let client_ref = &self.client;
-
-                    async move { client_ref.fetch_pokemon(&pokemon_name).await.unwrap() }
-                })
-                .buffer_unordered(50)
-                .collect::<Vec<_>>()
-                .await
-                .into_iter()
-                .map(|pokemon| (pokemon.name.clone(), pokemon))
-                .collect::<HashMap<String, Pokemon>>();
-
-            pokemon_names.retain(|pokemon_name| match pokemon_by_name.get(pokemon_name) {
-                Some(pokemon) => itertools::any(&pokemon.types, |pokemon_type| {
+            pokemon_list.retain(|pokemon| {
+                itertools::any(&pokemon.types, |pokemon_type| {
                     corrected_types.contains(&pokemon_type.type_.name)
-                }),
-                None => false,
-            });
+                })
+            })
         }
 
-        pokemon_names.sort();
+        pokemon_list.sort_by_key(|pokemon| pokemon.name.clone());
 
-        let formatted_pokemon = pokemon_names
+        let formatted_pokemon = pokemon_list
             .iter_mut()
-            .map(|name| format!("  {}", formatter::split_and_capitalise(&name)))
+            .map(|pokemon| {
+                let formatted_type = pokemon
+                    .types
+                    .iter()
+                    .map(|pokemon_type| type_colours::fetch(&pokemon_type.type_.name))
+                    .join(" | ");
+                format!(
+                    "  {formatted_type} {}",
+                    formatter::split_and_capitalise(&pokemon.name)
+                )
+            })
             .collect::<Vec<_>>()
             .join("\n");
 
-        let header = formatter::white(&format!("\nLearned by: ({})\n", pokemon_names.len()));
+        let header = formatter::white(&format!("\nLearned by: ({})\n", pokemon_list.len()));
         self.builder.append(header);
         self.builder.append(formatted_pokemon);
     }
