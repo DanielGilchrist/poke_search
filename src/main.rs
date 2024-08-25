@@ -64,6 +64,10 @@ enum Commands {
         #[arg(short, long, default_value_t = false)]
         #[arg(help = "Include a list of pokemon that learn the move")]
         learned_by: bool,
+
+        #[arg(short, long, num_args(0..), requires = "learned_by")]
+        #[arg(help = "Filter results of `learned_by` by particular types")]
+        types: Option<Vec<String>>,
     },
 
     #[command(about = "See information about a pokemon")]
@@ -127,9 +131,10 @@ async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
         Commands::Move {
             move_name,
             learned_by,
+            types,
         } => {
             let parsed_move_name = parse_name(&move_name);
-            MoveCommand::execute(client, parsed_move_name, learned_by).await
+            MoveCommand::execute(client, parsed_move_name, learned_by, types).await
         }
 
         Commands::Pokemon {
