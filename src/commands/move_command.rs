@@ -1,4 +1,3 @@
-use std::{collections::HashMap, iter};
 
 use crate::{
     builder::Builder,
@@ -10,7 +9,7 @@ use crate::{
 
 use futures::{stream, StreamExt};
 use itertools::Itertools;
-use rustemon::model::{moves::Move, pokemon::Pokemon};
+use rustemon::model::moves::Move;
 
 pub struct MoveCommand<'a> {
     builder: &'a mut Builder,
@@ -112,7 +111,7 @@ impl MoveCommand<'_> {
         let mut pokemon_list = stream::iter(&pokemon_names)
             .map(|pokemon_name| {
                 let client_ref = &self.client;
-                async move { client_ref.fetch_pokemon(&pokemon_name).await.unwrap() }
+                async move { client_ref.fetch_pokemon(pokemon_name).await.unwrap() }
             })
             .buffer_unordered(50)
             .collect::<Vec<_>>()
