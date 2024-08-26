@@ -183,13 +183,11 @@ impl MoveCommand<'_> {
     }
 
     async fn fetch_formatted_pokemon(&self, pokemon_names: &Vec<String>) -> Vec<FormattedPokemon> {
+        let client_ref = &self.client;
         stream::iter(pokemon_names)
-            .map(|pokemon_name| {
-                let client_ref = &self.client;
-                async move {
-                    let pokemon = client_ref.fetch_pokemon(pokemon_name).await.unwrap();
-                    FormattedPokemon::from(pokemon)
-                }
+            .map(|pokemon_name| async move {
+                let pokemon = client_ref.fetch_pokemon(pokemon_name).await.unwrap();
+                FormattedPokemon::from(pokemon)
             })
             .buffer_unordered(50)
             .collect::<Vec<_>>()
