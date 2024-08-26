@@ -20,8 +20,8 @@ impl FormattedPokemon {
         let formatted_name = formatter::split_and_capitalise(&pokemon.name);
         let types = pokemon
             .types
-            .iter()
-            .map(|pokemon_type| pokemon_type.type_.name.clone())
+            .into_iter()
+            .map(|pokemon_type| pokemon_type.type_.name)
             .collect::<Vec<_>>();
 
         Self {
@@ -128,7 +128,7 @@ impl MoveCommand<'_> {
             })
         }
 
-        pokemon_list.sort_by_key(|pokemon| pokemon.name.clone());
+        pokemon_list.sort_by(|a, b| a.name.cmp(&b.name));
 
         let max_name_width = pokemon_list
             .iter()
@@ -163,7 +163,7 @@ impl MoveCommand<'_> {
     }
 
     fn corrected_types(&self) -> Option<Vec<String>> {
-        self.types.clone().map(|type_names| {
+        self.types.as_ref().map(|type_names| {
             type_names
                 .iter()
                 .map(
