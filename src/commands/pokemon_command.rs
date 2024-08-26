@@ -296,17 +296,14 @@ impl PokemonCommand<'_> {
             .unique_by(|pokemon_ability| &pokemon_ability.ability.name)
             .collect::<Vec<_>>();
 
+        let pokemon_ref = &pokemon;
+        let client_ref = &self.client;
+
         stream::iter(&unique_pokemon_abilities)
-            .map(|a| {
-                let pokemon_ref = &pokemon;
-                let client_ref = &self.client;
-
-                async move {
-                    // TODO: Gracefully filter out failed requests for an ability
-                    let ability = client_ref.fetch_ability(&a.ability.name).await.unwrap();
-
-                    FormatAbility::new(ability, Some(Rc::clone(pokemon_ref)))
-                }
+            .map(|a| async move {
+                // TODO: Gracefully filter out failed requests for an ability
+                let ability = client_ref.fetch_ability(&a.ability.name).await.unwrap();
+                FormatAbility::new(ability, Some(Rc::clone(pokemon_ref)))
             })
             .buffer_unordered(2)
             .collect::<Vec<_>>()
