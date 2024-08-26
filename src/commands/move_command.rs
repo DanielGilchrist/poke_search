@@ -3,15 +3,53 @@ use crate::{
     client::ClientImplementation,
     formatter::{self, FormatModel, FormatMove},
     name_matcher::matcher,
+    type_colours,
 };
 
-use rustemon::model::moves::Move;
+use futures::{stream, StreamExt};
+use itertools::Itertools;
+use rustemon::model::{moves::Move, pokemon::Pokemon};
+
+#[derive(Ord, PartialOrd, Eq, PartialEq)]
+struct FormattedPokemon {
+    name: String,
+    types: Vec<String>,
+}
+
+impl FormattedPokemon {
+    pub fn from(pokemon: Pokemon) -> Self {
+        let Pokemon {
+            name: pokemon_name,
+            types: pokemon_types,
+            ..
+        } = pokemon;
+
+        let formatted_name = formatter::split_and_capitalise(&pokemon_name);
+        let types = pokemon_types
+            .into_iter()
+            .map(|pokemon_type| pokemon_type.type_.name)
+            .collect::<Vec<_>>();
+
+        Self {
+            name: formatted_name,
+            types,
+        }
+    }
+
+    pub fn formatted_type(&self) -> String {
+        self.types
+            .iter()
+            .map(|type_name| type_colours::fetch(type_name))
+            .join(" | ")
+    }
+}
 
 pub struct MoveCommand<'a> {
     builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     move_name: String,
     include_learned_by: bool,
+    types: Option<Vec<String>>,
 }
 
 impl MoveCommand<'_> {
@@ -19,6 +57,7 @@ impl MoveCommand<'_> {
         client: &dyn ClientImplementation,
         move_name: String,
         include_learned_by: bool,
+        types: Option<Vec<String>>,
     ) -> Builder {
         let mut builder = if include_learned_by {
             Builder::new(3000)
@@ -31,6 +70,7 @@ impl MoveCommand<'_> {
             client,
             move_name,
             include_learned_by,
+            types,
         }
         ._execute()
         .await;
@@ -53,7 +93,7 @@ impl MoveCommand<'_> {
         self.builder.append(format_move.format());
 
         if self.include_learned_by {
-            self.build_learned_by(&mut format_move);
+            self.build_learned_by(&mut format_move).await;
         }
     }
 
@@ -81,18 +121,78 @@ impl MoveCommand<'_> {
         }
     }
 
-    fn build_learned_by(&mut self, format_move: &mut FormatMove) {
-        let learned_by_pokemon = &mut format_move.move_.learned_by_pokemon;
-        learned_by_pokemon.sort_by_key(|pokemon| pokemon.name.clone());
+    async fn build_learned_by(&mut self, format_move: &mut FormatMove) {
+        let pokemon_names = self.pokemon_names(format_move);
+        let corrected_types = self.corrected_types();
+        let mut pokemon_list = self.fetch_formatted_pokemon(&pokemon_names).await;
 
-        let formatted_pokemon = learned_by_pokemon
+        if let Some(corrected_types) = &corrected_types {
+            pokemon_list.retain(|pokemon| {
+                itertools::any(&pokemon.types, |type_name| {
+                    corrected_types.contains(type_name)
+                })
+            })
+        }
+
+        pokemon_list.sort();
+
+        let max_name_width = pokemon_list
+            .iter()
+            .map(|pokemon| pokemon.name.len())
+            .max()
+            .unwrap_or(0);
+
+        let formatted_pokemon = pokemon_list
             .iter_mut()
-            .map(|pokemon| format!("  {}", formatter::split_and_capitalise(&pokemon.name)))
+            .map(|pokemon| {
+                let formatted_type = pokemon.formatted_type();
+                let name_width_diff = max_name_width - pokemon.name.len();
+                let padded_name = format!("{}{}", pokemon.name, " ".repeat(name_width_diff));
+
+                format!("  {} {formatted_type}", padded_name)
+            })
             .collect::<Vec<_>>()
             .join("\n");
 
-        let header = formatter::white(&format!("\nLearned by: ({})\n", learned_by_pokemon.len()));
+        let header = formatter::white(&format!("\nLearned by: ({})\n", pokemon_list.len()));
         self.builder.append(header);
         self.builder.append(formatted_pokemon);
+    }
+
+    fn pokemon_names(&self, format_move: &FormatMove) -> Vec<String> {
+        format_move
+            .move_
+            .learned_by_pokemon
+            .iter()
+            .map(|pokemon| pokemon.name.clone())
+            .collect::<Vec<_>>()
+    }
+
+    fn corrected_types(&self) -> Option<Vec<String>> {
+        self.types.as_ref().map(|type_names| {
+            type_names
+                .iter()
+                .map(|type_name| self.try_correct_type(type_name))
+                .collect::<Vec<_>>()
+        })
+    }
+
+    fn try_correct_type(&self, type_name: &str) -> String {
+        match matcher::match_name(type_name, matcher::MatcherType::Type) {
+            Ok(successful_match) => successful_match.suggested_name,
+            Err(_) => type_name.to_owned(),
+        }
+    }
+
+    async fn fetch_formatted_pokemon(&self, pokemon_names: &Vec<String>) -> Vec<FormattedPokemon> {
+        let client_ref = &self.client;
+        stream::iter(pokemon_names)
+            .map(|pokemon_name| async move {
+                let pokemon = client_ref.fetch_pokemon(pokemon_name).await.unwrap();
+                FormattedPokemon::from(pokemon)
+            })
+            .buffer_unordered(50)
+            .collect::<Vec<_>>()
+            .await
     }
 }
