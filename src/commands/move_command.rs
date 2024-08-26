@@ -10,6 +10,7 @@ use futures::{stream, StreamExt};
 use itertools::Itertools;
 use rustemon::model::{moves::Move, pokemon::Pokemon};
 
+#[derive(Ord, PartialOrd, Eq, PartialEq)]
 struct FormattedPokemon {
     name: String,
     types: Vec<String>,
@@ -133,7 +134,7 @@ impl MoveCommand<'_> {
             })
         }
 
-        pokemon_list.sort_by(|a, b| a.name.cmp(&b.name));
+        pokemon_list.sort();
 
         let max_name_width = pokemon_list
             .iter()
