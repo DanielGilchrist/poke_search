@@ -172,14 +172,16 @@ impl MoveCommand<'_> {
         self.types.as_ref().map(|type_names| {
             type_names
                 .iter()
-                .map(
-                    |type_name| match matcher::match_name(type_name, matcher::MatcherType::Type) {
-                        Ok(successful_match) => successful_match.suggested_name,
-                        Err(_) => type_name.to_owned(),
-                    },
-                )
+                .map(|type_name| self.try_correct_type(type_name))
                 .collect::<Vec<_>>()
         })
+    }
+
+    fn try_correct_type(&self, type_name: &str) -> String {
+        match matcher::match_name(type_name, matcher::MatcherType::Type) {
+            Ok(successful_match) => successful_match.suggested_name,
+            Err(_) => type_name.to_owned(),
+        }
     }
 
     async fn fetch_formatted_pokemon(&self, pokemon_names: &Vec<String>) -> Vec<FormattedPokemon> {
