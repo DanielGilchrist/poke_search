@@ -1,4 +1,3 @@
-
 use crate::{
     builder::Builder,
     client::ClientImplementation,
@@ -127,6 +126,12 @@ impl MoveCommand<'_> {
 
         pokemon_list.sort_by_key(|pokemon| pokemon.name.clone());
 
+        let max_name_width = pokemon_list
+            .iter()
+            .map(|pokemon| formatter::split_and_capitalise(&pokemon.name).len())
+            .max()
+            .unwrap_or(0);
+
         let formatted_pokemon = pokemon_list
             .iter_mut()
             .map(|pokemon| {
@@ -135,10 +140,16 @@ impl MoveCommand<'_> {
                     .iter()
                     .map(|pokemon_type| type_colours::fetch(&pokemon_type.type_.name))
                     .join(" | ");
-                format!(
-                    "  {formatted_type} {}",
-                    formatter::split_and_capitalise(&pokemon.name)
-                )
+
+                let formatted_name = formatter::split_and_capitalise(&pokemon.name);
+                let name_width_diff = max_name_width - formatted_name.len();
+                let padded_name = format!(
+                    "{}{}",
+                    formatter::split_and_capitalise(&pokemon.name),
+                    " ".repeat(name_width_diff)
+                );
+
+                format!("  {} {formatted_type}", padded_name,)
             })
             .collect::<Vec<_>>()
             .join("\n");
