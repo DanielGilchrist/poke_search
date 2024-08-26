@@ -17,9 +17,14 @@ struct FormattedPokemon {
 
 impl FormattedPokemon {
     pub fn from(pokemon: Pokemon) -> Self {
-        let formatted_name = formatter::split_and_capitalise(&pokemon.name);
-        let types = pokemon
-            .types
+        let Pokemon {
+            name: pokemon_name,
+            types: pokemon_types,
+            ..
+        } = pokemon;
+
+        let formatted_name = formatter::split_and_capitalise(&pokemon_name);
+        let types = pokemon_types
             .into_iter()
             .map(|pokemon_type| pokemon_type.type_.name)
             .collect::<Vec<_>>();
