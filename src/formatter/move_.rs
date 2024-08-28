@@ -1,5 +1,7 @@
 use crate::{
-    formatter::utils::{clean_and_wrap_text, formatln, parse_maybe_i64, split_and_capitalise, white},
+    formatter::utils::{
+        clean_and_wrap_text, formatln, parse_maybe_i64, split_and_capitalise, white,
+    },
     type_colours::{self},
 };
 
