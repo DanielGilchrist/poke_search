@@ -1,8 +1,6 @@
 use colored::{ColoredString, Colorize};
 use rustemon::model::resource::VerboseEffect;
 
-use textwrap;
-
 pub(crate) fn capitalise(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {
