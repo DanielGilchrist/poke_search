@@ -1,5 +1,7 @@
 use crate::{
-    formatter::utils::{formatln, parse_maybe_i64, split_and_capitalise, white},
+    formatter::utils::{
+        clean_and_wrap_text, formatln, parse_maybe_i64, split_and_capitalise, white,
+    },
     type_colours::{self},
 };
 
@@ -106,7 +108,8 @@ impl FormatMove {
                     .replace("$effect_chance%", &effect_chance)
             };
 
-            output.push_str(&formatln(&white("Effect"), &description));
+            let wrapped_description = clean_and_wrap_text(&description, 4, 80);
+            output.push_str(&formatln(&white("Effect"), &wrapped_description));
         });
     }
 
