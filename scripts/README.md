@@ -7,6 +7,6 @@ Have a look [here](https://rust-script.org/#installation) for instructions on in
 rust-script scripts/replace_pokemon_names.rs
 ```
 
-This is used to populate names for `name_matcher` to suggest pokemon names, moves names, move damage classes (categories) and type names when entered incorrectly with a command.
+This is used to populate names for `name_matcher` to suggest pokemon, moves, etc. when entered incorrectly with a command.
 
-The script fetches names from the Poke API repo and populated `<type>_names.rs` with a `Lazy<Vec<String>>` so the names are only initialised when used.
+The script fetches names from the Poke API repo and populates `<type>_names.rs` with a `LazyLock<Vec<String>>` so the names are only initialised when used.
