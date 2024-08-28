@@ -35,9 +35,17 @@ pub trait ClientImplementation {
 pub struct Client(RustemonClient);
 
 impl Client {
-    fn extract_id_from_url(&self, url: &str) -> Option<i64> {
-        let id_str = url.trim_end_matches('/').split('/').last()?;
-        id_str.parse::<i64>().ok()
+    fn extract_id_from_url(&self, url: &str) -> Result<i64, Error> {
+        let id_str = url
+            .trim_end_matches('/')
+            .split('/')
+            .last()
+            .ok_or_else(|| Error::UrlParse(url.to_owned()))?;
+
+        id_str.parse::<i64>().map_err(|e| {
+            let error_message = format!("{:?}, url: \"{}\"", e, url.to_owned());
+            Error::UrlParse(error_message)
+        })
     }
 }
 
@@ -78,10 +86,7 @@ impl ClientImplementation for Client {
         &self,
         evolution_chain_url: &str,
     ) -> Result<EvolutionChain, Error> {
-        let id = self
-            .extract_id_from_url(evolution_chain_url)
-            .ok_or_else(|| Error::UrlParse(evolution_chain_url.to_owned()))?;
-
+        let id = self.extract_id_from_url(evolution_chain_url)?;
         rustemon::evolution::evolution_chain::get_by_id(id, &self.0).await
     }
 }
