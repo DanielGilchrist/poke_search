@@ -1,4 +1,5 @@
-use crate::formatter::utils::{extract_effect, formatln, split_and_capitalise, white, FormatModel};
+use super::FormatModel;
+use crate::formatter::utils::{extract_effect, formatln, split_and_capitalise, white};
 
 use std::rc::Rc;
 

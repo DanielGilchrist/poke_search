@@ -1,7 +1,9 @@
 use crate::{
-    formatter::utils::{formatln, split_and_capitalise, white, FormatModel},
+    formatter::utils::{formatln, split_and_capitalise, white},
     type_colours::{self},
 };
+
+use super::FormatModel;
 
 use itertools::Itertools;
 use rustemon::model::pokemon::Pokemon;
