@@ -18,15 +18,16 @@ pub(crate) fn formatln(title: &str, value: &str) -> String {
 }
 
 pub(crate) fn extract_effect(effect_entries: &[VerboseEffect]) -> Option<String> {
-    let effect = effect_entries.iter().find_map(|verbose_effect| {
+    let formatted_effect = effect_entries.iter().find_map(|verbose_effect| {
         if verbose_effect.language.name == "en" {
-            Some(&verbose_effect.effect)
+            let effect = &verbose_effect.effect;
+            Some(clean_and_wrap_text(effect, 4, 80))
         } else {
             None
         }
     })?;
 
-    Some(effect.replace('\n', " "))
+    Some(formatted_effect)
 }
 
 pub(crate) fn parse_maybe_i64(value: Option<i64>) -> String {
@@ -34,6 +35,21 @@ pub(crate) fn parse_maybe_i64(value: Option<i64>) -> String {
         Some(value) => value.to_string(),
         None => String::from("-"),
     }
+}
+
+pub(crate) fn clean_and_wrap_text(text: &str, indent: usize, width: usize) -> String {
+    let cleaned_text = text
+        .replace("\n:", ":")
+        .replace(":  ", ": ")
+        .replace("  ", " ")
+        .replace("\n  ", "\n")
+        .trim()
+        .to_owned();
+
+    let spaces = &" ".repeat(indent);
+    let options = textwrap::Options::new(width).subsequent_indent(spaces);
+
+    textwrap::fill(&cleaned_text, options)
 }
 
 // Colours
