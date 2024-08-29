@@ -11,8 +11,6 @@ use rustemon::{
     },
 };
 
-// TEMP
-
 #[automock]
 #[async_trait]
 pub trait ClientImplementation {
