@@ -34,6 +34,8 @@ Search for pokemon information from the command line
 Usage: poke_search <COMMAND>
 
 Commands:
+  ability  See information about an ability
+  item     See information about an item
   moves    See moves for a pokemon
   move     See information about a move
   pokemon  See information about a pokemon
