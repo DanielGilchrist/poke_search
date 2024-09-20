@@ -92,13 +92,11 @@ impl NameMatcher {
     }
 
     fn build_corpus(&self) -> Corpus {
-        let mut corpus = CorpusBuilder::new().arity(2).pad_full(Pad::Auto).finish();
-
-        for name in &self.names {
-            corpus.add_text(name);
-        }
-
-        corpus
+        CorpusBuilder::new()
+            .arity(2)
+            .pad_full(Pad::Auto)
+            .fill(&self.names)
+            .finish()
     }
 }
 
