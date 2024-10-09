@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 
 use ngrammatic::{Corpus, CorpusBuilder, Pad};
 
-static MIN_CERTAIN_SIMILARITY: f32 = 0.74;
+static MIN_CERTAIN_SIMILARITY: f32 = 0.71;
 
 pub enum MatcherType {
     Ability,
