@@ -163,18 +163,22 @@ impl TypeCommand<'_> {
     }
 
     fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {
-        let mut pokemon_names = if let Some(second_type) = second_type {
-            let type_pokemon_names = self.pokemon_names_from_type(type_).collect::<HashSet<_>>();
-            let second_type_pokemon_names = self
-                .pokemon_names_from_type(second_type)
-                .collect::<HashSet<_>>();
+        let mut pokemon_names = {
+            let type_pokemon_names = self.pokemon_names_from_type(type_);
 
-            type_pokemon_names
-                .intersection(&second_type_pokemon_names)
-                .cloned()
-                .collect::<Vec<_>>()
-        } else {
-            self.pokemon_names_from_type(type_).collect::<Vec<_>>()
+            if let Some(second_type) = second_type {
+                let second_type_pokemon_names = self
+                    .pokemon_names_from_type(second_type)
+                    .collect::<HashSet<_>>();
+
+                type_pokemon_names
+                    .collect::<HashSet<_>>()
+                    .intersection(&second_type_pokemon_names)
+                    .cloned()
+                    .collect::<Vec<_>>()
+            } else {
+                type_pokemon_names.collect::<Vec<_>>()
+            }
         };
 
         pokemon_names.sort();
