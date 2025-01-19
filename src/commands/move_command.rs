@@ -13,7 +13,7 @@ use rustemon::model::{moves::Move, pokemon::Pokemon};
 #[derive(Ord, PartialOrd, Eq, PartialEq)]
 struct FormattedPokemon {
     name: String,
-    types: Vec<String>,
+    types: Option<Vec<String>>,
 }
 
 impl FormattedPokemon {
@@ -32,15 +32,19 @@ impl FormattedPokemon {
 
         Self {
             name: formatted_name,
-            types,
+            types: Some(types),
         }
     }
 
     pub fn formatted_type(&self) -> String {
-        self.types
-            .iter()
-            .map(|type_name| type_colours::fetch(type_name))
-            .join(" | ")
+        if let Some(types) = &self.types {
+            types
+                .iter()
+                .map(|type_name| type_colours::fetch(type_name))
+                .join(" | ")
+        } else {
+            String::new()
+        }
     }
 }
 
@@ -122,17 +126,26 @@ impl MoveCommand<'_> {
     }
 
     async fn build_learned_by(&mut self, format_move: &mut FormatMove) {
-        let pokemon_names = self.pokemon_names(format_move);
         let corrected_types = self.corrected_types();
-        let mut pokemon_list = self.fetch_formatted_pokemon(&pokemon_names).await;
+        let pokemon_names = self.pokemon_names(format_move);
 
-        if let Some(corrected_types) = &corrected_types {
-            pokemon_list.retain(|pokemon| {
-                itertools::any(&pokemon.types, |type_name| {
-                    corrected_types.contains(type_name)
-                })
-            })
-        }
+        let mut pokemon_list = if let Some(corrected_types) = corrected_types {
+            let mut fetched_pokemon = self.fetch_formatted_pokemon(&pokemon_names).await;
+
+            fetched_pokemon.retain(|pokemon| match &pokemon.types {
+                Some(types) => {
+                    itertools::any(types, |type_name| corrected_types.contains(type_name))
+                }
+                None => false,
+            });
+
+            fetched_pokemon
+        } else {
+            pokemon_names
+                .into_iter()
+                .map(|name| FormattedPokemon { name, types: None })
+                .collect()
+        };
 
         pokemon_list.sort();
 
