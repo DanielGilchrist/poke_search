@@ -21,7 +21,7 @@ use commands::{
 #[command(about = "Search for pokemon information from the command line")]
 struct Cli {
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 }
 
 #[derive(Subcommand)]
@@ -87,35 +87,33 @@ fn parse_name(name: &str) -> String {
 
 async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
     match cli.command {
-        Some(Commands::Moves {
+        Commands::Moves {
             pokemon,
             type_names,
             categories,
-        }) => {
+        } => {
             let parsed_pokemon_name = parse_name(&pokemon);
             MovesCommand::execute(client, parsed_pokemon_name, type_names, categories).await
         }
 
-        Some(Commands::Move {
+        Commands::Move {
             move_name,
             learned_by,
-        }) => {
+        } => {
             let parsed_move_name = parse_name(&move_name);
             MoveCommand::execute(client, parsed_move_name, learned_by).await
         }
 
-        Some(Commands::Pokemon { pokemon, types }) => {
+        Commands::Pokemon { pokemon, types } => {
             let parsed_pokemon_name = parse_name(&pokemon);
             PokemonCommand::execute(client, parsed_pokemon_name, types).await
         }
 
-        Some(Commands::Type {
+        Commands::Type {
             type_name,
             second_type_name,
             pokemon,
-        }) => TypeCommand::execute(client, type_name, second_type_name, pokemon).await,
-
-        _ => Builder::empty(),
+        } => TypeCommand::execute(client, type_name, second_type_name, pokemon).await,
     }
 }
 
