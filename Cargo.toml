@@ -14,11 +14,11 @@ panic = "abort"   # Don't include backtrace when panics occur
 [dependencies]
 async-trait = "0" # https://github.com/dtolnay/async-trait
 clap = { version = "4", features = ["derive"] } # https://github.com/clap-rs/clap
-colored = "2" # https://github.com/mackwic/colored
+colored = "3" # https://github.com/mackwic/colored
 futures = "0" # https://github.com/rust-lang/futures-rs
 itertools = "0" # https://github.com/rust-itertools/itertools
 mockall = "0" # https://github.com/asomers/mockall
 ngrammatic = "0" # https://github.com/compenguy/ngrammatic
-rustemon = "3" # https://github.com/mlemesle/rustemon
+rustemon = "4" # https://github.com/mlemesle/rustemon
 textwrap = "0" # https://github.com/mgeisler/textwrap
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] } # https://github.com/tokio-rs/tokio
