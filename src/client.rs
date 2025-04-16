@@ -39,7 +39,7 @@ impl Client {
         let id_str = url
             .trim_end_matches('/')
             .split('/')
-            .last()
+            .next_back()
             .ok_or_else(|| Error::UrlParse(url.to_owned()))?;
 
         id_str.parse::<i64>().map_err(|e| {
