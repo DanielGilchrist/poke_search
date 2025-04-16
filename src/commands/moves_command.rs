@@ -8,7 +8,7 @@ use crate::{
 
 use rustemon::model::pokemon::{Pokemon, PokemonMove};
 
-use futures::{stream, StreamExt};
+use futures::{StreamExt, stream};
 
 const BUILDER_CAPACITY: usize = 50000;
 

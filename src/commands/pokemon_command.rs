@@ -6,7 +6,7 @@ use crate::{
     name_matcher::matcher,
 };
 
-use futures::{stream, StreamExt};
+use futures::{StreamExt, stream};
 use std::{collections::BTreeMap, rc::Rc};
 
 use itertools::Itertools;

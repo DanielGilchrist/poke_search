@@ -201,7 +201,10 @@ impl TypeCommand<'_> {
         }
     }
 
-    fn pokemon_names_from_type<'a>(&self, type_: &'a Type) -> impl Iterator<Item = String> + 'a {
+    fn pokemon_names_from_type<'a>(
+        &self,
+        type_: &'a Type,
+    ) -> impl Iterator<Item = String> + 'a + use<'a> {
         type_
             .pokemon
             .iter()

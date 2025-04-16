@@ -6,7 +6,7 @@ use crate::{
     type_colours,
 };
 
-use futures::{stream, StreamExt};
+use futures::{StreamExt, stream};
 use itertools::Itertools;
 use rustemon::model::{moves::Move, pokemon::Pokemon};
 
