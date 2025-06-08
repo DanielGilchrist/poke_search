@@ -21,5 +21,5 @@ mockall = "0" # https://github.com/asomers/mockall
 ngrammatic = "0" # https://github.com/compenguy/ngrammatic
 rustemon = "=4.1.0" # https://github.com/mlemesle/rustemon
 textwrap = "0" # https://github.com/mgeisler/textwrap
-thiserror = "2.0.12"
+thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] } # https://github.com/tokio-rs/tokio
