@@ -1357,6 +1357,7 @@ dependencies = [
  "ngrammatic",
  "rustemon",
  "textwrap",
+ "thiserror 2.0.12",
  "tokio",
 ]
 
