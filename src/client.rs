@@ -50,7 +50,7 @@ pub trait ClientImplementation {
 pub struct Client(RustemonClient);
 
 impl Client {
-    pub fn new() -> Result<Self, ClientError> {
+    pub fn try_build() -> Result<Self, ClientError> {
         let cache_dir = Self::get_cache_dir()?;
         let cache_manager = CACacheManager { path: cache_dir };
         let client = RustemonClientBuilder::default()

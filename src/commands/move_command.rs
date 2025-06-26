@@ -149,7 +149,7 @@ impl MoveCommand<'_> {
                 let name_width_diff = max_name_width - pokemon.name.len();
                 let padded_name = format!("{}{}", pokemon.name, " ".repeat(name_width_diff));
 
-                format!("  {} {formatted_type}", padded_name)
+                format!("  {padded_name} {formatted_type}")
             })
             .collect::<Vec<_>>()
             .join("\n");

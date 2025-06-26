@@ -101,7 +101,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() {
-    let client = Client::new().unwrap_or_else(|e| {
+    let client = Client::try_build().unwrap_or_else(|e| {
         eprintln!("Failed to initialise client: {e}");
         std::process::exit(1);
     });

@@ -78,7 +78,7 @@ impl NameMatcher {
         let search_results = corpus.search(name, 0.25);
 
         #[cfg(debug_assertions)]
-        println!("\n[DEBUG] Similar Results: {:?}\n", search_results);
+        println!("\n[DEBUG] Similar Results: {search_results:?}\n");
 
         let search_result = search_results.first().map(ToOwned::to_owned)?;
 
