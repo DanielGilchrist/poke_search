@@ -168,7 +168,7 @@ mod tests {
     use crate::client::MockClientImplementation;
     use crate::name_matcher::matcher;
 
-    use rustemon::model::pokemon::Type;
+    use rustemon::static_resources;
 
     const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -270,7 +270,7 @@ mod tests {
             .expect_fetch_type()
             .with(mockall::predicate::eq(correct_name))
             .once()
-            .returning(|_args| Ok(Type::default()));
+            .returning(|_args| Ok(static_resources::get_type()));
 
         let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
         let expected = matcher::build_unknown_name("type", incorrect_name);
@@ -292,7 +292,7 @@ mod tests {
             .expect_fetch_type()
             .with(mockall::predicate::eq(correct_name))
             .once()
-            .returning(|_args| Ok(Type::default()));
+            .returning(|_args| Ok(static_resources::get_type()));
 
         let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
         let expected = matcher::build_suggested_name("type", incorrect_name, "psychic");
