@@ -168,7 +168,7 @@ mod tests {
     use crate::client::MockClientImplementation;
     use crate::name_matcher::matcher;
 
-    use rustemon::model::pokemon::Type;
+    use rustemon::static_resources;
 
     const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -202,12 +202,120 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn pokemon_move_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let correct_name = "fire-blast";
+        let similar_name = "Fire Blast";
+
+        let mut mock_client = MockClientImplementation::new();
+        let mock_move = static_resources::get_move();
+
+        mock_client
+            .expect_fetch_move()
+            .with(mockall::predicate::eq(correct_name))
+            .once()
+            .returning(move |_args| Ok(mock_move.clone()));
+
+        let cli = parse_args(vec!["move", similar_name]);
+
+        let expected = r#"Move
+  Name: Fire Blast
+  Type: Fire
+  Damage Type: Special
+  Power: 110
+  Accuracy: 85
+  PP: 5
+  Priority: 0
+  Description: An attack that may cause a burn.
+  Effect: Has a 10% chance to burn the target.
+"#;
+
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn pokemon_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
         let incorrect_name = "lkfdjslsdkjfkls";
 
         let mock_client = MockClientImplementation::new();
         let cli = parse_args(vec!["pokemon", incorrect_name]);
         let expected = matcher::build_unknown_name("pokemon", incorrect_name);
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn pokemon_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::error::Error>> {
+        let similar_name = "Charzard";
+        let correct_name = "charizard";
+
+        let mut mock_client = MockClientImplementation::new();
+        let mock_pokemon = static_resources::get_pokemon();
+
+        mock_client
+            .expect_fetch_pokemon()
+            .with(mockall::predicate::eq(correct_name))
+            .once()
+            .returning(move |_args| Ok(mock_pokemon.clone()));
+
+        mock_client
+            .expect_fetch_ability()
+            .with(mockall::predicate::eq("blaze"))
+            .once()
+            .returning(move |_args| Ok(static_resources::get_ability()));
+
+        mock_client
+            .expect_fetch_ability()
+            .with(mockall::predicate::eq("solar-power"))
+            .once()
+            .returning(move |_args| Ok(static_resources::get_ability()));
+
+        let cli = parse_args(vec!["pokemon", similar_name]);
+
+        let expected = r#"Summary
+  Name: Charizard
+  Type: Fire | flying
+  Abilities: Blaze | Solar Power
+
+Stats
+  HP: 78
+  Attack: 84
+  Defense: 78
+  Special Attack: 109
+  Special Defense: 85
+  Speed: 100
+  Total: 534
+
+Abilities
+  Name: Static
+  Description: Whenever a move makes contact with this Pokémon, the move's user has a 30%
+    chance of being paralyzed.
+
+    Pokémon that are immune to electric-type moves can still be paralyzed by this
+    ability.
+
+    Overworld: If the lead Pokémon has this ability, there is a 50% chance that
+    encounters will be with an electric Pokémon, if applicable.
+
+  Name: Static
+  Description: Whenever a move makes contact with this Pokémon, the move's user has a 30%
+    chance of being paralyzed.
+
+    Pokémon that are immune to electric-type moves can still be paralyzed by this
+    ability.
+
+    Overworld: If the lead Pokémon has this ability, there is a 50% chance that
+    encounters will be with an electric Pokémon, if applicable.
+
+"#;
+
         let actual = run(&mock_client, cli).await.to_string();
 
         assert_eq!(expected, actual);
@@ -245,6 +353,49 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn pokemon_single_type_autocorrect_if_similar_enough()
+    -> Result<(), Box<dyn std::error::Error>> {
+        colored::control::set_override(false);
+
+        let almost_correct_name = "firre";
+        let correct_name = "fire";
+
+        let mut mock_client = MockClientImplementation::new();
+        let mock_type = static_resources::get_type();
+
+        mock_client
+            .expect_fetch_type()
+            .with(mockall::predicate::eq(correct_name))
+            .once()
+            .returning(move |_args| Ok(mock_type.clone()));
+
+        let cli = parse_args(vec!["type", almost_correct_name]);
+        let expected = r#"fire
+
+Offence
+0.5x
+  dragon | fire | rock | water
+1x
+  dark | electric | fairy | fighting | flying | ghost | ground | normal | poison | psychic | stellar
+2x
+  bug | grass | ice | steel
+
+Defence
+0.5x
+  bug | fairy | fire | grass | ice | steel
+1x
+  dark | dragon | electric | fighting | flying | ghost | normal | poison | psychic | stellar
+2x
+  ground | rock | water
+"#;
+        let actual = run(&mock_client, cli).await.to_string();
+
+        assert_eq!(expected, actual);
+
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn pokemon_single_type_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
         let correct_name = "dragon";
         let incorrect_name = "drahgna";
@@ -265,12 +416,14 @@ mod tests {
         let incorrect_name = "ljflkdsfjslkj";
 
         let mut mock_client = MockClientImplementation::new();
+        let mut mock_type = static_resources::get_type();
+        mock_type.name = String::from(correct_name);
 
         mock_client
             .expect_fetch_type()
             .with(mockall::predicate::eq(correct_name))
             .once()
-            .returning(|_args| Ok(Type::default()));
+            .returning(move |_args| Ok(mock_type.clone()));
 
         let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
         let expected = matcher::build_unknown_name("type", incorrect_name);
@@ -292,7 +445,7 @@ mod tests {
             .expect_fetch_type()
             .with(mockall::predicate::eq(correct_name))
             .once()
-            .returning(|_args| Ok(Type::default()));
+            .returning(|_args| Ok(static_resources::get_type()));
 
         let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
         let expected = matcher::build_suggested_name("type", incorrect_name, "psychic");

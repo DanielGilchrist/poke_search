@@ -7,19 +7,27 @@ rust-version = "1.88.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [profile.release]
-lto = true        # Enable Link Time Optimisation
-strip = true      # Strip symbols
-panic = "abort"   # Don't include backtrace when panics occur
+lto = true      # Enable Link Time Optimisation
+strip = true    # Strip symbols
+panic = "abort" # Don't include backtrace when panics occur
 
 [dependencies]
 async-trait = "0" # https://github.com/dtolnay/async-trait
-clap = { version = "4", features = ["derive"] } # https://github.com/clap-rs/clap
+clap = { version = "4", features = [
+  "derive",
+] } # https://github.com/clap-rs/clap
 colored = "3" # https://github.com/mackwic/colored
 futures = "0" # https://github.com/rust-lang/futures-rs
 itertools = "0" # https://github.com/rust-itertools/itertools
 mockall = "0" # https://github.com/asomers/mockall
 ngrammatic = "0" # https://github.com/compenguy/ngrammatic
-rustemon = "=4.1.0" # https://github.com/mlemesle/rustemon
+rustemon = "4" # https://github.com/mlemesle/rustemon
 textwrap = "0" # https://github.com/mgeisler/textwrap
 thiserror = "2"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] } # https://github.com/tokio-rs/tokio
+tokio = { version = "1", features = [
+  "macros",
+  "rt-multi-thread",
+] } # https://github.com/tokio-rs/tokio
+
+[dev-dependencies]
+rustemon = { version = "4", features = ["static-resources"] }

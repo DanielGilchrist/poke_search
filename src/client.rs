@@ -52,7 +52,7 @@ pub struct Client(RustemonClient);
 impl Client {
     pub fn try_build() -> Result<Self, ClientError> {
         let cache_dir = Self::get_cache_dir()?;
-        let cache_manager = CACacheManager { path: cache_dir };
+        let cache_manager = CACacheManager::new(cache_dir, false);
         let client = RustemonClientBuilder::default()
             .with_manager(cache_manager)
             .try_build()?;
