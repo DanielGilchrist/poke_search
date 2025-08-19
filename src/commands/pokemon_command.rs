@@ -379,6 +379,8 @@ impl PokemonCommand<'_> {
                 self.builder.append_c('\n');
             }
         }
+
+        self.builder.append_c('\n');
     }
 
     fn build_detail(&self, builder: &mut Builder, detail: &NormalisedEvolutionDetail) {
