@@ -12,7 +12,7 @@ use std::{collections::BTreeMap, rc::Rc};
 use itertools::Itertools;
 use rustemon::model::{
     evolution::{ChainLink, EvolutionChain, EvolutionDetail},
-    pokemon::Pokemon,
+    pokemon::{Pokemon, PokemonSpecies},
 };
 
 static STAT_NAMES: &[&str] = &[
@@ -164,7 +164,16 @@ impl PokemonCommand<'_> {
             }
         };
 
-        let format_pokemon = FormatPokemon::new(pokemon.clone());
+        let species_name = &pokemon.species.name;
+        let species = match self.fetch_pokemon_species(species_name).await {
+            Ok(species) => species,
+            Err(error_message) => {
+                self.builder.append(error_message);
+                return;
+            }
+        };
+
+        let format_pokemon = FormatPokemon::new(pokemon.clone(), species.clone());
         let pokemon_rc = Rc::new(pokemon.clone());
 
         self.build_summary(&format_pokemon);
@@ -172,7 +181,7 @@ impl PokemonCommand<'_> {
         self.build_ability_output(&pokemon_rc).await;
 
         if self.show_evolution {
-            let evolution_chain = self.fetch_evolution_chain(&pokemon.species.name).await;
+            let evolution_chain = self.fetch_evolution_chain(&species).await;
             if let Some(evolution_chain) = evolution_chain {
                 let normalised_evolution_chains = self.normalised_evolution_chains(evolution_chain);
                 self.build_evolution_output(normalised_evolution_chains);
@@ -229,34 +238,26 @@ impl PokemonCommand<'_> {
 
     async fn fetch_pokemon(&self) -> Result<Pokemon, String> {
         let successful_match =
-            match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
-                Ok(successful_match) => Ok(successful_match),
-                Err(no_match) => Err(no_match.0),
-            }?;
+            matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon)
+                .map_err(|no_match| no_match.0)?;
 
-        let result = self
-            .client
+        self.client
             .fetch_pokemon(&successful_match.suggested_name)
-            .await;
-
-        match result {
-            Ok(pokemon) => Ok(pokemon),
-            Err(_) => {
-                let output = matcher::build_unknown_name(
-                    &successful_match.keyword,
-                    &successful_match.suggested_name,
-                );
-                Err(output)
-            }
-        }
+            .await
+            .map_err(|error| error.to_string())
     }
 
-    async fn fetch_evolution_chain(&self, species_name: &str) -> Option<EvolutionChain> {
-        let species = self.client.fetch_pokemon_species(species_name).await.ok()?;
+    async fn fetch_pokemon_species(&self, species_name: &str) -> Result<PokemonSpecies, String> {
+        self.client
+            .fetch_pokemon_species(species_name)
+            .await
+            .map_err(|error| error.to_string())
+    }
 
-        let evolution_chain_resource = species.evolution_chain?;
-
+    async fn fetch_evolution_chain(&self, species: &PokemonSpecies) -> Option<EvolutionChain> {
+        let evolution_chain_resource = species.evolution_chain.clone()?;
         let chain_url = evolution_chain_resource.url;
+
         self.client
             .fetch_evolution_chain_from_url(&chain_url)
             .await

@@ -6,26 +6,30 @@ use crate::{
 use super::FormatModel;
 
 use itertools::Itertools;
-use rustemon::model::pokemon::Pokemon;
+use rustemon::model::pokemon::{Pokemon, PokemonSpecies};
 
-pub struct FormatPokemon(pub Pokemon);
+pub struct FormatPokemon {
+    pokemon: Pokemon,
+    species: PokemonSpecies,
+}
 
 impl FormatPokemon {
-    pub fn new(pokemon: Pokemon) -> Self {
-        Self(pokemon)
+    pub fn new(pokemon: Pokemon, species: PokemonSpecies) -> Self {
+        Self { pokemon, species }
     }
 
     fn build_summary(&self, output: &mut String) {
-        let formatted_name = split_and_capitalise(&self.0.name);
+        let formatted_name = split_and_capitalise(&self.pokemon.name);
         output.push_str(&formatln(&white("Name"), &formatted_name));
 
         self.build_joined_types(output);
         self.build_joined_abilities(output);
+        self.build_generation(output);
     }
 
     fn build_joined_types(&self, output: &mut String) {
         let joined_types = self
-            .0
+            .pokemon
             .types
             .iter()
             .map(|pokemon_type| type_colours::fetch(&pokemon_type.type_.name))
@@ -37,7 +41,7 @@ impl FormatPokemon {
 
     fn build_joined_abilities(&self, output: &mut String) {
         let unique_abilities = self
-            .0
+            .pokemon
             .abilities
             .iter()
             .unique_by(|pokemon_ability| &pokemon_ability.ability.name)
@@ -50,6 +54,15 @@ impl FormatPokemon {
             .join(" | ");
 
         output.push_str(&formatln(&white("Abilities"), &joined_abilities));
+    }
+
+    fn build_generation(&self, output: &mut String) {
+        if let Some(generation_numeral) = self.species.generation.name.split('-').next_back() {
+            output.push_str(&formatln(
+                &white("Generation"),
+                &generation_numeral.to_uppercase(),
+            ))
+        }
     }
 }
 
