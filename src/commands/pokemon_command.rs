@@ -255,11 +255,10 @@ impl PokemonCommand<'_> {
     }
 
     async fn fetch_evolution_chain(&self, species: &PokemonSpecies) -> Option<EvolutionChain> {
-        let evolution_chain_resource = species.evolution_chain.clone()?;
-        let chain_url = evolution_chain_resource.url;
+        let chain_url = &species.evolution_chain.as_ref()?.url;
 
         self.client
-            .fetch_evolution_chain_from_url(&chain_url)
+            .fetch_evolution_chain_from_url(chain_url)
             .await
             .ok()
     }
