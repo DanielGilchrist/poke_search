@@ -26,13 +26,18 @@ async fn pokemon_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::erro
     let correct_name = "charizard";
 
     let mut mock_client = MockClientImplementation::new();
-    let mock_pokemon = static_resources::get_pokemon();
 
     mock_client
         .expect_fetch_pokemon()
         .with(mockall::predicate::eq(correct_name))
         .once()
-        .returning(move |_args| Ok(mock_pokemon.clone()));
+        .returning(move |_args| Ok(static_resources::get_pokemon()));
+
+    mock_client
+        .expect_fetch_pokemon_species()
+        .with(mockall::predicate::eq(correct_name))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_pokemon_species()));
 
     mock_client
         .expect_fetch_ability()
@@ -52,6 +57,7 @@ async fn pokemon_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::erro
   Name: Charizard
   Type: Fire | flying
   Abilities: Blaze | Solar Power
+  Generation: I
 
 Stats
   HP: 78
