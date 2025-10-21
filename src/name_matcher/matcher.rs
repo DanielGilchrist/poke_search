@@ -90,7 +90,7 @@ impl NameMatcher {
         #[cfg(debug_assertions)]
         println!("\n[DEBUG] Similar Results: {search_results:?}\n");
 
-        let search_result = search_results.first().map(ToOwned::to_owned)?;
+        let search_result = search_results.into_iter().next()?;
         let certainty = Certainty::from(&search_result);
 
         Some(Suggestion::new(search_result.text, certainty))
