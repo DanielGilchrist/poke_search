@@ -9,7 +9,7 @@ use crate::{
 
 use std::sync::LazyLock;
 
-use ngrammatic::{Corpus, CorpusBuilder, Pad};
+use ngrammatic::{Corpus, CorpusBuilder, Pad, SearchResult};
 
 static MIN_CERTAIN_SIMILARITY: f32 = 0.71;
 
@@ -49,6 +49,16 @@ enum Certainty {
     Uncertain,
 }
 
+impl From<&SearchResult> for Certainty {
+    fn from(search_result: &SearchResult) -> Self {
+        if search_result.similarity > MIN_CERTAIN_SIMILARITY {
+            Certainty::Certain
+        } else {
+            Certainty::Uncertain
+        }
+    }
+}
+
 struct Suggestion {
     name: String,
     certainty: Certainty,
@@ -81,12 +91,7 @@ impl NameMatcher {
         println!("\n[DEBUG] Similar Results: {search_results:?}\n");
 
         let search_result = search_results.first().map(ToOwned::to_owned)?;
-
-        let certainty = if search_result.similarity > MIN_CERTAIN_SIMILARITY {
-            Certainty::Certain
-        } else {
-            Certainty::Uncertain
-        };
+        let certainty = Certainty::from(&search_result);
 
         Some(Suggestion::new(search_result.text, certainty))
     }
