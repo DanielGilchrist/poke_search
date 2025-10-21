@@ -17,7 +17,16 @@ struct FormattedPokemon {
 }
 
 impl FormattedPokemon {
-    pub fn from(pokemon: Pokemon) -> Self {
+    pub fn formatted_type(&self) -> String {
+        self.types
+            .iter()
+            .map(|type_name| type_colours::fetch(type_name))
+            .join(" | ")
+    }
+}
+
+impl From<Pokemon> for FormattedPokemon {
+    fn from(pokemon: Pokemon) -> Self {
         let Pokemon {
             name: pokemon_name,
             types: pokemon_types,
@@ -34,13 +43,6 @@ impl FormattedPokemon {
             name: formatted_name,
             types,
         }
-    }
-
-    pub fn formatted_type(&self) -> String {
-        self.types
-            .iter()
-            .map(|type_name| type_colours::fetch(type_name))
-            .join(" | ")
     }
 }
 
