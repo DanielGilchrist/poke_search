@@ -44,12 +44,12 @@ impl AbilityCommand<'_> {
         };
 
         self.builder.append(formatter::white("Ability"));
-        self.builder.append_c('\n');
+        self.builder.append('\n');
         self.builder
             .append(FormatAbility::new(ability.clone(), None).format());
 
         if self.show_pokemon {
-            self.builder.append_c('\n');
+            self.builder.append('\n');
 
             let mut pokemon = ability.pokemon;
             pokemon.sort_by_key(|p| p.pokemon.name.clone());
@@ -60,7 +60,7 @@ impl AbilityCommand<'_> {
                 self.builder.append(formatter::split_and_capitalise(
                     &ability_pokemon.pokemon.name,
                 ));
-                self.builder.append_c('\n');
+                self.builder.append('\n');
             });
         }
     }

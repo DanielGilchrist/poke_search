@@ -10,11 +10,7 @@ impl Builder {
     }
 
     pub fn append<T: Appendable>(&mut self, str: T) {
-        self.0.push_str(str.to_appendable());
-    }
-
-    pub fn append_c(&mut self, c: char) {
-        self.0.push(c);
+        str.append(&mut self.0);
     }
 
     pub fn print(&self) {
@@ -39,23 +35,29 @@ impl fmt::Display for Builder {
 }
 
 pub trait Appendable {
-    fn to_appendable(&self) -> &str;
+    fn append(&self, string: &mut String);
 }
 
 impl Appendable for Builder {
-    fn to_appendable(&self) -> &str {
-        &self.0
+    fn append(&self, string: &mut String) {
+        string.push_str(&self.0);
+    }
+}
+
+impl Appendable for char {
+    fn append(&self, string: &mut String) {
+        string.push(*self);
     }
 }
 
 impl Appendable for String {
-    fn to_appendable(&self) -> &str {
-        self
+    fn append(&self, string: &mut String) {
+        string.push_str(self);
     }
 }
 
 impl Appendable for &str {
-    fn to_appendable(&self) -> &str {
-        self
+    fn append(&self, string: &mut String) {
+        string.push_str(self)
     }
 }

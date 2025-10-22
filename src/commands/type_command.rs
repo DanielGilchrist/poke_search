@@ -241,7 +241,7 @@ impl TypeCommand<'_> {
         self.builder.append(formatter::white("Offence\n"));
 
         self.append_single_damage_output(type_, DamageContext::Offence);
-        self.builder.append_c('\n');
+        self.builder.append('\n');
 
         self.builder.append(formatter::white("Defence\n"));
         self.append_single_damage_output(type_, DamageContext::Defence);
@@ -254,11 +254,11 @@ impl TypeCommand<'_> {
 
         self.append_single_type_header(type_);
         self.append_single_damage_output(type_, DamageContext::Offence);
-        self.builder.append_c('\n');
+        self.builder.append('\n');
 
         self.append_single_type_header(second_type);
         self.append_single_damage_output(second_type, DamageContext::Offence);
-        self.builder.append_c('\n');
+        self.builder.append('\n');
 
         self.builder.append(formatter::white("Defence\n"));
         self.append_dual_defence_output(type_, second_type);

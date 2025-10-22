@@ -327,7 +327,7 @@ impl PokemonCommand<'_> {
 
             if chains.len() > 1 {
                 prefix.push_str("   ");
-                self.builder.append_c('\n');
+                self.builder.append('\n');
             }
 
             for chain in chains {
@@ -376,11 +376,11 @@ impl PokemonCommand<'_> {
 
                 let joined_details = detail_strings.join(" or");
                 self.builder.append(joined_details);
-                self.builder.append_c('\n');
+                self.builder.append('\n');
             }
         }
 
-        self.builder.append_c('\n');
+        self.builder.append('\n');
     }
 
     fn build_detail(&self, builder: &mut Builder, detail: &NormalisedEvolutionDetail) {
