@@ -9,6 +9,7 @@ use crate::{
 use futures::{StreamExt, stream};
 use std::{collections::BTreeMap, rc::Rc};
 
+use colored::Colorize;
 use itertools::Itertools;
 use rustemon::model::{
     evolution::{ChainLink, EvolutionChain, EvolutionDetail},
@@ -314,6 +315,16 @@ impl PokemonCommand<'_> {
             });
     }
 
+    fn formatted_pokemon_name(&self, pokemon_name: &str) -> String {
+        let mut formatted_name = formatter::capitalise(pokemon_name);
+
+        if self.pokemon_name == pokemon_name {
+            formatted_name = formatted_name.bold().italic().to_string();
+        }
+
+        formatted_name
+    }
+
     fn build_evolution_output(&mut self, evolution_chains: Vec<NormalisedEvolutionPokemon>) {
         self.builder.append(formatter::white("Evolution Chain:\n"));
 
@@ -331,7 +342,7 @@ impl PokemonCommand<'_> {
             }
 
             for chain in chains {
-                let pokemon_name = formatter::capitalise(&chain.name);
+                let pokemon_name = self.formatted_pokemon_name(&chain.name);
                 self.builder.append(format!("{prefix}{pokemon_name}"));
 
                 let evolution_details = chain.evolution_details;
