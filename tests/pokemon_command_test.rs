@@ -99,6 +99,59 @@ Abilities
 }
 
 #[tokio::test]
+async fn pokemon_shows_evolution_information() -> Result<(), Box<dyn std::error::Error>> {
+    let pokemon_name = "charizard";
+
+    let mut mock_client = MockClientImplementation::new();
+
+    mock_client
+        .expect_fetch_pokemon()
+        .with(mockall::predicate::eq(pokemon_name))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_pokemon()));
+
+    mock_client
+        .expect_fetch_pokemon_species()
+        .with(mockall::predicate::eq(pokemon_name))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_pokemon_species()));
+
+    mock_client
+        .expect_fetch_ability()
+        .with(mockall::predicate::eq("blaze"))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_ability()));
+
+    mock_client
+        .expect_fetch_ability()
+        .with(mockall::predicate::eq("solar-power"))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_ability()));
+
+    mock_client
+        .expect_fetch_evolution_chain_from_url()
+        .with(mockall::predicate::eq(
+            "https://pokeapi.co/api/v2/evolution-chain/2/",
+        ))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_evolution_chain()));
+
+    let cli = parse_args(vec!["pokemon", pokemon_name, "-e"]);
+
+    let expected = r#"Evolution Chain:
+  Stage 1: Charmander
+  Stage 2: Charmeleon (Level Up - Level 16)
+  Stage 3: Charizard (Level Up - Level 36)
+"#;
+
+    let actual = run(&mock_client, cli).await.to_string();
+
+    assert!(actual.contains(expected));
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn pokemon_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
     let correct_name = "pikachu";
     let incorrect_name = "peacachu";
