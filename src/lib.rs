@@ -13,8 +13,9 @@ pub use crate::{
 use clap::{Parser, Subcommand};
 
 use commands::{
-    ability_command::AbilityCommand, item_command::ItemCommand, move_command::MoveCommand,
-    moves_command::MovesCommand, pokemon_command::PokemonCommand, type_command::TypeCommand,
+    ability_command::AbilityCommand, generation_command::GenerationCommand,
+    item_command::ItemCommand, move_command::MoveCommand, moves_command::MovesCommand,
+    pokemon_command::PokemonCommand, type_command::TypeCommand,
 };
 
 #[derive(Parser)]
@@ -34,6 +35,24 @@ pub enum Commands {
         #[arg(short, long, default_value_t = false)]
         #[arg(help = "Include a list of pokemon that have the ability")]
         pokemon: bool,
+    },
+
+    #[command(about = "Information about a particular generation of pokemon")]
+    Generation {
+        #[arg(help = "The generation you want to see information for")]
+        generation: String,
+
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Include a list of pokemon in the generation")]
+        pokemon: bool,
+
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Include a list of abilities in the generation")]
+        abilities: bool,
+
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Include a list of moves in the generation")]
+        moves: bool,
     },
 
     #[command(about = "See information about an item")]
@@ -106,6 +125,16 @@ pub async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             AbilityCommand::execute(client, parsed_ability_name, pokemon).await
         }
 
+        Commands::Generation {
+            generation,
+            pokemon,
+            abilities,
+            moves,
+        } => {
+            let parsed_generation = parse_generation(&generation);
+            GenerationCommand::execute(client, parsed_generation, pokemon, abilities, moves).await
+        }
+
         Commands::Item { item } => {
             let parsed_item_name = parse_name(&item);
             ItemCommand::execute(client, parsed_item_name).await
@@ -148,4 +177,12 @@ pub async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
 
 pub fn parse_name(name: &str) -> String {
     name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
+}
+
+pub fn parse_generation(generation_name: &str) -> String {
+    if generation_name.contains("generation") {
+        parse_name(generation_name)
+    } else {
+        format!("generation-{generation_name}")
+    }
 }
