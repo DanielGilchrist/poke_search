@@ -2,12 +2,16 @@ pub mod builder;
 pub mod client;
 pub mod commands;
 pub mod formatter;
+pub mod input_parser;
 pub mod name_matcher;
+pub mod roman_numeral;
 pub mod type_badge;
 
 pub use crate::{
     builder::Builder,
     client::{Client, ClientImplementation},
+    input_parser::{parse_generation, parse_name},
+    name_matcher::matcher,
 };
 
 use clap::{Parser, Subcommand};
@@ -130,10 +134,17 @@ pub async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             pokemon,
             abilities,
             moves,
-        } => {
-            let parsed_generation = parse_generation(&generation);
-            GenerationCommand::execute(client, parsed_generation, pokemon, abilities, moves).await
-        }
+        } => match parse_generation(&generation) {
+            Ok(parsed_generation) => {
+                GenerationCommand::execute(client, parsed_generation, pokemon, abilities, moves)
+                    .await
+            }
+            Err(error_message) => {
+                let mut builder = Builder::default();
+                builder.appendln(&error_message);
+                builder
+            }
+        },
 
         Commands::Item { item } => {
             let parsed_item_name = parse_name(&item);
@@ -172,17 +183,5 @@ pub async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             second_type_name,
             pokemon,
         } => TypeCommand::execute(client, type_name, second_type_name, pokemon).await,
-    }
-}
-
-pub fn parse_name(name: &str) -> String {
-    name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
-}
-
-pub fn parse_generation(generation_name: &str) -> String {
-    if generation_name.contains("generation") {
-        parse_name(generation_name)
-    } else {
-        format!("generation-{generation_name}")
     }
 }
