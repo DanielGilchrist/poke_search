@@ -320,6 +320,9 @@ impl PokemonCommand<'_> {
             .for_each(|ability| {
                 self.builder.appendln(ability.format());
             });
+
+        self.builder.pop();
+        self.builder.pop();
     }
 
     fn formatted_pokemon_name(&self, pokemon_name: &str) -> String {

@@ -29,6 +29,10 @@ impl Builder {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+
+    pub fn pop(&mut self) -> Option<char> {
+        self.0.pop()
+    }
 }
 
 impl Default for Builder {
