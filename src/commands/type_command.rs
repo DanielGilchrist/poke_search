@@ -186,15 +186,15 @@ impl TypeCommand<'_> {
         let formatted_pokemon = pokemon_names
             .iter()
             .map(|pokemon_name| format!("  {}", formatter::split_and_capitalise(pokemon_name)))
-            .collect::<Vec<_>>()
-            .join("\n");
+            .collect::<Vec<_>>();
 
         let num_pokemon = pokemon_names.len();
         let header = formatter::white(&format!("Pokemon ({num_pokemon})"));
         self.builder.appendln(header);
 
         if num_pokemon > 0 {
-            self.builder.append(formatted_pokemon);
+            self.builder
+                .append(formatter::format_columns(&formatted_pokemon, 3));
         } else {
             self.builder
                 .append(formatter::red("No pokemon with this type combination."));

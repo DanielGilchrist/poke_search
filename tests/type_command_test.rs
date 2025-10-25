@@ -120,3 +120,31 @@ async fn pokemon_dual_type_uncertain_suggestion() -> Result<(), Box<dyn std::err
 
     Ok(())
 }
+
+#[tokio::test]
+async fn lists_pokemon_in_columns() -> Result<(), Box<dyn std::error::Error>> {
+    let name = "fire";
+
+    let mut mock_client = MockClientImplementation::new();
+
+    mock_client
+        .expect_fetch_type()
+        .with(mockall::predicate::eq(name))
+        .once()
+        .returning(|_args| Ok(static_resources::get_type()));
+
+    let cli = parse_args(vec!["type", name, "-p"]);
+    let actual = run(&mock_client, cli).await.to_string();
+
+    let pokemon_section = actual.split("Pokemon (103)").nth(1).unwrap();
+    let first_line = pokemon_section.lines().nth(1).unwrap();
+    assert!(first_line.contains("Arcanine"));
+    assert!(first_line.contains("Arcanine Hisui"));
+    assert!(first_line.contains("Armarouge"));
+    assert!(!first_line.contains("Blacephalon"));
+
+    let second_line = pokemon_section.lines().nth(2).unwrap();
+    assert!(second_line.contains("Blacephalon"));
+
+    Ok(())
+}
