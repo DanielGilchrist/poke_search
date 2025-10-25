@@ -207,7 +207,6 @@ impl PokemonCommand<'_> {
             let type_builder = TypeCommand::execute(self.client, type1, type2, false).await;
 
             self.builder.newline();
-            self.builder.newline();
             self.builder.appendln(formatter::white("Type information"));
             self.builder.append(type_builder);
         }
@@ -321,7 +320,6 @@ impl PokemonCommand<'_> {
                 self.builder.appendln(ability.format());
             });
 
-        self.builder.pop();
         self.builder.pop();
     }
 
