@@ -41,7 +41,7 @@ pub(crate) fn format_columns(items: &[String], num_columns: usize) -> String {
         }
     }
 
-    if items.len() % num_columns != 0 {
+    if !items.len().is_multiple_of(num_columns) {
         output.push('\n');
     }
 
