@@ -3,7 +3,7 @@ pub mod client;
 pub mod commands;
 pub mod formatter;
 pub mod name_matcher;
-pub mod type_colours;
+pub mod type_badge;
 
 pub use crate::{
     builder::Builder,

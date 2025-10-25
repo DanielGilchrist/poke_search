@@ -1,6 +1,6 @@
 mod utils;
 
-use poke_search::{client::MockClientImplementation, name_matcher::matcher, run};
+use poke_search::{client::MockClientImplementation, name_matcher::matcher, run, type_badge};
 use rustemon::static_resources;
 use utils::parse_args;
 
@@ -51,16 +51,19 @@ async fn pokemon_move_autocorrect_if_similar_enough() -> Result<(), Box<dyn std:
 
     let cli = parse_args(vec!["move", similar_name]);
 
-    let expected = r#"Move
+    let fire = type_badge::fetch("fire");
+    let expected = format!(
+        "Move
   Name: Fire Blast
-  Type: Fire
+  Type: {fire}
   Damage Type: Special
   Power: 110
   Accuracy: 85
   PP: 5
   Priority: 0
   Description: An attack that may cause a burn.
-  Effect: Has a 10% chance to burn the target."#;
+  Effect: Has a 10% chance to burn the target."
+    );
 
     let actual = run(&mock_client, cli).await.to_string();
 

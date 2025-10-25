@@ -3,7 +3,7 @@ use crate::{
     client::ClientImplementation,
     formatter::{self, FormatModel, FormatMove},
     name_matcher::matcher,
-    type_colours,
+    type_badge,
 };
 
 use futures::{StreamExt, stream};
@@ -21,7 +21,7 @@ impl FormattedPokemon {
     pub fn formatted_type(&self) -> String {
         self.types
             .iter()
-            .map(|type_name| type_colours::fetch(type_name))
+            .map(|type_name| type_badge::fetch(type_name))
             .join(" | ")
     }
 }

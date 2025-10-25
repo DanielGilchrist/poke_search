@@ -53,9 +53,13 @@ async fn pokemon_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::erro
 
     let cli = parse_args(vec!["pokemon", similar_name]);
 
-    let expected = r#"Summary
+    let fire = poke_search::type_badge::fetch("fire");
+    let flying = poke_search::type_badge::fetch("flying");
+
+    let expected = format!(
+        "Summary
   Name: Charizard
-  Type: Fire | flying
+  Type: {fire} | {flying}
   Abilities: Blaze | Solar Power
   Generation: I
 
@@ -87,7 +91,8 @@ Abilities
     ability.
 
     Overworld: If the lead Pokémon has this ability, there is a 50% chance that
-    encounters will be with an electric Pokémon, if applicable."#;
+    encounters will be with an electric Pokémon, if applicable."
+    );
 
     let actual = run(&mock_client, cli).await.to_string();
 
