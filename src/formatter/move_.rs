@@ -2,7 +2,7 @@ use crate::{
     formatter::utils::{
         clean_and_wrap_text, formatln, parse_maybe_i64, split_and_capitalise, white,
     },
-    type_colours::{self},
+    type_badge::{self},
 };
 
 use super::FormatModel;
@@ -56,7 +56,7 @@ impl FormatMove {
         output.push_str(&formatln(&white("Name"), &formatted_name));
         output.push_str(&formatln(
             &white("Type"),
-            &type_colours::fetch(&self.move_.type_.name),
+            &type_badge::fetch(&self.move_.type_.name),
         ));
         output.push_str(&formatln(
             &white("Damage Type"),

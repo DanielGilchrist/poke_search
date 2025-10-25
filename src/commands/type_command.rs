@@ -3,7 +3,7 @@ use crate::{
     client::ClientImplementation,
     formatter::{self},
     name_matcher::{matcher, type_names},
-    type_colours::{self},
+    type_badge::{self},
 };
 
 use std::collections::{HashMap, HashSet};
@@ -234,7 +234,7 @@ impl TypeCommand<'_> {
     }
 
     fn formatted_type(&self, type_: &Type) -> String {
-        type_colours::fetch(&type_.name)
+        type_badge::fetch(&type_.name)
     }
 
     fn append_single_type_damage_details(&mut self, type_: &Type) {
@@ -438,7 +438,7 @@ impl TypeCommand<'_> {
 
         let coloured_types = new_type_names
             .iter()
-            .map(|type_name| type_colours::fetch(type_name))
+            .map(|type_name| type_badge::fetch(type_name))
             .collect::<Vec<_>>();
 
         self.builder

@@ -1,6 +1,6 @@
 use crate::{
     formatter::utils::{formatln, split_and_capitalise, white},
-    type_colours::{self},
+    type_badge::{self},
 };
 
 use super::FormatModel;
@@ -32,7 +32,7 @@ impl FormatPokemon {
             .pokemon
             .types
             .iter()
-            .map(|pokemon_type| type_colours::fetch(&pokemon_type.type_.name))
+            .map(|pokemon_type| type_badge::fetch(&pokemon_type.type_.name))
             .collect::<Vec<_>>()
             .join(" | ");
 
