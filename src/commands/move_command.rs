@@ -7,8 +7,9 @@ use crate::{
 };
 
 use futures::{StreamExt, stream};
-use itertools::Itertools;
+use itertools::{Itertools, any};
 use rustemon::model::{moves::Move, pokemon::Pokemon};
+use unicode_width::UnicodeWidthStr;
 
 #[derive(Ord, PartialOrd, Eq, PartialEq)]
 struct FormattedPokemon {
@@ -130,7 +131,7 @@ impl MoveCommand<'_> {
 
         if let Some(corrected_types) = &corrected_types {
             pokemon_list.retain(|pokemon| {
-                itertools::any(&pokemon.types, |type_name| {
+                any(&pokemon.types, |type_name| {
                     corrected_types.contains(type_name)
                 })
             })
@@ -140,27 +141,41 @@ impl MoveCommand<'_> {
 
         let max_name_width = pokemon_list
             .iter()
-            .map(|pokemon| pokemon.name.len())
+            .map(|pokemon| UnicodeWidthStr::width(pokemon.name.as_str()))
             .max()
             .unwrap_or(0);
 
-        let formatted_pokemon = pokemon_list
-            .iter_mut()
-            .map(|pokemon| {
-                let formatted_type = pokemon.formatted_type();
-                let name_width_diff = max_name_width - pokemon.name.len();
-                let padded_name = format!("{}{}", pokemon.name, " ".repeat(name_width_diff));
+        let num_columns = 2;
+        let column_width = max_name_width + 4;
 
-                format!("  {padded_name} {formatted_type}")
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
+        let mut learned_by_output = String::new();
+        for chunk in pokemon_list.chunks(num_columns) {
+            for pokemon in chunk {
+                let name_width = UnicodeWidthStr::width(pokemon.name.as_str());
+                let padding = " ".repeat(column_width - name_width);
+                learned_by_output.push_str("  ");
+                learned_by_output.push_str(&pokemon.name);
+                learned_by_output.push_str(&padding);
+            }
+            learned_by_output.push('\n');
+
+            for pokemon in chunk {
+                let type_str = pokemon.formatted_type();
+                let plain_type = pokemon.types.join(" | ");
+                let type_visual_width = UnicodeWidthStr::width(plain_type.as_str());
+                let padding = " ".repeat(column_width - type_visual_width);
+                learned_by_output.push_str("  ");
+                learned_by_output.push_str(&type_str);
+                learned_by_output.push_str(&padding);
+            }
+            learned_by_output.push_str("\n\n");
+        }
 
         self.builder.newline();
 
         let header = formatter::white(&format!("Learned by: ({})", pokemon_list.len()));
         self.builder.appendln(header);
-        self.builder.append(formatted_pokemon);
+        self.builder.append(learned_by_output);
     }
 
     fn pokemon_names(&self, format_move: &FormatMove) -> Vec<String> {
