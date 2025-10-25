@@ -37,8 +37,7 @@ impl ItemCommand<'_> {
             }
         };
 
-        self.builder.append(formatter::white("Item"));
-        self.builder.append('\n');
+        self.builder.appendln(formatter::white("Item"));
         self.builder.append(FormatItem::new(item).format());
     }
 

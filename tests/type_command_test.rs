@@ -52,8 +52,7 @@ Defence
 1x
   dark | dragon | electric | fighting | flying | ghost | normal | poison | psychic | stellar
 2x
-  ground | rock | water
-"#;
+  ground | rock | water"#;
     let actual = run(&mock_client, cli).await.to_string();
 
     assert_eq!(expected, actual);

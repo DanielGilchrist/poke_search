@@ -87,9 +87,7 @@ Abilities
     ability.
 
     Overworld: If the lead Pokémon has this ability, there is a 50% chance that
-    encounters will be with an electric Pokémon, if applicable.
-
-"#;
+    encounters will be with an electric Pokémon, if applicable."#;
 
     let actual = run(&mock_client, cli).await.to_string();
 
@@ -141,8 +139,7 @@ async fn pokemon_shows_evolution_information() -> Result<(), Box<dyn std::error:
     let expected = r#"Evolution Chain:
   Stage 1: Charmander
   Stage 2: Charmeleon (Level Up - Level 16)
-  Stage 3: Charizard (Level Up - Level 36)
-"#;
+  Stage 3: Charizard (Level Up - Level 36)"#;
 
     let actual = run(&mock_client, cli).await.to_string();
 

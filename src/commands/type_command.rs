@@ -190,8 +190,8 @@ impl TypeCommand<'_> {
             .join("\n");
 
         let num_pokemon = pokemon_names.len();
-        let header = formatter::white(&format!("\nPokemon ({num_pokemon})\n"));
-        self.builder.append(header);
+        let header = formatter::white(&format!("Pokemon ({num_pokemon})"));
+        self.builder.appendln(header);
 
         if num_pokemon > 0 {
             self.builder.append(formatted_pokemon);
@@ -224,7 +224,9 @@ impl TypeCommand<'_> {
 
     fn append_type_header(&mut self, type_: &Type, second_type: Option<&Type>) {
         let header = self.build_type_header(type_, second_type);
-        self.builder.append(format!("{header}\n\n"));
+        self.builder.append(header);
+        self.builder.newline();
+        self.builder.newline();
     }
 
     fn append_single_type_header(&mut self, type_: &Type) {
@@ -238,29 +240,29 @@ impl TypeCommand<'_> {
     fn append_single_type_damage_details(&mut self, type_: &Type) {
         self.append_single_type_header(type_);
 
-        self.builder.append(formatter::white("Offence\n"));
+        self.builder.appendln(formatter::white("Offence"));
 
         self.append_single_damage_output(type_, DamageContext::Offence);
-        self.builder.append('\n');
+        self.builder.newline();
 
-        self.builder.append(formatter::white("Defence\n"));
+        self.builder.appendln(formatter::white("Defence"));
         self.append_single_damage_output(type_, DamageContext::Defence);
     }
 
     fn append_dual_type_damage_details(&mut self, type_: &Type, second_type: &Type) {
         self.append_type_header(type_, Some(second_type));
 
-        self.builder.append(formatter::white("Offence\n"));
+        self.builder.appendln(formatter::white("Offence"));
 
         self.append_single_type_header(type_);
         self.append_single_damage_output(type_, DamageContext::Offence);
-        self.builder.append('\n');
+        self.builder.newline();
 
         self.append_single_type_header(second_type);
         self.append_single_damage_output(second_type, DamageContext::Offence);
-        self.builder.append('\n');
+        self.builder.newline();
 
-        self.builder.append(formatter::white("Defence\n"));
+        self.builder.appendln(formatter::white("Defence"));
         self.append_dual_defence_output(type_, second_type);
     }
 
@@ -440,6 +442,6 @@ impl TypeCommand<'_> {
             .collect::<Vec<_>>();
 
         self.builder
-            .append(format!("  {}\n", coloured_types.join(" | ")));
+            .appendln(format!("  {}", coloured_types.join(" | ")));
     }
 }
