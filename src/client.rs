@@ -6,6 +6,7 @@ use rustemon::{
     client::{CACacheManager, RustemonClient, RustemonClientBuilder},
     model::{
         evolution::EvolutionChain,
+        games::Generation,
         items::Item,
         moves::{Move, MoveLearnMethod},
         pokemon::{Ability, Pokemon, PokemonSpecies, Type},
@@ -27,6 +28,10 @@ pub enum ClientError {
 #[async_trait]
 pub trait ClientImplementation {
     async fn fetch_ability(&self, ability_name: &str) -> Result<Ability, rustemon::error::Error>;
+    async fn fetch_generation(
+        &self,
+        generation_name: &str,
+    ) -> Result<Generation, rustemon::error::Error>;
     async fn fetch_item(&self, item_name: &str) -> Result<Item, rustemon::error::Error>;
     async fn fetch_move(&self, move_name: &str) -> Result<Move, rustemon::error::Error>;
     async fn fetch_move_learn_method(
@@ -83,6 +88,13 @@ impl Client {
 impl ClientImplementation for Client {
     async fn fetch_ability(&self, ability_name: &str) -> Result<Ability, rustemon::error::Error> {
         rustemon::pokemon::ability::get_by_name(ability_name, &self.0).await
+    }
+
+    async fn fetch_generation(
+        &self,
+        generation_name: &str,
+    ) -> Result<Generation, rustemon::error::Error> {
+        rustemon::games::generation::get_by_name(generation_name, &self.0).await
     }
 
     async fn fetch_item(&self, item_name: &str) -> Result<Item, rustemon::error::Error> {

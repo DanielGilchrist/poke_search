@@ -56,11 +56,15 @@ impl AbilityCommand<'_> {
             self.builder
                 .appendln(formatter::white(&format!("Pokemon ({})", pokemon.len())));
 
-            pokemon.iter().for_each(|ability_pokemon| {
-                self.builder.appendln(formatter::split_and_capitalise(
-                    &ability_pokemon.pokemon.name,
-                ));
-            });
+            let pokemon_names = pokemon
+                .iter()
+                .map(|ability_pokemon| {
+                    formatter::split_and_capitalise(&ability_pokemon.pokemon.name)
+                })
+                .collect::<Vec<_>>();
+
+            self.builder
+                .append(formatter::format_columns(&pokemon_names, 4));
         }
     }
 

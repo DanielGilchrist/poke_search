@@ -1,5 +1,6 @@
 use colored::{ColoredString, Colorize};
 use rustemon::model::resource::VerboseEffect;
+use unicode_width::UnicodeWidthStr;
 
 pub(crate) fn capitalise(s: &str) -> String {
     let mut c = s.chars();
@@ -11,6 +12,40 @@ pub(crate) fn capitalise(s: &str) -> String {
 
 pub(crate) fn split_and_capitalise(s: &str) -> String {
     s.split('-').map(capitalise).collect::<Vec<_>>().join(" ")
+}
+
+pub(crate) fn format_columns(items: &[String], num_columns: usize) -> String {
+    if items.is_empty() {
+        return String::new();
+    }
+
+    let max_width = items
+        .iter()
+        .map(|item| UnicodeWidthStr::width(item.as_str()))
+        .max()
+        .unwrap_or(0);
+
+    let column_width = max_width + 2;
+
+    let mut output = String::new();
+    for (i, item) in items.iter().enumerate() {
+        let width = UnicodeWidthStr::width(item.as_str());
+        let padding = column_width - width;
+
+        output.push_str("  ");
+        output.push_str(item);
+        output.push_str(&" ".repeat(padding));
+
+        if (i + 1) % num_columns == 0 {
+            output.push('\n');
+        }
+    }
+
+    if items.len() % num_columns != 0 {
+        output.push('\n');
+    }
+
+    output
 }
 
 pub(crate) fn formatln(title: &str, value: &str) -> String {

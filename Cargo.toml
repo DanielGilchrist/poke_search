@@ -28,6 +28,7 @@ tokio = { version = "1", features = [
   "macros",
   "rt-multi-thread",
 ] } # https://github.com/tokio-rs/tokio
+unicode-width = "0"
 
 [dev-dependencies]
 rustemon = { version = "4", features = ["static-resources"] }
