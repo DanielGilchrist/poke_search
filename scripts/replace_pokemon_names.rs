@@ -12,49 +12,64 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-const SOURCES: &'static [(&'static str, &'static str)] = &[
+const SOURCES: &'static [(&'static str, &'static str, usize)] = &[
     (
         "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
         "pokemon_names",
+        1,
     ),
     (
         "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv",
         "move_names",
+        1,
     ),
     (
         "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/types.csv",
         "type_names",
+        1,
     ),
     (
         "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_damage_classes.csv",
         "move_damage_class_names",
+        1,
     ),
     (
         "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/abilities.csv",
         "ability_names",
+        1,
     ),
     (
         "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/items.csv",
         "item_names",
+        1,
+    ),
+    (
+        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/generations.csv",
+        "generation_names",
+        2,
     ),
 ];
 
 fn main() {
-    for (url, file_name) in SOURCES.into_iter() {
-        match fetch_and_replace(url, file_name) {
+    for (url, file_name, index) in SOURCES.into_iter() {
+        match fetch_and_replace(url, file_name, index.to_owned()) {
             Ok(_) => (),
             Err(error) => eprintln!("{:?}", error),
         };
     }
 }
 
-fn fetch_and_replace(url: &str, file_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn fetch_and_replace(
+    url: &str,
+    file_name: &str,
+    index: usize,
+) -> Result<(), Box<dyn std::error::Error>> {
     let response = reqwest::blocking::get(url)?;
     let csv = response.text()?;
     let mut reader = csv::Reader::from_reader(csv.as_bytes());
     let mut names = reader
         .records()
-        .map(|record| record.unwrap()[1].to_string())
+        .map(|record| record.unwrap()[index].to_string())
         .collect::<Vec<_>>();
 
     // This is important as we rely on binary search if we need to find a name in the vector in name_matcher::matcher.

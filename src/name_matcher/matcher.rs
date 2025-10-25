@@ -1,7 +1,7 @@
 use crate::{
     formatter::capitalise,
     name_matcher::{
-        ability_names::ABILITY_NAMES, item_names::ITEM_NAMES,
+        ability_names::ABILITY_NAMES, generation_names::GENERATION_NAMES, item_names::ITEM_NAMES,
         move_damage_class_names::MOVE_DAMAGE_CLASS_NAMES, move_names::MOVE_NAMES,
         pokemon_names::POKEMON_NAMES, type_names::TYPE_NAMES,
     },
@@ -15,6 +15,7 @@ static MIN_CERTAIN_SIMILARITY: f32 = 0.71;
 
 pub enum MatcherType {
     Ability,
+    Generation,
     Item,
     Pokemon,
     Move,
@@ -127,6 +128,11 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
     }
 }
 
+pub fn is_valid(name: &str, matcher_type: MatcherType) -> bool {
+    let (name_matcher, _) = matcher_and_keyword(matcher_type);
+    name_is_already_valid(&name_matcher.names, &name.to_owned())
+}
+
 pub fn build_suggested_name(keyword: &str, name: &str, suggestion: &str) -> String {
     format!("Unknown {keyword} \"{name}\"\nDid you mean \"{suggestion}\"?")
 }
@@ -142,6 +148,7 @@ fn name_is_already_valid(names: &[String], item: &String) -> bool {
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
     let (names, keyword) = match matcher_type {
         MatcherType::Ability => (&ABILITY_NAMES, "ability"),
+        MatcherType::Generation => (&GENERATION_NAMES, "generation"),
         MatcherType::Item => (&ITEM_NAMES, "item"),
         MatcherType::Move => (&MOVE_NAMES, "move"),
         MatcherType::MoveDamageCategory => (&MOVE_DAMAGE_CLASS_NAMES, "move damage category"),
