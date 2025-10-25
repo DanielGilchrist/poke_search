@@ -178,13 +178,18 @@ impl PokemonCommand<'_> {
         let pokemon_rc = Rc::new(pokemon.clone());
 
         self.build_summary(&format_pokemon);
+        self.builder.newline();
+
         self.build_stat_output(&pokemon_rc);
+        self.builder.newline();
+
         self.build_ability_output(&pokemon_rc).await;
 
         if self.show_evolution {
             let evolution_chain = self.fetch_evolution_chain(&species).await;
             if let Some(evolution_chain) = evolution_chain {
                 let normalised_evolution_chains = self.normalised_evolution_chains(evolution_chain);
+                self.builder.newline();
                 self.build_evolution_output(normalised_evolution_chains);
             };
         }
@@ -201,7 +206,9 @@ impl PokemonCommand<'_> {
             // TODO: We should extract the logic we need from this as it restricts what we can actually do with `TypeCommand`
             let type_builder = TypeCommand::execute(self.client, type1, type2, false).await;
 
-            self.builder.append(formatter::white("Type information\n"));
+            self.builder.newline();
+            self.builder.newline();
+            self.builder.appendln(formatter::white("Type information"));
             self.builder.append(type_builder);
         }
     }
@@ -265,12 +272,12 @@ impl PokemonCommand<'_> {
     }
 
     fn build_summary(&mut self, pokemon: &FormatPokemon) {
-        self.builder.append(formatter::white("Summary\n"));
+        self.builder.appendln(formatter::white("Summary"));
         self.builder.append(pokemon.format());
     }
 
     fn build_stat_output(&mut self, pokemon: &Rc<Pokemon>) {
-        self.builder.append(formatter::white("\nStats\n"));
+        self.builder.appendln(formatter::white("Stats"));
         let mut stat_total = 0;
         pokemon.stats.iter().enumerate().for_each(|(index, stat)| {
             // This assumes the stats returned from the API are always in the same order.
@@ -289,7 +296,7 @@ impl PokemonCommand<'_> {
     }
 
     async fn build_ability_output(&mut self, pokemon: &Rc<Pokemon>) {
-        self.builder.append(formatter::white("\nAbilities\n"));
+        self.builder.appendln(formatter::white("Abilities"));
 
         let unique_pokemon_abilities = pokemon
             .abilities
@@ -311,7 +318,7 @@ impl PokemonCommand<'_> {
             .await
             .into_iter()
             .for_each(|ability| {
-                self.builder.append(format!("{}\n", ability.format()));
+                self.builder.appendln(ability.format());
             });
     }
 
@@ -326,7 +333,7 @@ impl PokemonCommand<'_> {
     }
 
     fn build_evolution_output(&mut self, evolution_chains: Vec<NormalisedEvolutionPokemon>) {
-        self.builder.append(formatter::white("Evolution Chain:\n"));
+        self.builder.appendln(formatter::white("Evolution Chain:"));
 
         let evolution_chains_by_stage = self.group_by_key(evolution_chains, |chain| chain.stage);
 
@@ -338,12 +345,13 @@ impl PokemonCommand<'_> {
 
             if chains.len() > 1 {
                 prefix.push_str("   ");
-                self.builder.append('\n');
+                self.builder.newline();
             }
 
             for chain in chains {
                 let pokemon_name = self.formatted_pokemon_name(&chain.name);
-                self.builder.append(format!("{prefix}{pokemon_name}"));
+                self.builder.append(&prefix);
+                self.builder.append(pokemon_name);
 
                 let evolution_details = chain.evolution_details;
                 let evolution_details_by_trigger =
@@ -386,12 +394,9 @@ impl PokemonCommand<'_> {
                     .collect::<Vec<_>>();
 
                 let joined_details = detail_strings.join(" or");
-                self.builder.append(joined_details);
-                self.builder.append('\n');
+                self.builder.appendln(joined_details);
             }
         }
-
-        self.builder.append('\n');
     }
 
     fn build_detail(&self, builder: &mut Builder, detail: &NormalisedEvolutionDetail) {

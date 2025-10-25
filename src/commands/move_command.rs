@@ -91,7 +91,7 @@ impl MoveCommand<'_> {
 
         let mut format_move = FormatMove::new(move_);
 
-        self.builder.append(formatter::white("Move\n"));
+        self.builder.appendln(formatter::white("Move"));
         self.builder.append(format_move.format());
 
         if self.include_learned_by {
@@ -156,8 +156,10 @@ impl MoveCommand<'_> {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let header = formatter::white(&format!("\nLearned by: ({})\n", pokemon_list.len()));
-        self.builder.append(header);
+        self.builder.newline();
+
+        let header = formatter::white(&format!("Learned by: ({})", pokemon_list.len()));
+        self.builder.appendln(header);
         self.builder.append(formatted_pokemon);
     }
 

@@ -60,8 +60,7 @@ async fn pokemon_move_autocorrect_if_similar_enough() -> Result<(), Box<dyn std:
   PP: 5
   Priority: 0
   Description: An attack that may cause a burn.
-  Effect: Has a 10% chance to burn the target.
-"#;
+  Effect: Has a 10% chance to burn the target."#;
 
     let actual = run(&mock_client, cli).await.to_string();
 

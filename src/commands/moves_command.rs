@@ -75,10 +75,10 @@ impl MovesCommand<'_> {
         };
 
         self.builder
-            .append(format!("{} {pokemon_name}\n", formatter::white("Pokemon:")));
+            .appendln(format!("{} {pokemon_name}", formatter::white("Pokemon:")));
 
         self.builder
-            .append(formatter::white(&format!("Moves: ({})\n", moves.len())));
+            .appendln(formatter::white(&format!("Moves: ({})", moves.len())));
         self.builder.append(move_output);
     }
 

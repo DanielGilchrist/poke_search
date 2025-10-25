@@ -43,24 +43,23 @@ impl AbilityCommand<'_> {
             }
         };
 
-        self.builder.append(formatter::white("Ability"));
-        self.builder.append('\n');
+        self.builder.appendln(formatter::white("Ability"));
         self.builder
             .append(FormatAbility::new(ability.clone(), None).format());
 
         if self.show_pokemon {
-            self.builder.append('\n');
+            self.builder.newline();
 
             let mut pokemon = ability.pokemon;
             pokemon.sort_by_key(|p| p.pokemon.name.clone());
 
             self.builder
-                .append(formatter::white(&format!("Pokemon ({})\n", pokemon.len())));
+                .appendln(formatter::white(&format!("Pokemon ({})", pokemon.len())));
+
             pokemon.iter().for_each(|ability_pokemon| {
-                self.builder.append(formatter::split_and_capitalise(
+                self.builder.appendln(formatter::split_and_capitalise(
                     &ability_pokemon.pokemon.name,
                 ));
-                self.builder.append('\n');
             });
         }
     }
