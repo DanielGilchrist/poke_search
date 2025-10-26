@@ -55,7 +55,7 @@ pub(crate) fn formatln(title: &str, value: &str) -> String {
 pub(crate) fn extract_effect(effect_entries: &[VerboseEffect]) -> Option<String> {
     let formatted_effect = effect_entries.iter().find_map(|verbose_effect| {
         if verbose_effect.language.name == "en" {
-            let effect = &verbose_effect.effect;
+            let effect = &verbose_effect.short_effect;
             Some(clean_and_wrap_text(effect, 4, 80))
         } else {
             None
