@@ -8,11 +8,26 @@ use rustemon::model::pokemon::{Ability, Pokemon};
 pub struct FormatAbility {
     ability: Ability,
     pokemon: Option<Rc<Pokemon>>,
+    verbose: bool,
 }
 
 impl FormatAbility {
-    pub fn new(ability: Ability, pokemon: Option<Rc<Pokemon>>) -> Self {
-        FormatAbility { ability, pokemon }
+    pub fn new(ability: Ability) -> Self {
+        FormatAbility {
+            ability,
+            pokemon: None,
+            verbose: false,
+        }
+    }
+
+    pub fn with_pokemon(mut self, pokemon: Rc<Pokemon>) -> Self {
+        self.pokemon = Some(pokemon);
+        self
+    }
+
+    pub fn with_verbose(mut self, verbose: bool) -> Self {
+        self.verbose = verbose;
+        self
     }
 
     fn build_description(&self, output: &mut String) {
@@ -41,7 +56,7 @@ impl FormatAbility {
 
     fn ability_effect(&self) -> Option<String> {
         let effect_entries = &self.ability.effect_entries;
-        extract_effect(effect_entries)
+        extract_effect(effect_entries, self.verbose)
     }
 }
 

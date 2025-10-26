@@ -52,10 +52,14 @@ pub(crate) fn formatln(title: &str, value: &str) -> String {
     format!("  {}{}{}\n", title, ": ", capitalise(value))
 }
 
-pub(crate) fn extract_effect(effect_entries: &[VerboseEffect]) -> Option<String> {
+pub(crate) fn extract_effect(effect_entries: &[VerboseEffect], verbose: bool) -> Option<String> {
     let formatted_effect = effect_entries.iter().find_map(|verbose_effect| {
         if verbose_effect.language.name == "en" {
-            let effect = &verbose_effect.short_effect;
+            let effect = if verbose {
+                &verbose_effect.effect
+            } else {
+                &verbose_effect.short_effect
+            };
             Some(clean_and_wrap_text(effect, 4, 80))
         } else {
             None

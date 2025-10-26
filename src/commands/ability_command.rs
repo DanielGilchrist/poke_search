@@ -12,6 +12,7 @@ pub struct AbilityCommand<'a> {
     client: &'a dyn ClientImplementation,
     ability_name: String,
     show_pokemon: bool,
+    verbose: bool,
 }
 
 impl AbilityCommand<'_> {
@@ -19,6 +20,7 @@ impl AbilityCommand<'_> {
         client: &dyn ClientImplementation,
         ability_name: String,
         show_pokemon: bool,
+        verbose: bool,
     ) -> Builder {
         let mut builder = Builder::default();
 
@@ -27,6 +29,7 @@ impl AbilityCommand<'_> {
             client,
             ability_name,
             show_pokemon,
+            verbose,
         }
         ._execute()
         .await;
@@ -44,8 +47,9 @@ impl AbilityCommand<'_> {
         };
 
         self.builder.appendln(formatter::white("Ability"));
-        self.builder
-            .append(FormatAbility::new(ability.clone(), None).format());
+
+        let format_ability = FormatAbility::new(ability.clone()).with_verbose(self.verbose);
+        self.builder.append(format_ability.format());
 
         if self.show_pokemon {
             self.builder.newline();
