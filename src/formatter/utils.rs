@@ -2,12 +2,16 @@ use colored::{ColoredString, Colorize};
 use rustemon::model::resource::VerboseEffect;
 use unicode_width::UnicodeWidthStr;
 
-pub(crate) fn capitalise(s: &str) -> String {
+pub fn capitalise(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {
         None => String::new(),
         Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
     }
+}
+
+pub fn highlight(s: &str) -> String {
+    s.bold().italic().to_string()
 }
 
 pub(crate) fn split_and_capitalise(s: &str) -> String {
@@ -92,27 +96,27 @@ pub(crate) fn clean_and_wrap_text(text: &str, indent: usize, width: usize) -> St
 }
 
 // Colours
-pub(crate) fn white(str: &str) -> String {
+pub fn white(str: &str) -> String {
     format_colour(str.white())
 }
 
-pub(crate) fn green(str: &str) -> String {
+pub fn green(str: &str) -> String {
     format_colour(str.green())
 }
 
-pub(crate) fn yellow(str: &str) -> String {
+pub fn yellow(str: &str) -> String {
     format_colour(str.yellow())
 }
 
-pub(crate) fn red(str: &str) -> String {
+pub fn red(str: &str) -> String {
     format_colour(str.red())
 }
 
-pub(crate) fn bright_red(str: &str) -> String {
+pub fn bright_red(str: &str) -> String {
     format_colour(str.bright_red())
 }
 
-pub(crate) fn bright_green(str: &str) -> String {
+pub fn bright_green(str: &str) -> String {
     format_colour(str.bright_green())
 }
 

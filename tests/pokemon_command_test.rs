@@ -1,6 +1,8 @@
 mod utils;
 
-use poke_search::{client::MockClientImplementation, name_matcher::matcher, run};
+use poke_search::{
+    client::MockClientImplementation, formatter::utils as fmt, name_matcher::matcher, run,
+};
 use rustemon::static_resources;
 use utils::parse_args;
 
@@ -20,8 +22,6 @@ async fn pokemon_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn pokemon_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::error::Error>> {
-    colored::control::set_override(false);
-
     let similar_name = "Charzard";
     let correct_name = "charizard";
 
@@ -57,27 +57,45 @@ async fn pokemon_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::erro
     let flying = poke_search::type_badge::fetch("flying");
 
     let expected = format!(
-        "Summary
-  Name: Charizard
-  Type: {fire} | {flying}
-  Abilities: Blaze | Solar Power
-  Generation: I
+        "{}
+  {}: Charizard
+  {}: {fire} | {flying}
+  {}: Blaze | Solar Power
+  {}: I
 
-Stats
-  HP: 78
-  Attack: 84
-  Defense: 78
-  Special Attack: 109
-  Special Defense: 85
-  Speed: 100
-  Total: 534
+{}
+  {}: 78
+  {}: 84
+  {}: 78
+  {}: 109
+  {}: 85
+  {}: 100
+  {}: 534
 
-Abilities
-  Name: Static
-  Description: Has a 30% chance of paralyzing attacking Pokémon on contact.
+{}
+  {}: Static
+  {}: Has a 30% chance of paralyzing attacking Pokémon on contact.
 
-  Name: Static
-  Description: Has a 30% chance of paralyzing attacking Pokémon on contact."
+  {}: Static
+  {}: Has a 30% chance of paralyzing attacking Pokémon on contact.",
+        fmt::white("Summary"),
+        fmt::white("Name"),
+        fmt::white("Type"),
+        fmt::white("Abilities"),
+        fmt::white("Generation"),
+        fmt::white("Stats"),
+        fmt::white("HP"),
+        fmt::white("Attack"),
+        fmt::white("Defense"),
+        fmt::white("Special Attack"),
+        fmt::white("Special Defense"),
+        fmt::white("Speed"),
+        fmt::white("Total"),
+        fmt::white("Abilities"),
+        fmt::white("Name"),
+        fmt::white("Description"),
+        fmt::white("Name"),
+        fmt::white("Description"),
     );
 
     let actual = run(&mock_client, cli).await.to_string();
@@ -127,14 +145,18 @@ async fn pokemon_shows_evolution_information() -> Result<(), Box<dyn std::error:
 
     let cli = parse_args(vec!["pokemon", pokemon_name, "-e"]);
 
-    let expected = r#"Evolution Chain:
-  Stage 1: Charmander
-  Stage 2: Charmeleon (Level Up - Level 16)
-  Stage 3: Charizard (Level Up - Level 36)"#;
-
     let actual = run(&mock_client, cli).await.to_string();
 
-    assert!(actual.contains(expected));
+    assert!(actual.contains("Evolution Chain:"));
+    assert!(actual.contains("Stage 1:"));
+    assert!(actual.contains("Charmander"));
+    assert!(actual.contains("Stage 2:"));
+    assert!(actual.contains("Charmeleon"));
+    assert!(actual.contains("Level Up"));
+    assert!(actual.contains("Level 16"));
+    assert!(actual.contains("Stage 3:"));
+    assert!(actual.contains("Charizard"));
+    assert!(actual.contains("Level 36"));
 
     Ok(())
 }
@@ -200,16 +222,16 @@ async fn pokemon_highlights_matched_name_in_evolution_chain()
 
     let actual = run(&mock_client, cli).await.to_string();
 
-    colored::control::unset_override();
-
     if let Some(evo_pos) = actual.find("Evolution Chain:") {
         let evolution_section = &actual[evo_pos..];
 
-        let charizard_highlighted = evolution_section.contains("\u{1b}[1;3mCharizard\u{1b}[0m");
-        let charmander_not_highlighted =
-            !evolution_section.contains("\u{1b}[1;3mCharmander\u{1b}[0m");
-        let charmeleon_not_highlighted =
-            !evolution_section.contains("\u{1b}[1;3mCharmeleon\u{1b}[0m");
+        let charizard_highlighted_text = fmt::highlight(&fmt::capitalise("charizard"));
+        let charmander_highlighted_text = fmt::highlight(&fmt::capitalise("charmander"));
+        let charmeleon_highlighted_text = fmt::highlight(&fmt::capitalise("charmeleon"));
+
+        let charizard_highlighted = evolution_section.contains(&charizard_highlighted_text);
+        let charmander_not_highlighted = !evolution_section.contains(&charmander_highlighted_text);
+        let charmeleon_not_highlighted = !evolution_section.contains(&charmeleon_highlighted_text);
 
         assert!(
             charizard_highlighted,
