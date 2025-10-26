@@ -130,6 +130,7 @@ pub struct PokemonCommand<'a> {
     builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     pokemon_name: String,
+    matched_pokemon_name: Option<String>,
     show_types: bool,
     show_evolution: bool,
 }
@@ -147,6 +148,7 @@ impl PokemonCommand<'_> {
             builder: &mut builder,
             client,
             pokemon_name,
+            matched_pokemon_name: None,
             show_types,
             show_evolution,
         }
@@ -157,13 +159,14 @@ impl PokemonCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let pokemon = match self.fetch_pokemon().await {
-            Ok(pokemon) => pokemon,
+        let (pokemon, matched_name) = match self.fetch_pokemon().await {
+            Ok(result) => result,
             Err(error_message) => {
                 self.builder.append(error_message);
                 return;
             }
         };
+        self.matched_pokemon_name = Some(matched_name);
 
         let species_name = &pokemon.species.name;
         let species = match self.fetch_pokemon_species(species_name).await {
@@ -243,15 +246,19 @@ impl PokemonCommand<'_> {
         }
     }
 
-    async fn fetch_pokemon(&self) -> Result<Pokemon, String> {
+    async fn fetch_pokemon(&self) -> Result<(Pokemon, String), String> {
         let successful_match =
             matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon)
                 .map_err(|no_match| no_match.0)?;
 
-        self.client
+        let matched_name = successful_match.suggested_name.clone();
+        let pokemon = self
+            .client
             .fetch_pokemon(&successful_match.suggested_name)
             .await
-            .map_err(|error| error.to_string())
+            .map_err(|error| error.to_string())?;
+
+        Ok((pokemon, matched_name))
     }
 
     async fn fetch_pokemon_species(&self, species_name: &str) -> Result<PokemonSpecies, String> {
@@ -326,8 +333,10 @@ impl PokemonCommand<'_> {
     fn formatted_pokemon_name(&self, pokemon_name: &str) -> String {
         let mut formatted_name = formatter::capitalise(pokemon_name);
 
-        if self.pokemon_name == pokemon_name {
-            formatted_name = formatted_name.bold().italic().to_string();
+        if let Some(matched_name) = &self.matched_pokemon_name {
+            if matched_name == pokemon_name {
+                formatted_name = formatted_name.bold().italic().to_string();
+            }
         }
 
         formatted_name

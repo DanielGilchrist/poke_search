@@ -153,3 +153,79 @@ async fn pokemon_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>
 
     Ok(())
 }
+
+#[tokio::test]
+async fn pokemon_highlights_matched_name_in_evolution_chain()
+-> Result<(), Box<dyn std::error::Error>> {
+    colored::control::set_override(true);
+
+    let incorrect_name = "charzard";
+    let correct_name = "charizard";
+
+    let mut mock_client = MockClientImplementation::new();
+
+    mock_client
+        .expect_fetch_pokemon()
+        .with(mockall::predicate::eq(correct_name))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_pokemon()));
+
+    mock_client
+        .expect_fetch_pokemon_species()
+        .with(mockall::predicate::eq(correct_name))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_pokemon_species()));
+
+    mock_client
+        .expect_fetch_ability()
+        .with(mockall::predicate::eq("blaze"))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_ability()));
+
+    mock_client
+        .expect_fetch_ability()
+        .with(mockall::predicate::eq("solar-power"))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_ability()));
+
+    mock_client
+        .expect_fetch_evolution_chain_from_url()
+        .with(mockall::predicate::eq(
+            "https://pokeapi.co/api/v2/evolution-chain/2/",
+        ))
+        .once()
+        .returning(move |_args| Ok(static_resources::get_evolution_chain()));
+
+    let cli = parse_args(vec!["pokemon", incorrect_name, "-e"]);
+
+    let actual = run(&mock_client, cli).await.to_string();
+
+    colored::control::unset_override();
+
+    if let Some(evo_pos) = actual.find("Evolution Chain:") {
+        let evolution_section = &actual[evo_pos..];
+
+        let charizard_highlighted = evolution_section.contains("\u{1b}[1;3mCharizard\u{1b}[0m");
+        let charmander_not_highlighted =
+            !evolution_section.contains("\u{1b}[1;3mCharmander\u{1b}[0m");
+        let charmeleon_not_highlighted =
+            !evolution_section.contains("\u{1b}[1;3mCharmeleon\u{1b}[0m");
+
+        assert!(
+            charizard_highlighted,
+            "Charizard should be bold+italic in evolution chain"
+        );
+        assert!(
+            charmander_not_highlighted,
+            "Charmander should NOT be bold+italic"
+        );
+        assert!(
+            charmeleon_not_highlighted,
+            "Charmeleon should NOT be bold+italic"
+        );
+    } else {
+        panic!("Evolution Chain section not found in output");
+    }
+
+    Ok(())
+}
