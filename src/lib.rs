@@ -39,6 +39,10 @@ pub enum Commands {
         #[arg(short, long, default_value_t = false)]
         #[arg(help = "Include a list of pokemon that have the ability")]
         pokemon: bool,
+
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Show verbose ability description")]
+        verbose: bool,
     },
 
     #[command(about = "Information about a particular generation of pokemon")]
@@ -124,9 +128,13 @@ pub enum Commands {
 
 pub async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
     match cli.command {
-        Commands::Ability { ability, pokemon } => {
+        Commands::Ability {
+            ability,
+            pokemon,
+            verbose,
+        } => {
             let parsed_ability_name = parse_name(&ability);
-            AbilityCommand::execute(client, parsed_ability_name, pokemon).await
+            AbilityCommand::execute(client, parsed_ability_name, pokemon, verbose).await
         }
 
         Commands::Generation {

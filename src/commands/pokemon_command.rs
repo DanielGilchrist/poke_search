@@ -310,7 +310,7 @@ impl PokemonCommand<'_> {
             .map(|a| async move {
                 // TODO: Gracefully filter out failed requests for an ability
                 let ability = client_ref.fetch_ability(&a.ability.name).await.unwrap();
-                FormatAbility::new(ability, Some(Rc::clone(pokemon_ref)))
+                FormatAbility::new(ability).with_pokemon(Rc::clone(pokemon_ref))
             })
             .buffer_unordered(2)
             .collect::<Vec<_>>()

@@ -17,7 +17,7 @@ impl FormatItem {
 
     fn build_effect(&self, output: &mut String) {
         let effect_entries = &self.0.effect_entries;
-        let effect = extract_effect(effect_entries);
+        let effect = extract_effect(effect_entries, false);
 
         if let Some(effect) = effect {
             output.push_str(&formatln(&white("Effect"), &effect));
