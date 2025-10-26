@@ -9,7 +9,6 @@ use crate::{
 use futures::{StreamExt, stream};
 use std::{collections::BTreeMap, rc::Rc};
 
-use colored::Colorize;
 use itertools::Itertools;
 use rustemon::model::{
     evolution::{ChainLink, EvolutionChain, EvolutionDetail},
@@ -130,7 +129,6 @@ pub struct PokemonCommand<'a> {
     builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     pokemon_name: String,
-    matched_pokemon_name: Option<String>,
     show_types: bool,
     show_evolution: bool,
 }
@@ -148,7 +146,6 @@ impl PokemonCommand<'_> {
             builder: &mut builder,
             client,
             pokemon_name,
-            matched_pokemon_name: None,
             show_types,
             show_evolution,
         }
@@ -159,14 +156,13 @@ impl PokemonCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let (pokemon, matched_name) = match self.fetch_pokemon().await {
-            Ok(result) => result,
+        let pokemon = match self.fetch_pokemon().await {
+            Ok(pokemon) => pokemon,
             Err(error_message) => {
                 self.builder.append(error_message);
                 return;
             }
         };
-        self.matched_pokemon_name = Some(matched_name);
 
         let species_name = &pokemon.species.name;
         let species = match self.fetch_pokemon_species(species_name).await {
@@ -193,7 +189,7 @@ impl PokemonCommand<'_> {
             if let Some(evolution_chain) = evolution_chain {
                 let normalised_evolution_chains = self.normalised_evolution_chains(evolution_chain);
                 self.builder.newline();
-                self.build_evolution_output(normalised_evolution_chains);
+                self.build_evolution_output(&pokemon, normalised_evolution_chains);
             };
         }
 
@@ -246,19 +242,15 @@ impl PokemonCommand<'_> {
         }
     }
 
-    async fn fetch_pokemon(&self) -> Result<(Pokemon, String), String> {
+    async fn fetch_pokemon(&self) -> Result<Pokemon, String> {
         let successful_match =
             matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon)
                 .map_err(|no_match| no_match.0)?;
 
-        let matched_name = successful_match.suggested_name.clone();
-        let pokemon = self
-            .client
+        self.client
             .fetch_pokemon(&successful_match.suggested_name)
             .await
-            .map_err(|error| error.to_string())?;
-
-        Ok((pokemon, matched_name))
+            .map_err(|error| error.to_string())
     }
 
     async fn fetch_pokemon_species(&self, species_name: &str) -> Result<PokemonSpecies, String> {
@@ -330,19 +322,22 @@ impl PokemonCommand<'_> {
         self.builder.pop();
     }
 
-    fn formatted_pokemon_name(&self, pokemon_name: &str) -> String {
+    fn formatted_pokemon_name(&self, pokemon: &Pokemon, pokemon_name: &str) -> String {
+        let should_highlight_name = pokemon.name == pokemon_name;
         let mut formatted_name = formatter::capitalise(pokemon_name);
 
-        if let Some(matched_name) = &self.matched_pokemon_name {
-            if matched_name == pokemon_name {
-                formatted_name = formatted_name.bold().italic().to_string();
-            }
+        if should_highlight_name {
+            formatted_name = formatter::highlight(&formatted_name);
         }
 
         formatted_name
     }
 
-    fn build_evolution_output(&mut self, evolution_chains: Vec<NormalisedEvolutionPokemon>) {
+    fn build_evolution_output(
+        &mut self,
+        pokemon: &Pokemon,
+        evolution_chains: Vec<NormalisedEvolutionPokemon>,
+    ) {
         self.builder.appendln(formatter::white("Evolution Chain:"));
 
         let evolution_chains_by_stage = self.group_by_key(evolution_chains, |chain| chain.stage);
@@ -359,7 +354,7 @@ impl PokemonCommand<'_> {
             }
 
             for chain in chains {
-                let pokemon_name = self.formatted_pokemon_name(&chain.name);
+                let pokemon_name = self.formatted_pokemon_name(pokemon, &chain.name);
                 self.builder.append(&prefix);
                 self.builder.append(pokemon_name);
 
