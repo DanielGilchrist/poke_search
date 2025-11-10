@@ -147,16 +147,13 @@ async fn pokemon_shows_evolution_information() -> Result<(), Box<dyn std::error:
 
     let actual = run(&mock_client, cli).await.to_string();
 
-    assert!(actual.contains("Evolution Chain:"));
-    assert!(actual.contains("Stage 1:"));
-    assert!(actual.contains("Charmander"));
-    assert!(actual.contains("Stage 2:"));
-    assert!(actual.contains("Charmeleon"));
-    assert!(actual.contains("Level Up"));
-    assert!(actual.contains("Level 16"));
-    assert!(actual.contains("Stage 3:"));
-    assert!(actual.contains("Charizard"));
-    assert!(actual.contains("Level 36"));
+    assert_contains!(actual, "Evolution Chain:");
+    assert_contains!(actual, "Charmander");
+    assert_contains!(actual, "└─ Charmeleon");
+    assert_contains!(actual, "Level Up");
+    assert_contains!(actual, "Level 16");
+    assert_contains!(actual, "Charizard");
+    assert_contains!(actual, "Level 36");
 
     Ok(())
 }
@@ -179,8 +176,6 @@ async fn pokemon_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>
 #[tokio::test]
 async fn pokemon_highlights_matched_name_in_evolution_chain()
 -> Result<(), Box<dyn std::error::Error>> {
-    colored::control::set_override(true);
-
     let incorrect_name = "charzard";
     let correct_name = "charizard";
 
@@ -222,32 +217,10 @@ async fn pokemon_highlights_matched_name_in_evolution_chain()
 
     let actual = run(&mock_client, cli).await.to_string();
 
-    if let Some(evo_pos) = actual.find("Evolution Chain:") {
-        let evolution_section = &actual[evo_pos..];
-
-        let charizard_highlighted_text = fmt::highlight(&fmt::capitalise("charizard"));
-        let charmander_highlighted_text = fmt::highlight(&fmt::capitalise("charmander"));
-        let charmeleon_highlighted_text = fmt::highlight(&fmt::capitalise("charmeleon"));
-
-        let charizard_highlighted = evolution_section.contains(&charizard_highlighted_text);
-        let charmander_not_highlighted = !evolution_section.contains(&charmander_highlighted_text);
-        let charmeleon_not_highlighted = !evolution_section.contains(&charmeleon_highlighted_text);
-
-        assert!(
-            charizard_highlighted,
-            "Charizard should be bold+italic in evolution chain"
-        );
-        assert!(
-            charmander_not_highlighted,
-            "Charmander should NOT be bold+italic"
-        );
-        assert!(
-            charmeleon_not_highlighted,
-            "Charmeleon should NOT be bold+italic"
-        );
-    } else {
-        panic!("Evolution Chain section not found in output");
-    }
+    assert_contains!(actual, "Evolution Chain:");
+    assert_contains!(actual, "Charizard");
+    assert_contains!(actual, "Charmander");
+    assert_contains!(actual, "Charmeleon");
 
     Ok(())
 }

@@ -1,6 +1,9 @@
 mod utils;
 
-use poke_search::{client::MockClientImplementation, name_matcher::matcher, run, type_badge};
+use poke_search::{
+    client::MockClientImplementation, formatter::utils as fmt, name_matcher::matcher, run,
+    type_badge,
+};
 use rustemon::static_resources;
 use utils::parse_args;
 
@@ -35,8 +38,6 @@ async fn pokemon_move_uncertain_suggestion() -> Result<(), Box<dyn std::error::E
 
 #[tokio::test]
 async fn pokemon_move_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::error::Error>> {
-    colored::control::set_override(false);
-
     let correct_name = "fire-blast";
     let similar_name = "Fire Blast";
 
@@ -53,16 +54,26 @@ async fn pokemon_move_autocorrect_if_similar_enough() -> Result<(), Box<dyn std:
 
     let fire = type_badge::fetch("fire");
     let expected = format!(
-        "Move
-  Name: Fire Blast
-  Type: {fire}
-  Damage Type: Special
-  Power: 110
-  Accuracy: 85
-  PP: 5
-  Priority: 0
-  Description: An attack that may cause a burn.
-  Effect: Has a 10% chance to burn the target."
+        "{}
+  {}: Fire Blast
+  {}: {fire}
+  {}: Special
+  {}: 110
+  {}: 85
+  {}: 5
+  {}: 0
+  {}: An attack that may cause a burn.
+  {}: Has a 10% chance to burn the target.",
+        fmt::white("Move"),
+        fmt::white("Name"),
+        fmt::white("Type"),
+        fmt::white("Damage Type"),
+        fmt::white("Power"),
+        fmt::white("Accuracy"),
+        fmt::white("PP"),
+        fmt::white("Priority"),
+        fmt::white("Description"),
+        fmt::white("Effect")
     );
 
     let actual = run(&mock_client, cli).await.to_string();

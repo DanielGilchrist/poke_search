@@ -1,6 +1,9 @@
 mod utils;
 
-use poke_search::{client::MockClientImplementation, name_matcher::matcher, run, type_badge};
+use poke_search::{
+    client::MockClientImplementation, formatter::utils as fmt, name_matcher::matcher, run,
+    type_badge,
+};
 use rustemon::static_resources;
 use utils::parse_args;
 
@@ -21,8 +24,6 @@ async fn pokemon_single_type_cant_be_found() -> Result<(), Box<dyn std::error::E
 #[tokio::test]
 async fn pokemon_single_type_autocorrect_if_similar_enough()
 -> Result<(), Box<dyn std::error::Error>> {
-    colored::control::set_override(false);
-
     let almost_correct_name = "firre";
     let correct_name = "fire";
 
@@ -56,23 +57,27 @@ async fn pokemon_single_type_autocorrect_if_similar_enough()
     let ice = type_badge::fetch("ice");
     let steel = type_badge::fetch("steel");
 
-    let expected = format!("{fire}
+    let expected = format!(
+        "{fire}
 
-Offence
-0.5x
-  {dragon} | {fire} | {rock} | {water}
-1x
-  {dark} | {electr} | {fairy} | {fight} | {flying} | {ghost} | {ground} | {normal} | {poison} | {psychc} | stellar
-2x
-  {bug} | {grass} | {ice} | {steel}
+{}
+{}  {dragon} | {fire} | {rock} | {water}
+{}  {dark} | {electr} | {fairy} | {fight} | {flying} | {ghost} | {ground} | {normal} | {poison} | {psychc} | stellar
+{}  {bug} | {grass} | {ice} | {steel}
 
-Defence
-0.5x
-  {bug} | {fairy} | {fire} | {grass} | {ice} | {steel}
-1x
-  {dark} | {dragon} | {electr} | {fight} | {flying} | {ghost} | {normal} | {poison} | {psychc} | stellar
-2x
-  {ground} | {rock} | {water}");
+{}
+{}  {bug} | {fairy} | {fire} | {grass} | {ice} | {steel}
+{}  {dark} | {dragon} | {electr} | {fight} | {flying} | {ghost} | {normal} | {poison} | {psychc} | stellar
+{}  {ground} | {rock} | {water}",
+        fmt::white("Offence"),
+        fmt::bright_red("0.5x\n"),
+        fmt::yellow("1x\n"),
+        fmt::green("2x\n"),
+        fmt::white("Defence"),
+        fmt::bright_green("0.5x\n"),
+        fmt::yellow("1x\n"),
+        fmt::red("2x\n")
+    );
 
     let actual = run(&mock_client, cli).await.to_string();
 
