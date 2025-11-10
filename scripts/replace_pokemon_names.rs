@@ -12,58 +12,59 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-const SOURCES: &'static [(&'static str, &'static str, usize)] = &[
-    (
-        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon.csv",
-        "pokemon_names",
-        1,
-    ),
-    (
-        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/moves.csv",
-        "move_names",
-        1,
-    ),
-    (
-        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/types.csv",
-        "type_names",
-        1,
-    ),
-    (
-        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/move_damage_classes.csv",
-        "move_damage_class_names",
-        1,
-    ),
-    (
-        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/abilities.csv",
-        "ability_names",
-        1,
-    ),
-    (
-        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/items.csv",
-        "item_names",
-        1,
-    ),
-    (
-        "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/generations.csv",
-        "generation_names",
-        2,
-    ),
-];
+struct Source<'a> {
+    url: String,
+    file_name: &'a str,
+    index: usize,
+}
+
+impl<'a> Source<'a> {
+    pub fn new(url_file_name: &str, file_name: &'a str) -> Self {
+        Self {
+            url: Self::build_url(url_file_name),
+            file_name,
+            index: 1,
+        }
+    }
+
+    fn build_url(url_file_name: &str) -> String {
+        format!(
+            "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/{url_file_name}"
+        )
+    }
+
+    pub fn index(mut self, index: usize) -> Self {
+        self.index = index;
+        self
+    }
+}
 
 fn main() {
-    for (url, file_name, index) in SOURCES.into_iter() {
-        match fetch_and_replace(url, file_name, index.to_owned()) {
+    let sources = vec![
+        Source::new("pokemon.csv", "pokemon_names"),
+        Source::new("moves.csv", "move_names"),
+        Source::new("types.csv", "type_names"),
+        Source::new("move_damage_classes.csv", "move_damage_class_names"),
+        Source::new("abilities.csv", "ability_names"),
+        Source::new("items.csv", "item_names"),
+        Source::new("generations.csv", "generation_names").index(2),
+    ];
+
+    for source in sources.into_iter() {
+        match fetch_and_replace(source) {
             Ok(_) => (),
             Err(error) => eprintln!("{:?}", error),
         };
     }
 }
 
-fn fetch_and_replace(
-    url: &str,
-    file_name: &str,
-    index: usize,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn fetch_and_replace(source: Source) -> Result<(), Box<dyn std::error::Error>> {
+    let Source {
+        url,
+        file_name,
+        index,
+    } = source;
+
     let response = reqwest::blocking::get(url)?;
     let csv = response.text()?;
     let mut reader = csv::Reader::from_reader(csv.as_bytes());
