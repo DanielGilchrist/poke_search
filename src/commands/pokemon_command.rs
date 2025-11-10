@@ -24,7 +24,7 @@ static STAT_NAMES: &[&str] = &[
     "Speed",
 ];
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct NormalisedEvolutionDetail {
     item: Option<String>,
     trigger: String,
@@ -104,23 +104,25 @@ impl From<&EvolutionDetail> for NormalisedEvolutionDetail {
     }
 }
 
-#[derive(Debug)]
-struct NormalisedEvolutionPokemon {
+#[derive(Debug, Clone)]
+struct NormalisedEvolutionChain {
     name: String,
-    stage: u8,
     evolution_details: Vec<NormalisedEvolutionDetail>,
+    children: Vec<NormalisedEvolutionChain>,
 }
 
-impl NormalisedEvolutionPokemon {
-    fn from(chain: &ChainLink, stage: u8) -> Self {
+impl From<&ChainLink> for NormalisedEvolutionChain {
+    fn from(chain: &ChainLink) -> Self {
+        let children = chain.evolves_to.iter().map(Self::from).collect();
+
         Self {
             name: chain.species.name.clone(),
-            stage,
             evolution_details: chain
                 .evolution_details
                 .iter()
                 .map(NormalisedEvolutionDetail::from)
                 .collect(),
+            children,
         }
     }
 }
@@ -187,9 +189,11 @@ impl PokemonCommand<'_> {
         if self.show_evolution {
             let evolution_chain = self.fetch_evolution_chain(&species).await;
             if let Some(evolution_chain) = evolution_chain {
-                let normalised_evolution_chains = self.normalised_evolution_chains(evolution_chain);
+                let normalised_evolution_chain =
+                    NormalisedEvolutionChain::from(&evolution_chain.chain);
+
                 self.builder.newline();
-                self.build_evolution_output(&pokemon, normalised_evolution_chains);
+                self.build_evolution_output(&pokemon, normalised_evolution_chain);
             };
         }
 
@@ -208,37 +212,6 @@ impl PokemonCommand<'_> {
             self.builder.newline();
             self.builder.appendln(formatter::white("Type information"));
             self.builder.append(type_builder);
-        }
-    }
-
-    fn normalised_evolution_chains(
-        &self,
-        evolution_chain: EvolutionChain,
-    ) -> Vec<NormalisedEvolutionPokemon> {
-        let mut normalised_evolution_pokemon = Vec::new();
-
-        self.extract_and_normalize_chain_links(
-            &evolution_chain.chain,
-            &mut normalised_evolution_pokemon,
-            1,
-        );
-
-        normalised_evolution_pokemon.sort_unstable_by_key(|ep| (ep.stage, ep.name.clone()));
-
-        normalised_evolution_pokemon
-    }
-
-    #[allow(clippy::only_used_in_recursion)]
-    fn extract_and_normalize_chain_links(
-        &self,
-        chain_link: &ChainLink,
-        normalized_links: &mut Vec<NormalisedEvolutionPokemon>,
-        stage: u8,
-    ) {
-        normalized_links.push(NormalisedEvolutionPokemon::from(chain_link, stage));
-        let next_stage = stage + 1;
-        for sub_chain_link in &chain_link.evolves_to {
-            self.extract_and_normalize_chain_links(sub_chain_link, normalized_links, next_stage);
         }
     }
 
@@ -336,71 +309,94 @@ impl PokemonCommand<'_> {
     fn build_evolution_output(
         &mut self,
         pokemon: &Pokemon,
-        evolution_chains: Vec<NormalisedEvolutionPokemon>,
+        evolution_chain: NormalisedEvolutionChain,
     ) {
         self.builder.appendln(formatter::white("Evolution Chain:"));
+        self.build_evolution_tree(pokemon, &evolution_chain, "  ", true, true);
+    }
 
-        let evolution_chains_by_stage = self.group_by_key(evolution_chains, |chain| chain.stage);
+    fn build_evolution_tree(
+        &mut self,
+        pokemon: &Pokemon,
+        chain: &NormalisedEvolutionChain,
+        prefix: &str,
+        is_last: bool,
+        is_root: bool,
+    ) {
+        let tree_char = if is_root {
+            ""
+        } else if is_last {
+            "└─ "
+        } else {
+            "├─ "
+        };
 
-        for (stage, chains) in evolution_chains_by_stage {
-            self.builder
-                .append(formatter::white(&format!("  Stage {stage}:")));
+        self.builder.append(prefix);
+        self.builder.append(tree_char);
 
-            let mut prefix = String::from(" ");
+        let pokemon_name = self.formatted_pokemon_name(pokemon, &chain.name);
+        self.builder.append(pokemon_name);
 
-            if chains.len() > 1 {
-                prefix.push_str("   ");
-                self.builder.newline();
-            }
+        if !chain.evolution_details.is_empty() {
+            let evolution_details_by_trigger = self
+                .group_by_key(chain.evolution_details.clone(), |detail| {
+                    detail.trigger.clone()
+                });
 
-            for chain in chains {
-                let pokemon_name = self.formatted_pokemon_name(pokemon, &chain.name);
-                self.builder.append(&prefix);
-                self.builder.append(pokemon_name);
+            let detail_strings = evolution_details_by_trigger
+                .into_iter()
+                .map(|(trigger, details)| {
+                    let joined_details = details
+                        .iter()
+                        .filter_map(|detail| {
+                            let mut detail_builder = Builder::default();
 
-                let evolution_details = chain.evolution_details;
-                let evolution_details_by_trigger =
-                    self.group_by_key(evolution_details, |detail| detail.trigger.clone());
+                            self.build_detail(&mut detail_builder, detail);
 
-                let detail_strings = evolution_details_by_trigger
-                    .into_iter()
-                    .map(|(trigger, details)| {
-                        let joined_details = details
-                            .iter()
-                            .filter_map(|detail| {
-                                let mut detail_builder = Builder::default();
+                            if detail_builder.is_empty() {
+                                None
+                            } else {
+                                Some(detail_builder.to_string())
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" | ");
 
-                                self.build_detail(&mut detail_builder, detail);
+                    let mut details_builder = Builder::default();
 
-                                if detail_builder.is_empty() {
-                                    None
-                                } else {
-                                    Some(detail_builder.to_string())
-                                }
-                            })
-                            .collect::<Vec<_>>()
-                            .join(" | ");
+                    details_builder.append(" (");
+                    details_builder
+                        .append(formatter::white(&formatter::split_and_capitalise(&trigger)));
 
-                        let mut details_builder = Builder::default();
+                    if !joined_details.is_empty() {
+                        details_builder.append(" - ");
+                    }
 
-                        details_builder.append(" (");
-                        details_builder
-                            .append(formatter::white(&formatter::split_and_capitalise(&trigger)));
+                    details_builder.append(joined_details);
+                    details_builder.append(")");
 
-                        if !joined_details.is_empty() {
-                            details_builder.append(" - ");
-                        }
+                    details_builder.to_string()
+                })
+                .collect::<Vec<_>>();
 
-                        details_builder.append(joined_details);
-                        details_builder.append(")");
+            let joined_details = detail_strings.join(" or");
+            self.builder.append(joined_details);
+        }
 
-                        details_builder.to_string()
-                    })
-                    .collect::<Vec<_>>();
+        self.builder.newline();
 
-                let joined_details = detail_strings.join(" or");
-                self.builder.appendln(joined_details);
-            }
+        let child_count = chain.children.len();
+        for (index, child) in chain.children.iter().enumerate() {
+            let is_last_child = index == child_count - 1;
+            let child_prefix = if is_root {
+                prefix.to_string()
+            } else if is_last {
+                format!("{prefix}   ")
+            } else {
+                format!("{prefix}│  ")
+            };
+
+            self.build_evolution_tree(pokemon, child, &child_prefix, is_last_child, false);
         }
     }
 
