@@ -146,14 +146,20 @@ async fn pokemon_shows_evolution_information() -> Result<(), Box<dyn std::error:
     let cli = parse_args(vec!["pokemon", pokemon_name, "-e"]);
 
     let actual = run(&mock_client, cli).await.to_string();
+    let expected = format!(
+        "{}
+  Charmander
+  └─ Charmeleon ({} - {})
+     └─ {} ({} - {})",
+        fmt::white("Evolution Chain:"),
+        fmt::white("Level Up"),
+        fmt::white("Level 16"),
+        fmt::highlight("Charizard"),
+        fmt::white("Level Up"),
+        fmt::white("Level 36"),
+    );
 
-    assert_contains!(actual, "Evolution Chain:");
-    assert_contains!(actual, "Charmander");
-    assert_contains!(actual, "└─ Charmeleon");
-    assert_contains!(actual, "Level Up");
-    assert_contains!(actual, "Level 16");
-    assert_contains!(actual, "Charizard");
-    assert_contains!(actual, "Level 36");
+    assert_contains!(actual, &expected);
 
     Ok(())
 }
