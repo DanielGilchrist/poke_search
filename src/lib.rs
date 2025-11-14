@@ -67,6 +67,10 @@ pub enum Commands {
     Item {
         #[arg(help = "The name of the item you want to see information for")]
         item: String,
+
+        #[arg(short, long, default_value_t = false)]
+        #[arg(help = "Show verbose item description")]
+        verbose: bool,
     },
 
     #[command(about = "See moves for a pokemon")]
@@ -154,9 +158,9 @@ pub async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
             }
         },
 
-        Commands::Item { item } => {
+        Commands::Item { item, verbose } => {
             let parsed_item_name = parse_name(&item);
-            ItemCommand::execute(client, parsed_item_name).await
+            ItemCommand::execute(client, parsed_item_name, verbose).await
         }
 
         Commands::Moves {

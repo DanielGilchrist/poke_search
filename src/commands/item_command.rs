@@ -11,16 +11,22 @@ pub struct ItemCommand<'a> {
     builder: &'a mut Builder,
     client: &'a dyn ClientImplementation,
     item_name: String,
+    verbose: bool,
 }
 
 impl ItemCommand<'_> {
-    pub async fn execute(client: &dyn ClientImplementation, item_name: String) -> Builder {
+    pub async fn execute(
+        client: &dyn ClientImplementation,
+        item_name: String,
+        verbose: bool,
+    ) -> Builder {
         let mut builder = Builder::default();
 
         ItemCommand {
             builder: &mut builder,
             client,
             item_name,
+            verbose,
         }
         ._execute()
         .await;
@@ -37,8 +43,9 @@ impl ItemCommand<'_> {
             }
         };
 
+        let format_item = FormatItem::new(item).with_verbose(self.verbose);
         self.builder.appendln(formatter::white("Item"));
-        self.builder.append(FormatItem::new(item).format());
+        self.builder.append(format_item.format());
     }
 
     async fn fetch_item(&self) -> Result<Item, String> {
