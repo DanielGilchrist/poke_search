@@ -38,7 +38,7 @@ impl From<Pokemon> for FormattedPokemon {
         let types = pokemon_types
             .into_iter()
             .map(|pokemon_type| pokemon_type.type_.name)
-            .collect::<Vec<_>>();
+            .collect_vec();
 
         Self {
             name: formatted_name,
@@ -181,7 +181,7 @@ impl MoveCommand<'_> {
             .learned_by_pokemon
             .iter()
             .map(|pokemon| pokemon.name.clone())
-            .collect::<Vec<_>>()
+            .collect_vec()
     }
 
     fn corrected_types(&self) -> Option<Vec<String>> {
@@ -189,7 +189,7 @@ impl MoveCommand<'_> {
             type_names
                 .iter()
                 .map(|type_name| self.try_correct_type(type_name))
-                .collect::<Vec<_>>()
+                .collect_vec()
         })
     }
 

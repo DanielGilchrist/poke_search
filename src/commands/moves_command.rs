@@ -142,7 +142,7 @@ impl MovesCommand<'_> {
                         Ok(successful_match) => successful_match.suggested_name,
                         Err(_) => type_name.to_owned(),
                     })
-                    .collect::<Vec<_>>();
+                    .collect_vec();
 
                 processed_moves
                     .into_iter()
@@ -155,7 +155,7 @@ impl MovesCommand<'_> {
                             None
                         }
                     })
-                    .collect::<Vec<_>>()
+                    .collect_vec()
             }
             None => processed_moves,
         };
@@ -170,7 +170,7 @@ impl MovesCommand<'_> {
                             Err(_) => category.to_owned(),
                         },
                     )
-                    .collect::<Vec<_>>();
+                    .collect_vec();
 
                 processed_moves
                     .into_iter()
@@ -183,7 +183,7 @@ impl MovesCommand<'_> {
                             None
                         }
                     })
-                    .collect::<Vec<_>>()
+                    .collect_vec()
             }
             None => processed_moves,
         };

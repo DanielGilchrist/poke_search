@@ -202,7 +202,7 @@ impl PokemonCommand<'_> {
                 .types
                 .into_iter()
                 .map(|t| t.type_.name)
-                .collect::<Vec<_>>();
+                .collect_vec();
 
             let (type1, type2) = (types[0].to_string(), types.get(1).map(ToString::to_string));
 
@@ -272,7 +272,7 @@ impl PokemonCommand<'_> {
             .abilities
             .iter()
             .unique_by(|pokemon_ability| &pokemon_ability.ability.name)
-            .collect::<Vec<_>>();
+            .collect_vec();
 
         let pokemon_ref = &pokemon;
         let client_ref = &self.client;

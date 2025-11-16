@@ -5,6 +5,7 @@ use crate::{
     name_matcher::matcher,
 };
 
+use itertools::Itertools;
 use rustemon::model::pokemon::Ability;
 
 pub struct AbilityCommand<'a> {
@@ -65,7 +66,7 @@ impl AbilityCommand<'_> {
                 .map(|ability_pokemon| {
                     formatter::split_and_capitalise(&ability_pokemon.pokemon.name)
                 })
-                .collect::<Vec<_>>();
+                .collect_vec();
 
             self.builder
                 .append(formatter::format_columns(&pokemon_names, 4));

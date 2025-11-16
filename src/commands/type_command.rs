@@ -176,9 +176,9 @@ impl TypeCommand<'_> {
                     .collect::<HashSet<_>>()
                     .intersection(&second_type_pokemon_names)
                     .cloned()
-                    .collect::<Vec<_>>()
+                    .collect_vec()
             } else {
-                type_pokemon_names.collect::<Vec<_>>()
+                type_pokemon_names.collect_vec()
             }
         };
 
@@ -187,7 +187,7 @@ impl TypeCommand<'_> {
         let formatted_pokemon = pokemon_names
             .iter()
             .map(|pokemon_name| format!("  {}", formatter::split_and_capitalise(pokemon_name)))
-            .collect::<Vec<_>>();
+            .collect_vec();
 
         let num_pokemon = pokemon_names.len();
         let header = formatter::white(&format!("Pokemon ({num_pokemon})"));
@@ -310,7 +310,7 @@ impl TypeCommand<'_> {
                     && !EXCLUDED_TYPES.contains(&type_name.as_str())
             })
             .map(ToOwned::to_owned)
-            .collect::<Vec<_>>()
+            .collect_vec()
     }
 
     fn append_dual_defence_output(&mut self, type_: &Type, second_type: &Type) {
@@ -414,7 +414,7 @@ impl TypeCommand<'_> {
         resources
             .iter()
             .map(|type_resource| type_resource.name.clone())
-            .collect::<Vec<_>>()
+            .collect_vec()
     }
 
     fn append_types_output<I>(
@@ -434,7 +434,7 @@ impl TypeCommand<'_> {
         let header = damage_context.multiplier_header(damage_type);
         self.builder.append(header);
 
-        let mut new_type_names = iter.collect::<Vec<_>>();
+        let mut new_type_names = iter.collect_vec();
         new_type_names.sort();
 
         let mut coloured_types = new_type_names
