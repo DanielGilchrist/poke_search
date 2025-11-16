@@ -25,6 +25,7 @@ impl FormatPokemon {
         self.build_joined_types(output);
         self.build_joined_abilities(output);
         self.build_generation(output);
+        self.build_effort_values(output);
     }
 
     fn build_joined_types(&self, output: &mut String) {
@@ -63,6 +64,34 @@ impl FormatPokemon {
                 &generation_numeral.to_uppercase(),
             ))
         }
+    }
+
+    fn build_effort_values(&self, output: &mut String) {
+        let effort_values = self
+            .pokemon
+            .stats
+            .iter()
+            .filter_map(|pokemon_stat| {
+                if pokemon_stat.effort > 0 {
+                    Some(format!(
+                        "{} +{}",
+                        split_and_capitalise(&pokemon_stat.stat.name),
+                        pokemon_stat.effort
+                    ))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        if effort_values.is_empty() {
+            return;
+        }
+
+        output.push_str(&formatln(
+            &white("Effort Values"),
+            &effort_values.join(" | "),
+        ))
     }
 }
 

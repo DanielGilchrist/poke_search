@@ -62,6 +62,7 @@ async fn pokemon_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::erro
   {}: {fire} | {flying}
   {}: Blaze | Solar Power
   {}: I
+  {}: Special Attack +3
 
 {}
   {}: 78
@@ -83,6 +84,7 @@ async fn pokemon_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::erro
         fmt::white("Type"),
         fmt::white("Abilities"),
         fmt::white("Generation"),
+        fmt::white("Effort Values"),
         fmt::white("Stats"),
         fmt::white("HP"),
         fmt::white("Attack"),
