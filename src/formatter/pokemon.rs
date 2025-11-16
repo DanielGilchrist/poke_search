@@ -34,7 +34,6 @@ impl FormatPokemon {
             .types
             .iter()
             .map(|pokemon_type| type_badge::fetch(&pokemon_type.type_.name))
-            .collect::<Vec<_>>()
             .join(" | ");
 
         output.push_str(&formatln(&white("Type"), &joined_types));
@@ -45,13 +44,10 @@ impl FormatPokemon {
             .pokemon
             .abilities
             .iter()
-            .unique_by(|pokemon_ability| &pokemon_ability.ability.name)
-            .collect::<Vec<_>>();
+            .unique_by(|pokemon_ability| &pokemon_ability.ability.name);
 
         let joined_abilities = unique_abilities
-            .iter()
             .map(|pokemon_ability| split_and_capitalise(&pokemon_ability.ability.name))
-            .collect::<Vec<_>>()
             .join(" | ");
 
         output.push_str(&formatln(&white("Abilities"), &joined_abilities));
@@ -67,26 +63,17 @@ impl FormatPokemon {
     }
 
     fn build_effort_values(&self, output: &mut String) {
-        let effort_values = self
-            .pokemon
-            .stats
-            .iter()
-            .filter_map(|pokemon_stat| {
-                if pokemon_stat.effort > 0 {
-                    Some(format!(
-                        "{} +{}",
-                        split_and_capitalise(&pokemon_stat.stat.name),
-                        pokemon_stat.effort
-                    ))
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-
-        if effort_values.is_empty() {
-            return;
-        }
+        let mut effort_values = self.pokemon.stats.iter().filter_map(|pokemon_stat| {
+            if pokemon_stat.effort > 0 {
+                Some(format!(
+                    "{} +{}",
+                    split_and_capitalise(&pokemon_stat.stat.name),
+                    pokemon_stat.effort
+                ))
+            } else {
+                None
+            }
+        });
 
         output.push_str(&formatln(
             &white("Effort Values"),

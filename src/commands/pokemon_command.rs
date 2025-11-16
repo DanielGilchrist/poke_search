@@ -342,41 +342,40 @@ impl PokemonCommand<'_> {
                     detail.trigger.clone()
                 });
 
-            let detail_strings = evolution_details_by_trigger
-                .into_iter()
-                .map(|(trigger, details)| {
-                    let joined_details = details
-                        .iter()
-                        .filter_map(|detail| {
-                            let mut detail_builder = Builder::default();
+            let mut detail_strings =
+                evolution_details_by_trigger
+                    .into_iter()
+                    .map(|(trigger, details)| {
+                        let joined_details = details
+                            .iter()
+                            .filter_map(|detail| {
+                                let mut detail_builder = Builder::default();
 
-                            self.build_detail(&mut detail_builder, detail);
+                                self.build_detail(&mut detail_builder, detail);
 
-                            if detail_builder.is_empty() {
-                                None
-                            } else {
-                                Some(detail_builder.to_string())
-                            }
-                        })
-                        .collect::<Vec<_>>()
-                        .join(" | ");
+                                if detail_builder.is_empty() {
+                                    None
+                                } else {
+                                    Some(detail_builder.to_string())
+                                }
+                            })
+                            .join(" | ");
 
-                    let mut details_builder = Builder::default();
+                        let mut details_builder = Builder::default();
 
-                    details_builder.append(" (");
-                    details_builder
-                        .append(formatter::white(&formatter::split_and_capitalise(&trigger)));
+                        details_builder.append(" (");
+                        details_builder
+                            .append(formatter::white(&formatter::split_and_capitalise(&trigger)));
 
-                    if !joined_details.is_empty() {
-                        details_builder.append(" - ");
-                    }
+                        if !joined_details.is_empty() {
+                            details_builder.append(" - ");
+                        }
 
-                    details_builder.append(joined_details);
-                    details_builder.append(")");
+                        details_builder.append(joined_details);
+                        details_builder.append(")");
 
-                    details_builder.to_string()
-                })
-                .collect::<Vec<_>>();
+                        details_builder.to_string()
+                    });
 
             let joined_details = detail_strings.join(" or");
             self.builder.append(joined_details);

@@ -1,4 +1,5 @@
 use colored::{ColoredString, Colorize};
+use itertools::Itertools;
 use rustemon::model::resource::VerboseEffect;
 use unicode_width::UnicodeWidthStr;
 
@@ -15,7 +16,7 @@ pub fn highlight(s: &str) -> String {
 }
 
 pub(crate) fn split_and_capitalise(s: &str) -> String {
-    s.split('-').map(capitalise).collect::<Vec<_>>().join(" ")
+    s.split('-').map(capitalise).join(" ")
 }
 
 pub(crate) fn format_columns(items: &[String], num_columns: usize) -> String {

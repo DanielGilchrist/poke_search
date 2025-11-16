@@ -1,7 +1,8 @@
 use crate::{name_matcher::matcher, roman_numeral::integer_to_roman};
+use itertools::Itertools;
 
 pub fn parse_name(name: &str) -> String {
-    name.to_lowercase().split(' ').collect::<Vec<_>>().join("-")
+    name.to_lowercase().split(' ').join("-")
 }
 
 pub fn parse_generation(generation_name: &str) -> Result<String, String> {

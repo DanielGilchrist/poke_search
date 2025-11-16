@@ -6,6 +6,7 @@ use crate::{
     name_matcher::matcher,
 };
 
+use itertools::Itertools;
 use rustemon::model::pokemon::{Pokemon, PokemonMove};
 
 use futures::{StreamExt, stream};
@@ -64,7 +65,6 @@ impl MovesCommand<'_> {
                     type_names
                         .iter()
                         .map(|t| formatter::capitalise(t))
-                        .collect::<Vec<_>>()
                         .join(" or ")
                 );
 

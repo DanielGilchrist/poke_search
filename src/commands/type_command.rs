@@ -8,6 +8,7 @@ use crate::{
 
 use std::collections::{HashMap, HashSet};
 
+use itertools::Itertools;
 use rustemon::model::{pokemon::Type, resource::NamedApiResource};
 
 const EXCLUDED_TYPES: &[&str] = &["unknown", "shadow"];
@@ -436,10 +437,9 @@ impl TypeCommand<'_> {
         let mut new_type_names = iter.collect::<Vec<_>>();
         new_type_names.sort();
 
-        let coloured_types = new_type_names
+        let mut coloured_types = new_type_names
             .iter()
-            .map(|type_name| type_badge::fetch(type_name))
-            .collect::<Vec<_>>();
+            .map(|type_name| type_badge::fetch(type_name));
 
         self.builder
             .appendln(format!("  {}", coloured_types.join(" | ")));
