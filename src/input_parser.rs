@@ -23,7 +23,7 @@ pub fn parse_generation(generation_name: &str) -> Result<String, String> {
 
     let generation_id = format!("generation-{}", roman);
 
-    if matcher::is_valid(&generation_id, matcher::MatcherType::Generation) {
+    if matcher::is_valid_generation(&generation_id) {
         Ok(generation_id)
     } else {
         Err(format!(

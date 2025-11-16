@@ -13,7 +13,7 @@ use ngrammatic::{Corpus, CorpusBuilder, Pad, SearchResult};
 
 static MIN_CERTAIN_SIMILARITY: f32 = 0.71;
 
-pub enum MatcherType {
+enum MatcherType {
     Ability,
     Generation,
     Item,
@@ -106,7 +106,47 @@ impl NameMatcher {
     }
 }
 
-pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, NoMatch> {
+pub fn match_ability_name(name: &str) -> Result<SuccessfulMatch, NoMatch> {
+    match_name(name, MatcherType::Ability)
+}
+
+pub fn match_generation_name(name: &str) -> Result<SuccessfulMatch, NoMatch> {
+    match_name(name, MatcherType::Generation)
+}
+
+pub fn match_item_name(name: &str) -> Result<SuccessfulMatch, NoMatch> {
+    match_name(name, MatcherType::Item)
+}
+
+pub fn match_move_name(name: &str) -> Result<SuccessfulMatch, NoMatch> {
+    match_name(name, MatcherType::Move)
+}
+
+pub fn match_move_damage_category_name(name: &str) -> Result<SuccessfulMatch, NoMatch> {
+    match_name(name, MatcherType::MoveDamageCategory)
+}
+
+pub fn match_pokemon_name(name: &str) -> Result<SuccessfulMatch, NoMatch> {
+    match_name(name, MatcherType::Pokemon)
+}
+
+pub fn match_type_name(name: &str) -> Result<SuccessfulMatch, NoMatch> {
+    match_name(name, MatcherType::Type)
+}
+
+pub fn build_suggested_name(keyword: &str, name: &str, suggestion: &str) -> String {
+    format!("Unknown {keyword} \"{name}\"\nDid you mean \"{suggestion}\"?")
+}
+
+pub fn build_unknown_name(keyword: &str, name: &str) -> String {
+    format!("{} \"{}\" doesn't exist", capitalise(keyword), name)
+}
+
+pub fn is_valid_generation(name: &str) -> bool {
+    is_valid(name, MatcherType::Generation)
+}
+
+fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, NoMatch> {
     let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
 
     if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
@@ -128,17 +168,9 @@ pub fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMat
     }
 }
 
-pub fn is_valid(name: &str, matcher_type: MatcherType) -> bool {
+fn is_valid(name: &str, matcher_type: MatcherType) -> bool {
     let (name_matcher, _) = matcher_and_keyword(matcher_type);
     name_is_already_valid(&name_matcher.names, &name.to_owned())
-}
-
-pub fn build_suggested_name(keyword: &str, name: &str, suggestion: &str) -> String {
-    format!("Unknown {keyword} \"{name}\"\nDid you mean \"{suggestion}\"?")
-}
-
-pub fn build_unknown_name(keyword: &str, name: &str) -> String {
-    format!("{} \"{}\" doesn't exist", capitalise(keyword), name)
 }
 
 fn name_is_already_valid(names: &[String], item: &String) -> bool {

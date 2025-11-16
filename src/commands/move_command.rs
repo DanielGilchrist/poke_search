@@ -102,10 +102,7 @@ impl MoveCommand<'_> {
 
     async fn fetch_move(&self) -> Result<Move, String> {
         let successful_match =
-            match matcher::match_name(&self.move_name, matcher::MatcherType::Move) {
-                Ok(successful_match) => Ok(successful_match),
-                Err(no_match) => Err(no_match.0),
-            }?;
+            matcher::match_move_name(&self.move_name).map_err(|no_match| no_match.0)?;
 
         let result = self
             .client
@@ -197,7 +194,7 @@ impl MoveCommand<'_> {
     }
 
     fn try_correct_type(&self, type_name: &str) -> String {
-        match matcher::match_name(type_name, matcher::MatcherType::Type) {
+        match matcher::match_type_name(type_name) {
             Ok(successful_match) => successful_match.suggested_name,
             Err(_) => type_name.to_owned(),
         }

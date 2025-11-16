@@ -84,10 +84,7 @@ impl MovesCommand<'_> {
 
     async fn fetch_pokemon(&self) -> Result<Pokemon, String> {
         let successful_match =
-            match matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon) {
-                Ok(successful_match) => Ok(successful_match),
-                Err(no_match) => Err(no_match.0),
-            }?;
+            matcher::match_pokemon_name(&self.pokemon_name).map_err(|no_match| no_match.0)?;
 
         let result = self
             .client
@@ -141,11 +138,9 @@ impl MovesCommand<'_> {
             Some(type_names) => {
                 let corrected_type_names = type_names
                     .iter()
-                    .map(|type_name| {
-                        match matcher::match_name(type_name, matcher::MatcherType::Type) {
-                            Ok(successful_match) => successful_match.suggested_name,
-                            Err(_) => type_name.to_owned(),
-                        }
+                    .map(|type_name| match matcher::match_type_name(type_name) {
+                        Ok(successful_match) => successful_match.suggested_name,
+                        Err(_) => type_name.to_owned(),
                     })
                     .collect::<Vec<_>>();
 
@@ -169,15 +164,12 @@ impl MovesCommand<'_> {
             Some(categories) => {
                 let corrected_categories = categories
                     .iter()
-                    .map(|category| {
-                        match matcher::match_name(
-                            category,
-                            matcher::MatcherType::MoveDamageCategory,
-                        ) {
+                    .map(
+                        |category| match matcher::match_move_damage_category_name(category) {
                             Ok(successful_match) => successful_match.suggested_name,
                             Err(_) => category.to_owned(),
-                        }
-                    })
+                        },
+                    )
                     .collect::<Vec<_>>();
 
                 processed_moves

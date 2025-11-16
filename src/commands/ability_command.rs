@@ -74,10 +74,7 @@ impl AbilityCommand<'_> {
 
     async fn fetch_ability(&self) -> Result<Ability, String> {
         let successful_match =
-            match matcher::match_name(&self.ability_name, matcher::MatcherType::Ability) {
-                Ok(successful_match) => Ok(successful_match),
-                Err(no_match) => Err(no_match.0),
-            }?;
+            matcher::match_ability_name(&self.ability_name).map_err(|no_match| no_match.0)?;
 
         let result = self
             .client

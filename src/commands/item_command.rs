@@ -50,10 +50,7 @@ impl ItemCommand<'_> {
 
     async fn fetch_item(&self) -> Result<Item, String> {
         let successful_match =
-            match matcher::match_name(&self.item_name, matcher::MatcherType::Item) {
-                Ok(successful_match) => Ok(successful_match),
-                Err(no_match) => Err(no_match.0),
-            }?;
+            matcher::match_item_name(&self.item_name).map_err(|no_match| no_match.0)?;
 
         let result = self
             .client

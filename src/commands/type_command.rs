@@ -138,7 +138,7 @@ impl TypeCommand<'_> {
     }
 
     async fn fetch_type(&self, name: &str) -> Result<Type, String> {
-        let successful_match = match matcher::match_name(name, matcher::MatcherType::Type) {
+        let successful_match = match matcher::match_type_name(name) {
             Ok(successful_match) => successful_match,
             Err(no_match) => {
                 return Err(no_match.0);

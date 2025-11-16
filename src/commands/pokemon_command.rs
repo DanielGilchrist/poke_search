@@ -217,8 +217,7 @@ impl PokemonCommand<'_> {
 
     async fn fetch_pokemon(&self) -> Result<Pokemon, String> {
         let successful_match =
-            matcher::match_name(&self.pokemon_name, matcher::MatcherType::Pokemon)
-                .map_err(|no_match| no_match.0)?;
+            matcher::match_pokemon_name(&self.pokemon_name).map_err(|no_match| no_match.0)?;
 
         self.client
             .fetch_pokemon(&successful_match.suggested_name)
