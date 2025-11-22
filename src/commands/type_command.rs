@@ -202,10 +202,7 @@ impl TypeCommand<'_> {
         }
     }
 
-    fn pokemon_names_from_type<'a>(
-        &self,
-        type_: &'a Type,
-    ) -> impl Iterator<Item = String> + 'a + use<'a> {
+    fn pokemon_names_from_type(&self, type_: &Type) -> impl Iterator<Item = String> {
         type_
             .pokemon
             .iter()
@@ -417,24 +414,23 @@ impl TypeCommand<'_> {
             .collect_vec()
     }
 
-    fn append_types_output<I>(
+    fn append_types_output<'a, I>(
         &mut self,
         damage_context: &DamageContext,
         damage_type: DamageType,
-        type_names: &I,
+        type_names: I,
     ) where
-        for<'a> &'a I: IntoIterator<Item = &'a String>,
+        I: IntoIterator<Item = &'a String>,
     {
-        let mut iter = type_names.into_iter().peekable();
+        let mut new_type_names: Vec<_> = type_names.into_iter().cloned().collect();
 
-        if iter.peek().is_none() {
+        if new_type_names.is_empty() {
             return;
         }
 
         let header = damage_context.multiplier_header(damage_type);
         self.builder.append(header);
 
-        let mut new_type_names = iter.collect_vec();
         new_type_names.sort();
 
         let mut coloured_types = new_type_names
