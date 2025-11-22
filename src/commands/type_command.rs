@@ -422,20 +422,16 @@ impl TypeCommand<'_> {
     ) where
         I: IntoIterator<Item = &'a String>,
     {
-        let mut new_type_names: Vec<_> = type_names.into_iter().cloned().collect();
+        let mut iter = type_names.into_iter().peekable();
 
-        if new_type_names.is_empty() {
+        if iter.peek().is_none() {
             return;
         }
 
         let header = damage_context.multiplier_header(damage_type);
         self.builder.append(header);
 
-        new_type_names.sort();
-
-        let mut coloured_types = new_type_names
-            .iter()
-            .map(|type_name| type_badge::fetch(type_name));
+        let mut coloured_types = iter.sorted().map(|type_name| type_badge::fetch(type_name));
 
         self.builder
             .appendln(format!("  {}", coloured_types.join(" | ")));
