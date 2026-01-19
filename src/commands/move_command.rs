@@ -160,7 +160,8 @@ impl MoveCommand<'_> {
                 let type_str = pokemon.formatted_type();
                 let plain_type = pokemon.types.join(" | ");
                 let type_visual_width = UnicodeWidthStr::width(plain_type.as_str());
-                let padding = " ".repeat(column_width - type_visual_width);
+                let padding_amount = column_width.saturating_sub(type_visual_width);
+                let padding = " ".repeat(padding_amount);
                 learned_by_output.push_str("  ");
                 learned_by_output.push_str(&type_str);
                 learned_by_output.push_str(&padding);
