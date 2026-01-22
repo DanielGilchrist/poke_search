@@ -57,11 +57,11 @@ impl FormatGeneration {
         )));
         output.push('\n');
 
-        let mut pokemon_species = generation.pokemon_species.clone();
-        pokemon_species.sort_by_key(|p| p.name.clone());
+        let mut pokemon_species = generation.pokemon_species.iter().collect::<Vec<_>>();
+        pokemon_species.sort_by_key(|p| &p.name);
 
         let pokemon_names: Vec<String> = pokemon_species
-            .iter()
+            .into_iter()
             .map(|species| formatter::split_and_capitalise(&species.name))
             .collect();
 
