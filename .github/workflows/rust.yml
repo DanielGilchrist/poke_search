@@ -35,7 +35,7 @@ jobs:
 
     - name: Toolchain
       run: |
-        rustup default 1.90.0
+        rustup default 1.93.0
         rustup component add clippy
         rustup component add rustfmt
 

@@ -9,7 +9,7 @@ use crate::{
 
 use std::sync::LazyLock;
 
-use ngrammatic::{Corpus, CorpusBuilder, Pad, SearchResult};
+use ngrammatic::{Corpus, CorpusBuilder, IdentityKeyTransformer, Pad, SearchResult};
 
 static MIN_CERTAIN_SIMILARITY: f32 = 0.71;
 
@@ -86,7 +86,7 @@ impl NameMatcher {
 
     fn find_match(&self, name: &str) -> Option<Suggestion> {
         let corpus = self.build_corpus();
-        let search_results = corpus.search(name, 0.25);
+        let search_results = corpus.search(name, 0.25, 1);
 
         #[cfg(debug_assertions)]
         println!("\n[DEBUG] Similar Results: {search_results:?}\n");
@@ -97,8 +97,8 @@ impl NameMatcher {
         Some(Suggestion::new(search_result.text, certainty))
     }
 
-    fn build_corpus(&self) -> Corpus {
-        CorpusBuilder::new()
+    fn build_corpus(&self) -> Corpus<IdentityKeyTransformer> {
+        CorpusBuilder::default()
             .arity(2)
             .pad_full(Pad::Auto)
             .fill(&self.names)

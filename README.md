@@ -2,7 +2,7 @@
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/5a2d16f6-f1a1-40dc-8a86-84eb3fd2081d">
 
 # Installation
-You will need Rust 1.90.0 installed. I recommend using [`rustup`](https://rustup.rs/)
+You will need Rust 1.93.0 installed. I recommend using [`rustup`](https://rustup.rs/)
 ```sh
 # From the rustup.rs website
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -10,7 +10,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 And then run
 ```sh
-rustup default 1.90.0
+rustup default 1.93.0
 ```
 
 Then
