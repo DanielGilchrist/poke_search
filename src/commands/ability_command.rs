@@ -55,14 +55,16 @@ impl AbilityCommand<'_> {
         if self.show_pokemon {
             self.builder.newline();
 
-            let mut pokemon = ability.pokemon;
-            pokemon.sort_by_key(|p| p.pokemon.name.clone());
+            let mut ability_pokemon_vec = ability.pokemon;
+            ability_pokemon_vec.sort_by(|a, b| a.pokemon.name.cmp(&b.pokemon.name));
 
-            self.builder
-                .appendln(formatter::white(&format!("Pokemon ({})", pokemon.len())));
+            self.builder.appendln(formatter::white(&format!(
+                "Pokemon ({})",
+                ability_pokemon_vec.len()
+            )));
 
-            let pokemon_names = pokemon
-                .iter()
+            let pokemon_names = ability_pokemon_vec
+                .into_iter()
                 .map(|ability_pokemon| {
                     formatter::split_and_capitalise(&ability_pokemon.pokemon.name)
                 })

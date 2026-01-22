@@ -149,7 +149,7 @@ pub fn is_valid_generation(name: &str) -> bool {
 fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, NoMatch> {
     let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
 
-    if name_is_already_valid(&name_matcher.names, &name.to_owned()) {
+    if name_is_already_valid(&name_matcher.names, name) {
         let suggestion = Suggestion::certain(name.to_owned());
         return Ok(SuccessfulMatch::new(keyword, suggestion));
     }
@@ -170,11 +170,13 @@ fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, 
 
 fn is_valid(name: &str, matcher_type: MatcherType) -> bool {
     let (name_matcher, _) = matcher_and_keyword(matcher_type);
-    name_is_already_valid(&name_matcher.names, &name.to_owned())
+    name_is_already_valid(&name_matcher.names, name)
 }
 
-fn name_is_already_valid(names: &[String], item: &String) -> bool {
-    names.binary_search(item).is_ok()
+fn name_is_already_valid(names: &[String], item: &str) -> bool {
+    names
+        .binary_search_by(|name| name.as_str().cmp(item))
+        .is_ok()
 }
 
 fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
