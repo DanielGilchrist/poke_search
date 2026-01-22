@@ -75,12 +75,12 @@ impl Suggestion {
     }
 }
 
-struct NameMatcher {
-    names: Vec<String>,
+struct NameMatcher<'a> {
+    names: &'a LazyLock<Vec<String>>,
 }
 
-impl NameMatcher {
-    fn new(names: Vec<String>) -> Self {
+impl<'a> NameMatcher<'a> {
+    fn new(names: &'a LazyLock<Vec<String>>) -> Self {
         NameMatcher { names }
     }
 
@@ -101,7 +101,7 @@ impl NameMatcher {
         CorpusBuilder::default()
             .arity(2)
             .pad_full(Pad::Auto)
-            .fill(&self.names)
+            .fill(self.names.iter())
             .finish()
     }
 }
@@ -149,7 +149,7 @@ pub fn is_valid_generation(name: &str) -> bool {
 fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, NoMatch> {
     let (name_matcher, keyword) = matcher_and_keyword(matcher_type);
 
-    if name_is_already_valid(&name_matcher.names, name) {
+    if name_is_already_valid(name_matcher.names, name) {
         let suggestion = Suggestion::certain(name.to_owned());
         return Ok(SuccessfulMatch::new(keyword, suggestion));
     }
@@ -170,7 +170,7 @@ fn match_name(name: &str, matcher_type: MatcherType) -> Result<SuccessfulMatch, 
 
 fn is_valid(name: &str, matcher_type: MatcherType) -> bool {
     let (name_matcher, _) = matcher_and_keyword(matcher_type);
-    name_is_already_valid(&name_matcher.names, name)
+    name_is_already_valid(name_matcher.names, name)
 }
 
 fn name_is_already_valid(names: &[String], item: &str) -> bool {
@@ -179,7 +179,7 @@ fn name_is_already_valid(names: &[String], item: &str) -> bool {
         .is_ok()
 }
 
-fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
+fn matcher_and_keyword<'a>(matcher_type: MatcherType) -> (NameMatcher<'a>, String) {
     let (names, keyword) = match matcher_type {
         MatcherType::Ability => (&ABILITY_NAMES, "ability"),
         MatcherType::Generation => (&GENERATION_NAMES, "generation"),
@@ -190,8 +190,5 @@ fn matcher_and_keyword(matcher_type: MatcherType) -> (NameMatcher, String) {
         MatcherType::Type => (&TYPE_NAMES, "type"),
     };
 
-    (
-        NameMatcher::new(LazyLock::force(names).to_owned()),
-        String::from(keyword),
-    )
+    (NameMatcher::new(names), String::from(keyword))
 }
