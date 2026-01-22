@@ -71,7 +71,7 @@ fn fetch_and_replace(source: Source) -> Result<(), Box<dyn std::error::Error>> {
     let mut names = reader
         .records()
         .map(|record| record.unwrap()[index].to_string())
-        .collect_vec();
+        .collect::<Vec<_>>();
 
     // This is important as we rely on binary search if we need to find a name in the vector in name_matcher::matcher.
     names.sort();
@@ -79,7 +79,7 @@ fn fetch_and_replace(source: Source) -> Result<(), Box<dyn std::error::Error>> {
     let joined_names = names
         .into_iter()
         .map(|name| format!("        String::from(\"{name}\"),"))
-        .collect_vec()
+        .collect::<Vec<_>>()
         .join("\n");
 
     let file_name_constant_string = file_name.to_string().to_uppercase();
