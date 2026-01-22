@@ -10,6 +10,7 @@ use std::collections::{HashMap, HashSet};
 
 use itertools::Itertools;
 use rustemon::model::{pokemon::Type, resource::NamedApiResource};
+use tokio::try_join;
 
 const EXCLUDED_TYPES: &[&str] = &["unknown", "shadow"];
 
@@ -109,23 +110,12 @@ impl TypeCommand<'_> {
     }
 
     async fn _execute(&mut self) {
-        let type_ = match self.fetch_type(&self.type_name).await {
-            Ok(type_) => type_,
+        let (type_, second_type) = match self.fetch_types().await {
+            Ok(types) => types,
             Err(error_message) => {
                 self.builder.append(error_message);
                 return;
             }
-        };
-
-        let second_type = match &self.second_type_name {
-            Some(second_type_name) => match self.fetch_type(second_type_name).await {
-                Ok(type_) => Some(type_),
-                Err(error_message) => {
-                    self.builder.append(error_message);
-                    return;
-                }
-            },
-            None => None,
         };
 
         match second_type {
@@ -136,6 +126,22 @@ impl TypeCommand<'_> {
         if self.list_pokemon {
             self.append_pokemon_list(&type_, second_type.as_ref());
         }
+    }
+
+    async fn fetch_types(&self) -> Result<(Type, Option<Type>), String> {
+        let types = match &self.second_type_name {
+            Some(second_type_name) => {
+                let (t1, t2) = try_join!(
+                    self.fetch_type(&self.type_name),
+                    self.fetch_type(second_type_name)
+                )?;
+
+                (t1, Some(t2))
+            }
+            None => (self.fetch_type(&self.type_name).await?, None),
+        };
+
+        Ok(types)
     }
 
     async fn fetch_type(&self, name: &str) -> Result<Type, String> {
