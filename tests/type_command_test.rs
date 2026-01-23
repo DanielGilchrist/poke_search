@@ -148,6 +148,49 @@ async fn pokemon_dual_type_uncertain_suggestion() -> Result<(), Box<dyn std::err
 }
 
 #[tokio::test]
+async fn dual_type_same_type_only_shows_once() -> Result<(), Box<dyn std::error::Error>> {
+    let type_name = "fire";
+
+    let mut mock_client = MockClientImplementation::new();
+
+    mock_client
+        .expect_fetch_type()
+        .with(mockall::predicate::eq(type_name))
+        .once()
+        .returning(|_args| Ok(static_resources::get_type()));
+
+    let cli = parse_args(vec!["type", type_name, "-s", type_name]);
+    let output = run(&mock_client, cli).await.to_string();
+    let first_line = output.lines().next().unwrap();
+
+    assert_eq!(type_badge::fetch(type_name), first_line);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn dual_type_same_type_only_shows_once_corrected() -> Result<(), Box<dyn std::error::Error>> {
+    let type_name = "fire";
+    let second_type_name = "fires";
+
+    let mut mock_client = MockClientImplementation::new();
+
+    mock_client
+        .expect_fetch_type()
+        .with(mockall::predicate::eq(type_name))
+        .once()
+        .returning(|_args| Ok(static_resources::get_type()));
+
+    let cli = parse_args(vec!["type", type_name, "-s", second_type_name]);
+    let output = run(&mock_client, cli).await.to_string();
+    let first_line = output.lines().next().unwrap();
+
+    assert_eq!(type_badge::fetch(type_name), first_line);
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn lists_pokemon_in_columns() -> Result<(), Box<dyn std::error::Error>> {
     let name = "fire";
 
