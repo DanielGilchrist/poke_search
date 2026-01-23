@@ -8,7 +8,7 @@ use rustemon::static_resources;
 use utils::parse_args;
 
 #[tokio::test]
-async fn pokemon_single_type_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
+async fn single_type_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
     let incorrect_name = "lkjfsldfjsdkll";
 
     let mock_client = MockClientImplementation::new();
@@ -22,8 +22,7 @@ async fn pokemon_single_type_cant_be_found() -> Result<(), Box<dyn std::error::E
 }
 
 #[tokio::test]
-async fn pokemon_single_type_autocorrect_if_similar_enough()
--> Result<(), Box<dyn std::error::Error>> {
+async fn single_type_autocorrect_if_similar_enough() -> Result<(), Box<dyn std::error::Error>> {
     let almost_correct_name = "firre";
     let correct_name = "fire";
 
@@ -87,7 +86,7 @@ async fn pokemon_single_type_autocorrect_if_similar_enough()
 }
 
 #[tokio::test]
-async fn pokemon_single_type_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
+async fn single_type_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
     let correct_name = "dragon";
     let incorrect_name = "drahgna";
 
@@ -102,7 +101,7 @@ async fn pokemon_single_type_uncertain_suggestion() -> Result<(), Box<dyn std::e
 }
 
 #[tokio::test]
-async fn pokemon_dual_type_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
+async fn dual_type_cant_be_found() -> Result<(), Box<dyn std::error::Error>> {
     let correct_name = "water";
     let incorrect_name = "ljflkdsfjslkj";
 
@@ -122,7 +121,7 @@ async fn pokemon_dual_type_cant_be_found() -> Result<(), Box<dyn std::error::Err
 }
 
 #[tokio::test]
-async fn pokemon_dual_type_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
+async fn dual_type_uncertain_suggestion() -> Result<(), Box<dyn std::error::Error>> {
     let correct_name = "water";
     let incorrect_name = "sychick";
 
@@ -183,7 +182,7 @@ async fn dual_type_same_type_only_shows_once_corrected() -> Result<(), Box<dyn s
 }
 
 #[tokio::test]
-async fn lists_pokemon_in_columns() -> Result<(), Box<dyn std::error::Error>> {
+async fn lists_in_columns() -> Result<(), Box<dyn std::error::Error>> {
     let name = "fire";
 
     let mut mock_client = MockClientImplementation::new();
