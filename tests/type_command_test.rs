@@ -110,11 +110,7 @@ async fn pokemon_dual_type_cant_be_found() -> Result<(), Box<dyn std::error::Err
     let mut mock_type = static_resources::get_type();
     mock_type.name = String::from(correct_name);
 
-    mock_client
-        .expect_fetch_type()
-        .with(mockall::predicate::eq(correct_name))
-        .once()
-        .returning(move |_args| Ok(mock_type.clone()));
+    mock_client.expect_fetch_type().never();
 
     let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
     let expected = matcher::build_unknown_name("type", incorrect_name);
@@ -132,11 +128,7 @@ async fn pokemon_dual_type_uncertain_suggestion() -> Result<(), Box<dyn std::err
 
     let mut mock_client = MockClientImplementation::new();
 
-    mock_client
-        .expect_fetch_type()
-        .with(mockall::predicate::eq(correct_name))
-        .once()
-        .returning(|_args| Ok(static_resources::get_type()));
+    mock_client.expect_fetch_type().never();
 
     let cli = parse_args(vec!["type", correct_name, "-s", incorrect_name]);
     let expected = matcher::build_suggested_name("type", incorrect_name, "psychic");
