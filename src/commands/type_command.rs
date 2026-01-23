@@ -2,6 +2,7 @@ use crate::{
     builder::Builder,
     client::ClientImplementation,
     formatter::{self},
+    matcher::SuccessfulMatch,
     name_matcher::{matcher, type_names},
     type_badge::{self},
 };
@@ -129,44 +130,51 @@ impl TypeCommand<'_> {
     }
 
     async fn fetch_types(&self) -> Result<(Type, Option<Type>), String> {
-        let types = match &self.second_type_name {
-            Some(second_type_name) => {
+        let corrected_type = self.correct_type_name(&self.type_name)?;
+        let corrected_second_type = self
+            .second_type_name
+            .as_ref()
+            .map(|n| self.correct_type_name(n))
+            .transpose()?;
+
+        if let Some(corrected_second_type) = &corrected_second_type
+            && corrected_second_type.suggested_name == corrected_type.suggested_name
+        {
+            return Ok((self.fetch_type(&corrected_type).await?, None));
+        }
+
+        let types = match corrected_second_type {
+            Some(corrected_second_type) => {
                 let (t1, t2) = try_join!(
-                    self.fetch_type(&self.type_name),
-                    self.fetch_type(second_type_name)
+                    self.fetch_type(&corrected_type),
+                    self.fetch_type(&corrected_second_type)
                 )?;
 
                 (t1, Some(t2))
             }
-            None => (self.fetch_type(&self.type_name).await?, None),
+            None => (self.fetch_type(&corrected_type).await?, None),
         };
 
         Ok(types)
     }
 
-    async fn fetch_type(&self, name: &str) -> Result<Type, String> {
-        let successful_match = match matcher::match_type_name(name) {
-            Ok(successful_match) => successful_match,
-            Err(no_match) => {
-                return Err(no_match.0);
-            }
-        };
-
-        let result = self
-            .client
-            .fetch_type(&successful_match.suggested_name)
-            .await;
+    async fn fetch_type(&self, matched_name: &SuccessfulMatch) -> Result<Type, String> {
+        let result = self.client.fetch_type(&matched_name.suggested_name).await;
 
         match result {
             Ok(type_) => Ok(type_),
             Err(_) => {
                 let output = matcher::build_unknown_name(
-                    &successful_match.keyword,
-                    &successful_match.suggested_name,
+                    &matched_name.keyword,
+                    &matched_name.suggested_name,
                 );
                 Err(output)
             }
         }
+    }
+
+    fn correct_type_name(&self, name: &str) -> Result<SuccessfulMatch, String> {
+        matcher::match_type_name(name).map_err(|no_match| no_match.0)
     }
 
     fn append_pokemon_list(&mut self, type_: &Type, second_type: Option<&Type>) {
