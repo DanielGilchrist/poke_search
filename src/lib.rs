@@ -45,7 +45,10 @@ pub enum Commands {
         verbose: bool,
     },
 
-    #[command(about = "Information about a particular generation of pokemon")]
+    #[command(
+        alias = "gen",
+        about = "Information about a particular generation of pokemon"
+    )]
     Generation {
         #[arg(help = "The generation you want to see information for")]
         generation: String,
