@@ -268,19 +268,20 @@ impl PokemonCommand<'_> {
     async fn build_ability_output(&mut self, pokemon: &Rc<Pokemon>) {
         self.builder.appendln(formatter::white("Abilities"));
 
-        let unique_pokemon_abilities = pokemon
+        let unique_abilities = pokemon
             .abilities
             .iter()
-            .unique_by(|pokemon_ability| &pokemon_ability.ability.name)
+            .filter_map(|pokemon_ability| pokemon_ability.ability.as_ref())
+            .unique_by(|ability| &ability.name)
             .collect_vec();
 
         let pokemon_ref = &pokemon;
         let client_ref = &self.client;
 
-        stream::iter(&unique_pokemon_abilities)
+        stream::iter(unique_abilities)
             .map(|a| async move {
                 // TODO: Gracefully filter out failed requests for an ability
-                let ability = client_ref.fetch_ability(&a.ability.name).await.unwrap();
+                let ability = client_ref.fetch_ability(&a.name).await.unwrap();
                 FormatAbility::new(ability).with_pokemon(Rc::clone(pokemon_ref))
             })
             .buffer_unordered(2)

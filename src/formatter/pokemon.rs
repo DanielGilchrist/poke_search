@@ -44,10 +44,11 @@ impl FormatPokemon {
             .pokemon
             .abilities
             .iter()
-            .unique_by(|pokemon_ability| &pokemon_ability.ability.name);
+            .filter_map(|pokemon_ability| pokemon_ability.ability.as_ref())
+            .unique_by(|ability| &ability.name);
 
         let joined_abilities = unique_abilities
-            .map(|pokemon_ability| split_and_capitalise(&pokemon_ability.ability.name))
+            .map(|ability| split_and_capitalise(&ability.name))
             .join(" | ");
 
         output.push_str(&formatln(&white("Abilities"), &joined_abilities));
