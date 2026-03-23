@@ -154,11 +154,7 @@ pub async fn run(client: &dyn ClientImplementation, cli: Cli) -> Builder {
                 GenerationCommand::execute(client, parsed_generation, pokemon, abilities, moves)
                     .await
             }
-            Err(error_message) => {
-                let mut builder = Builder::default();
-                builder.appendln(&error_message);
-                builder
-            }
+            Err(error_message) => Builder::from(error_message),
         },
 
         Commands::Item { item, verbose } => {

@@ -35,6 +35,14 @@ impl Builder {
     }
 }
 
+impl From<String> for Builder {
+    fn from(item: String) -> Builder {
+        let mut builder = Builder::default();
+        builder.appendln(item);
+        builder
+    }
+}
+
 impl Default for Builder {
     fn default() -> Self {
         Self::new(DEFAULT_CAPACITY)
