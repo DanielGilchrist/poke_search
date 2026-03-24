@@ -37,9 +37,7 @@ impl Builder {
 
 impl From<String> for Builder {
     fn from(item: String) -> Builder {
-        let mut builder = Builder::default();
-        builder.appendln(item);
-        builder
+        Builder(item)
     }
 }
 
