@@ -75,12 +75,6 @@ impl Appendable for String {
     }
 }
 
-impl Appendable for &String {
-    fn append_self_to(&self, string: &mut String) {
-        string.push_str(self);
-    }
-}
-
 impl Appendable for &str {
     fn append_self_to(&self, string: &mut String) {
         string.push_str(self)
