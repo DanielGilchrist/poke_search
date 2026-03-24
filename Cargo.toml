@@ -32,3 +32,4 @@ unicode-width = "0"
 
 [dev-dependencies]
 rustemon = { version = "4", features = ["static-resources"] }
+regex = "*"

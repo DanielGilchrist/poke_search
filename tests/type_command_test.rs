@@ -196,7 +196,11 @@ async fn lists_in_columns() -> Result<(), Box<dyn std::error::Error>> {
     let cli = parse_args(vec!["type", name, "-p"]);
     let actual = run(&mock_client, cli).await.to_string();
 
-    let pokemon_section = actual.split("Pokemon (103)").nth(1).unwrap();
+    let pokemon_section = {
+        let re = regex::Regex::new(r"Pokemon \(\d+\)").unwrap();
+        let mat = re.find(&actual).expect("Should contain a Pokemon section");
+        &actual[mat.end()..]
+    };
     let first_line = pokemon_section.lines().nth(1).unwrap();
     assert!(first_line.contains("Arcanine"));
     assert!(first_line.contains("Arcanine Hisui"));

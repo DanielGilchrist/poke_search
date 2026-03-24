@@ -100,6 +100,10 @@ impl FormatMove {
     fn build_effects(&self, power: String, output: &mut String) {
         let effect_chance = format!("{}%", parse_maybe_i64(self.move_.effect_chance));
         self.move_.effect_entries.iter().for_each(|entry| {
+            if entry.language.name != "en" {
+                return;
+            }
+
             let description = if power == "-" {
                 entry.effect.replace('\n', " ").replace("  ", " ")
             } else {
