@@ -173,33 +173,43 @@ impl MoveCommand<'_> {
 
         let num_columns = 2;
         let column_width = max_name_width.max(max_type_width) + 4;
+        let column_padding = " ".repeat(column_width);
 
         let mut output = String::new();
         for chunk in pokemon_list.chunks(num_columns) {
-            Self::append_name_row(&mut output, chunk, column_width);
-            Self::append_type_row(&mut output, chunk, column_width);
+            Self::append_name_row(&mut output, chunk, &column_padding);
+            Self::append_type_row(&mut output, chunk, &column_padding);
             output.push('\n');
         }
 
         output
     }
 
-    fn append_name_row(output: &mut String, chunk: &[FormattedPokemon], column_width: usize) {
-        for pokemon in chunk {
-            let padding = " ".repeat(column_width - pokemon.name_visual_width());
+    fn append_name_row(output: &mut String, chunk: &[FormattedPokemon], column_padding: &str) {
+        let last = chunk.len() - 1;
+        for (i, pokemon) in chunk.iter().enumerate() {
             output.push_str("  ");
             output.push_str(&pokemon.name);
-            output.push_str(&padding);
+            if i < last {
+                output.push_str(
+                    &column_padding[..column_padding.len() - pokemon.name_visual_width()],
+                );
+            }
         }
         output.push('\n');
     }
 
-    fn append_type_row(output: &mut String, chunk: &[FormattedPokemon], column_width: usize) {
-        for pokemon in chunk {
-            let padding = " ".repeat(column_width.saturating_sub(pokemon.type_visual_width));
+    fn append_type_row(output: &mut String, chunk: &[FormattedPokemon], column_padding: &str) {
+        let last = chunk.len() - 1;
+        for (i, pokemon) in chunk.iter().enumerate() {
             output.push_str("  ");
             output.push_str(&pokemon.formatted_type);
-            output.push_str(&padding);
+            if i < last {
+                let end = column_padding
+                    .len()
+                    .saturating_sub(pokemon.type_visual_width);
+                output.push_str(&column_padding[..end]);
+            }
         }
         output.push('\n');
     }

@@ -133,8 +133,8 @@ async fn move_learned_by_types_are_aligned_with_names() -> Result<(), Box<dyn st
     let name_padding = " ".repeat(column_width - name_width);
     let type_padding = " ".repeat(column_width.saturating_sub(type_width));
 
-    let expected_name_row = format!("  {name}{name_padding}  {name}{name_padding}");
-    let expected_type_row = format!("  {type_badge}{type_padding}  {type_badge}{type_padding}");
+    let expected_name_row = format!("  {name}{name_padding}  {name}");
+    let expected_type_row = format!("  {type_badge}{type_padding}  {type_badge}");
 
     assert_contains!(actual, &expected_name_row);
     assert_contains!(actual, &expected_type_row);
