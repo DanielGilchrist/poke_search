@@ -62,7 +62,7 @@ fn shorten_type_name(type_name: &str) -> String {
     }
 }
 
-fn format_type_name(type_name: &str) -> String {
+pub fn format_type_name(type_name: &str) -> String {
     let shortened = shorten_type_name(type_name);
     let max_length = *MAX_TYPE_LENGTH;
 

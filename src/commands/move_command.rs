@@ -15,14 +15,13 @@ use unicode_width::UnicodeWidthStr;
 struct FormattedPokemon {
     name: String,
     types: Vec<String>,
+    formatted_type: String,
+    type_visual_width: usize,
 }
 
 impl FormattedPokemon {
-    pub fn formatted_type(&self) -> String {
-        self.types
-            .iter()
-            .map(|type_name| type_badge::fetch(type_name))
-            .join(" | ")
+    fn name_visual_width(&self) -> usize {
+        UnicodeWidthStr::width(self.name.as_str())
     }
 }
 
@@ -34,15 +33,30 @@ impl From<Pokemon> for FormattedPokemon {
             ..
         } = pokemon;
 
-        let formatted_name = formatter::split_and_capitalise(&pokemon_name);
+        let name = formatter::split_and_capitalise(&pokemon_name);
         let types = pokemon_types
             .into_iter()
             .map(|pokemon_type| pokemon_type.type_.name)
             .collect_vec();
 
+        let formatted_type = types
+            .iter()
+            .map(|type_name| type_badge::fetch(type_name))
+            .join(" | ");
+
+        let type_visual_width = UnicodeWidthStr::width(
+            types
+                .iter()
+                .map(|t| type_badge::format_type_name(t))
+                .join(" | ")
+                .as_str(),
+        );
+
         Self {
-            name: formatted_name,
+            name,
             types,
+            formatted_type,
+            type_visual_width,
         }
     }
 }
@@ -136,44 +150,58 @@ impl MoveCommand<'_> {
 
         pokemon_list.sort();
 
-        let max_name_width = pokemon_list
-            .iter()
-            .map(|pokemon| UnicodeWidthStr::width(pokemon.name.as_str()))
-            .max()
-            .unwrap_or(0);
-
-        let num_columns = 2;
-        let column_width = max_name_width + 4;
-
-        let mut learned_by_output = String::new();
-        for chunk in pokemon_list.chunks(num_columns) {
-            for pokemon in chunk {
-                let name_width = UnicodeWidthStr::width(pokemon.name.as_str());
-                let padding = " ".repeat(column_width - name_width);
-                learned_by_output.push_str("  ");
-                learned_by_output.push_str(&pokemon.name);
-                learned_by_output.push_str(&padding);
-            }
-            learned_by_output.push('\n');
-
-            for pokemon in chunk {
-                let type_str = pokemon.formatted_type();
-                let plain_type = pokemon.types.join(" | ");
-                let type_visual_width = UnicodeWidthStr::width(plain_type.as_str());
-                let padding_amount = column_width.saturating_sub(type_visual_width);
-                let padding = " ".repeat(padding_amount);
-                learned_by_output.push_str("  ");
-                learned_by_output.push_str(&type_str);
-                learned_by_output.push_str(&padding);
-            }
-            learned_by_output.push_str("\n\n");
-        }
-
         self.builder.newline();
 
         let header = formatter::white(&format!("Learned by: ({})", pokemon_list.len()));
         self.builder.appendln(header);
-        self.builder.append(learned_by_output);
+        self.builder
+            .append(Self::format_learned_by_columns(&pokemon_list));
+    }
+
+    fn format_learned_by_columns(pokemon_list: &[FormattedPokemon]) -> String {
+        let max_name_width = pokemon_list
+            .iter()
+            .map(|p| p.name_visual_width())
+            .max()
+            .unwrap_or(0);
+
+        let max_type_width = pokemon_list
+            .iter()
+            .map(|p| p.type_visual_width)
+            .max()
+            .unwrap_or(0);
+
+        let num_columns = 2;
+        let column_width = max_name_width.max(max_type_width) + 4;
+
+        let mut output = String::new();
+        for chunk in pokemon_list.chunks(num_columns) {
+            Self::append_name_row(&mut output, chunk, column_width);
+            Self::append_type_row(&mut output, chunk, column_width);
+            output.push('\n');
+        }
+
+        output
+    }
+
+    fn append_name_row(output: &mut String, chunk: &[FormattedPokemon], column_width: usize) {
+        for pokemon in chunk {
+            let padding = " ".repeat(column_width - pokemon.name_visual_width());
+            output.push_str("  ");
+            output.push_str(&pokemon.name);
+            output.push_str(&padding);
+        }
+        output.push('\n');
+    }
+
+    fn append_type_row(output: &mut String, chunk: &[FormattedPokemon], column_width: usize) {
+        for pokemon in chunk {
+            let padding = " ".repeat(column_width.saturating_sub(pokemon.type_visual_width));
+            output.push_str("  ");
+            output.push_str(&pokemon.formatted_type);
+            output.push_str(&padding);
+        }
+        output.push('\n');
     }
 
     fn pokemon_names(&self, format_move: &FormatMove) -> Vec<String> {
