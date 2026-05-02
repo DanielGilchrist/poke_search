@@ -1129,6 +1129,7 @@ pub static ITEM_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
         String::from("meowth-candy"),
         String::from("meowth-fur"),
         String::from("metagrossite"),
+        String::from("metal-alloy"),
         String::from("metal-coat"),
         String::from("metal-powder"),
         String::from("meteorite"),
