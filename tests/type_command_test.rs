@@ -212,3 +212,187 @@ async fn lists_in_columns() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn list_pokemon_flag() -> Result<(), Box<dyn std::error::Error>> {
+    let name = "fire";
+
+    let mut mock_client = MockClientImplementation::new();
+
+    mock_client
+        .expect_fetch_type()
+        .with(mockall::predicate::eq(name))
+        .once()
+        .returning(|_args| Ok(static_resources::get_type()));
+
+    let cli = parse_args(vec!["type", name, "-p"]);
+
+    let fire = type_badge::fetch("fire");
+    let dragon = type_badge::fetch("dragon");
+    let rock = type_badge::fetch("rock");
+    let water = type_badge::fetch("water");
+    let dark = type_badge::fetch("dark");
+    let electr = type_badge::fetch("electric");
+    let fairy = type_badge::fetch("fairy");
+    let fight = type_badge::fetch("fighting");
+    let flying = type_badge::fetch("flying");
+    let ghost = type_badge::fetch("ghost");
+    let ground = type_badge::fetch("ground");
+    let normal = type_badge::fetch("normal");
+    let poison = type_badge::fetch("poison");
+    let psychc = type_badge::fetch("psychic");
+    let bug = type_badge::fetch("bug");
+    let grass = type_badge::fetch("grass");
+    let ice = type_badge::fetch("ice");
+    let steel = type_badge::fetch("steel");
+
+    let pokemon_names = [
+        "arcanine",
+        "arcanine-hisui",
+        "armarouge",
+        "blacephalon",
+        "blaziken",
+        "blaziken-mega",
+        "braixen",
+        "camerupt",
+        "camerupt-mega",
+        "carkol",
+        "castform-sunny",
+        "centiskorch",
+        "centiskorch-gmax",
+        "ceruledge",
+        "chandelure",
+        "chandelure-mega",
+        "charcadet",
+        "charizard",
+        "charizard-gmax",
+        "charizard-mega-x",
+        "charizard-mega-y",
+        "charmander",
+        "charmeleon",
+        "chi-yu",
+        "chimchar",
+        "cinderace",
+        "cinderace-gmax",
+        "coalossal",
+        "coalossal-gmax",
+        "combusken",
+        "crocalor",
+        "cyndaquil",
+        "darmanitan-galar-zen",
+        "darmanitan-standard",
+        "darmanitan-zen",
+        "darumaka",
+        "delphox",
+        "delphox-mega",
+        "emboar",
+        "emboar-mega",
+        "entei",
+        "fennekin",
+        "flareon",
+        "fletchinder",
+        "fuecoco",
+        "gouging-fire",
+        "groudon-primal",
+        "growlithe",
+        "growlithe-hisui",
+        "heatmor",
+        "heatran",
+        "heatran-mega",
+        "ho-oh",
+        "houndoom",
+        "houndoom-mega",
+        "houndour",
+        "incineroar",
+        "infernape",
+        "iron-moth",
+        "lampent",
+        "larvesta",
+        "litleo",
+        "litten",
+        "litwick",
+        "magby",
+        "magcargo",
+        "magmar",
+        "magmortar",
+        "marowak-alola",
+        "marowak-totem",
+        "moltres",
+        "monferno",
+        "ninetales",
+        "numel",
+        "ogerpon-hearthflame-mask",
+        "oricorio-baile",
+        "pansear",
+        "pignite",
+        "ponyta",
+        "pyroar",
+        "pyroar-mega",
+        "quilava",
+        "raboot",
+        "rapidash",
+        "reshiram",
+        "rotom-heat",
+        "salandit",
+        "salazzle",
+        "salazzle-totem",
+        "scorbunny",
+        "scovillain",
+        "scovillain-mega",
+        "simisear",
+        "sizzlipede",
+        "skeledirge",
+        "slugma",
+        "talonflame",
+        "tauros-paldea-blaze-breed",
+        "tepig",
+        "torchic",
+        "torkoal",
+        "torracat",
+        "turtonator",
+        "typhlosion",
+        "typhlosion-hisui",
+        "victini",
+        "volcanion",
+        "volcarona",
+        "vulpix",
+    ];
+    let formatted_pokemon: Vec<String> = pokemon_names
+        .iter()
+        .map(|n| format!("  {}", fmt::split_and_capitalise(n)))
+        .collect();
+    let pokemon_columns = fmt::format_columns(&formatted_pokemon, 3);
+
+    let expected = format!(
+        "{fire}
+
+{}
+{}  {dragon} | {fire} | {rock} | {water}
+{}  {dark} | {electr} | {fairy} | {fight} | {flying} | {ghost} | {ground} | {normal} | {poison} | {psychc} | stellar
+{}  {bug} | {grass} | {ice} | {steel}
+
+{}
+{}  {bug} | {fairy} | {fire} | {grass} | {ice} | {steel}
+{}  {dark} | {dragon} | {electr} | {fight} | {flying} | {ghost} | {normal} | {poison} | {psychc} | stellar
+{}  {ground} | {rock} | {water}
+
+{}
+{}",
+        fmt::white("Offence"),
+        fmt::bright_red("0.5x\n"),
+        fmt::yellow("1x\n"),
+        fmt::green("2x\n"),
+        fmt::white("Defence"),
+        fmt::bright_green("0.5x\n"),
+        fmt::yellow("1x\n"),
+        fmt::red("2x\n"),
+        fmt::white(&format!("Pokemon ({})", pokemon_names.len())),
+        pokemon_columns.trim_end(),
+    );
+
+    let actual = run(&mock_client, cli).await.to_string();
+
+    assert_eq!(expected, actual);
+
+    Ok(())
+}

@@ -125,6 +125,7 @@ impl TypeCommand<'_> {
         };
 
         if self.list_pokemon {
+            self.builder.newline();
             self.append_pokemon_list(&type_, second_type.as_ref());
         }
     }

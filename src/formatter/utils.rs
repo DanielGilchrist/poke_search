@@ -15,11 +15,11 @@ pub fn highlight(s: &str) -> String {
     s.bold().italic().to_string()
 }
 
-pub(crate) fn split_and_capitalise(s: &str) -> String {
+pub fn split_and_capitalise(s: &str) -> String {
     s.split('-').map(capitalise).join(" ")
 }
 
-pub(crate) fn format_columns(items: &[String], num_columns: usize) -> String {
+pub fn format_columns(items: &[String], num_columns: usize) -> String {
     if items.is_empty() {
         return String::new();
     }
