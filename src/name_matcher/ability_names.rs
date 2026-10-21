@@ -17,6 +17,7 @@ pub static ABILITY_NAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
         String::from("as-one-glastrier"),
         String::from("as-one-spectrier"),
         String::from("aura-break"),
+        String::from("aura-guard"),
         String::from("bad-dreams"),
         String::from("ball-fetch"),
         String::from("battery"),

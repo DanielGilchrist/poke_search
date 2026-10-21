@@ -326,7 +326,7 @@ async fn list_pokemon_flag() -> Result<(), Box<dyn std::error::Error>> {
         "pansear",
         "pignite",
         "ponyta",
-        "pyroar",
+        "pyroar-male",
         "pyroar-mega",
         "quilava",
         "raboot",

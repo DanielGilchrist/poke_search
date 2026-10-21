@@ -64,7 +64,7 @@ async fn pokemon_move_autocorrect_if_similar_enough() -> Result<(), Box<dyn std:
   {}: 5
   {}: 0
   {}: An attack that may cause a burn.
-  {}: Has a 10% chance to burn the target.",
+  {}: Has a chance to burn the target.",
         fmt::white("Move"),
         fmt::white("Name"),
         fmt::white("Type"),
